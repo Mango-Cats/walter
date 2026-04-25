@@ -44,7 +44,7 @@ def master_maker():
     This is a coordinator function that calls the function above.
     Always returns a cleaned DataFrame of the drug brand names.
     """
-    
+
     prim: str = str(finder(PRIMARY_FNAME))
     df: pd.DataFrame = pandafy(csv_file=prim)
     return cleaner(df=df)
