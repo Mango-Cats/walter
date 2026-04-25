@@ -1,4 +1,4 @@
 # walter
 LLM-assisted dataset construction for LASA drugs. "Walter are these two LASA drugs? Make no mistakes."
 
-<img src="https://media.tenor.com/v5666mYv_6wAAAAC/breaking-bad-walter-white.gif" width="300" />
+<img width="560" height="420" alt="image" src="https://github.com/user-attachments/assets/4f6d2351-f740-4b46-b7fd-461969789d2e" />
