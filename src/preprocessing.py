@@ -7,16 +7,17 @@ import pandas as pd
 from src.utils import finder
 
 PRIMARY_FNAME = "drug_products.csv"
+BRAND_COL = "Brand Name"
 
 
 def pandafy(csv_file: str):
     """
     Constructs a Pandas DataFrame from the dataset while only
-    including the brand name column.
+    including the brand name column. The brand name column is defined
+    in the `BRAND_COL` constant.
     """
 
-    df = pd.read_csv(csv_file)
-    return df[["Brand Name"]]
+    return pd.read_csv(csv_file, usecols=[BRAND_COL])
 
 
 def cleaner(df: pd.DataFrame, sort: bool = False):
@@ -24,22 +25,26 @@ def cleaner(df: pd.DataFrame, sort: bool = False):
     A multistep cleaning pipeline for the pandas DataFrame
     constructed by pandafy.
     """
+    df[BRAND_COL] = df[BRAND_COL].astype(str).str.strip()
+    
+    bad_values = ["none", "nan", "n/a", ""]
+    df = df[
+        df[BRAND_COL].str.strip().ne("") & 
+        ~df[BRAND_COL].str.lower().isin(bad_values)
+    ]
 
-    df.drop_duplicates(inplace=True)
-    df.dropna(inplace=True)
-
-    empty_markers = ["none"]
-    df = df[~df["Brand Name"].isin(empty_markers)]
-    # if it's a whitespace string
-    df = df[~df["Brand Name"].str.contains(r"^\s*$", regex=True, na=False)]
+    df = df.drop_duplicates().dropna()
 
     if sort:
-        df = df.sort_values(by="Brand Name")
-
+        df = df.sort_values(
+                by=BRAND_COL, 
+                key=lambda col: col.str.lower(),
+                ignore_index=True
+            )
     return df
 
 
-def master_maker():
+def master_maker(sort: bool = False):
     """
     This is a coordinator function that calls the function above.
     Always returns a cleaned DataFrame of the drug brand names.
@@ -47,4 +52,4 @@ def master_maker():
 
     prim: str = str(finder(PRIMARY_FNAME))
     df: pd.DataFrame = pandafy(csv_file=prim)
-    return cleaner(df=df)
+    return cleaner(df=df, sort=sort)
