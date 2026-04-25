@@ -1,0 +1,15 @@
+[project]
+name = "walter"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=3.0.2",
+    "pathlib>=1.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.12",
+]
