@@ -1,3 +1,7 @@
+"""
+General utility functions.
+"""
+
 import pathlib as pl
 
 

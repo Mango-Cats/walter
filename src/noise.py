@@ -1,3 +1,7 @@
+"""
+Noise pairs generation.
+"""
+
 from typing import Any
 from itertools import permutations
 import pandas as pd

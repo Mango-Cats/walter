@@ -1,5 +1,10 @@
+"""
+Preprocessing steps for the primary (uncleaned/unaltered) dataset.
+Contains parsing and cleaning.
+"""
+
 import pandas as pd
-from scripts.utils import finder
+from src.utils import finder
 
 PRIMARY_FNAME = "drug_products.csv"
 
