@@ -51,20 +51,18 @@ def get_pipeline(model_choice: LocalModel):
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model not found at {model_path}")
 
-    print(f"Loading tokenizer for {model_path}...")
+    print(f"<walter> Loading tokenizer for {model_path}...")
     tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
 
-    print("Loading model...")
-
     if torch.cuda.is_available():
-        print("Using CUDA...")
+        print("<walter> Using CUDA...")
         model = transformers.AutoModelForCausalLM.from_pretrained(
             model_path,
             torch_dtype=torch.bfloat16,
             device_map="auto",
         )
     else:
-        print("Using CPU...")
+        print("<walter> Using CPU...")
         model = transformers.AutoModelForCausalLM.from_pretrained(
             model_path,
             torch_dtype=torch.float32,
@@ -88,7 +86,6 @@ def response(
 ):
     pipe = get_pipeline(model)
 
-    # Flat prompt for better CPU + small-model stability
     flat_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}\n\nOutput:"
 
     output = pipe(
