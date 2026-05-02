@@ -2,32 +2,55 @@
 Function definitions for LLM-assisted true LASA pairs generation.
 """
 
-from src.proposer.prompt import SYSTEM_PROMPT
-from os import environ
+from src.proposer._prompt import SYSTEM_PROMPT
 from pathlib import Path
+from enum import Enum
+import time
 
-# FIXME: adjust this as needed
-MODEL = "claude-haiku-4-5-20251001"
+
 RESULTS_DIR = Path("")
 DELAY = 0.2
 
 
-def propose_n(drug_name: str, n: int, api_key: str):
+class Model(Enum):
+    CLAUDE = 0
+    LLAMA = 1
+
+
+def propose(
+    drug_name: str,
+    dataset: str,
+    model: Model,
+    n: int = 1,
+    api_key: str | None = None,
+):
     """
-    This function prompts the LLM to find potential LASA drugs given
-    some drug name.
-
-    FIXME: do this
+    Prompt a language model to generate `n` LASA candidates for `drug_name`
+    given a `dataset`.
     """
-    for _ in range(0, n):
-        print(SYSTEM_PROMPT)
+    if model is Model.CLAUDE and not api_key:
+        raise Exception("Model is defined as CLAUDE but no provided `api_key`.")
 
+    results: list[str] = []
+    for _ in range(n):
+        output: str
+        match model:
+            case Model.LLAMA:
+                from .llama import response
 
-def get_api_key(env_var_name: str):
+                output = response(SYSTEM_PROMPT)
 
-    if (key := environ.get(key=env_var_name)) is None:
-        raise KeyError(
-            f"The environment variable {env_var_name} is required but is not found."
-        )
+            case Model.CLAUDE:
+                from .claude import response
 
-    return key
+                output = response(user_prompt=SYSTEM_PROMPT)
+
+                raise NotImplementedError
+
+            case _:
+                raise ValueError("Unsupported model")
+
+        results.append(output.strip())
+        time.sleep(DELAY)
+
+    return results

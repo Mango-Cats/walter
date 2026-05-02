@@ -1,3 +1,3 @@
-from ._core import propose_n, get_api_key
+from ._core import propose
 
-__all__: list[str] = ["get_api_key", "propose_n"]
+__all__: list[str] = ["propose"]
