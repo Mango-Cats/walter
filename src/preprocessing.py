@@ -10,7 +10,7 @@ from random import randint
 
 FILE_DIR = "data/"
 PRIMARY_FNAME = "drug_products.csv"
-CLEANED_FNAME = str(FILE_DIR+"cleaned_"+PRIMARY_FNAME)
+CLEANED_FNAME = str(FILE_DIR + "cleaned_" + PRIMARY_FNAME)
 TARGET_COL = "Brand Name"
 
 
