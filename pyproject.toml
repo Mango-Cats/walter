@@ -10,6 +10,12 @@ dependencies = [
     "pathlib>=1.0.1",
 ]
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project.optional-dependencies]
 hf = ["torch", "transformers", "accelerate"]
 

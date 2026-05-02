@@ -1,6 +1,6 @@
 # Human-Registered Drugs file (anywhere)
 *drug_products.csv
-token
+.env
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
