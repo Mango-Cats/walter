@@ -1,5 +1,5 @@
 # Human-Registered Drugs file (anywhere)
-drug_products.csv
+*drug_products.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
