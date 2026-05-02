@@ -32,7 +32,6 @@ def get_pipeline(model_choice: LocalModel):
     print(f"Loading tokenizer for {model_path}...")
     tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
 
-    # GPU path
     if torch.cuda.is_available():
         print("Hardware detected: NVIDIA GPU (CUDA). Loading model...")
         model = transformers.AutoModelForCausalLM.from_pretrained(
@@ -46,8 +45,6 @@ def get_pipeline(model_choice: LocalModel):
             model=model,
             tokenizer=tokenizer,
         )
-
-    # CPU fallback
     else:
         print("No GPU detected. Falling back to CPU...")
         model = transformers.AutoModelForCausalLM.from_pretrained(
@@ -78,6 +75,9 @@ def response(user_prompt: str, model: LocalModel, new_toks_len: int = 256) -> st
         messages,
         max_new_tokens=new_toks_len,
         truncation=True,
+        do_sample=0.0,
+        top_p=1.0,
+        temperature=0.0,
     )
 
     return output[0]["generated_text"][-1]["content"]
