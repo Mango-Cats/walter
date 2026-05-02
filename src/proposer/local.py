@@ -1,78 +1,64 @@
 import os
-import transformers
 import torch
+import transformers
 from enum import Enum
 from .prompt import SYSTEM_PROMPT
 
-
 n_threads = os.cpu_count() or 4
-
 torch.set_num_threads(n_threads)
 torch.set_num_interop_threads(max(1, n_threads // 2))
-torch.backends.mkldnn.enabled = True
 
 
 class LocalModel(Enum):
-    DEEPSEEK_1_5B = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
-    LLAMA_8B = "meta-llama/Meta-Llama-3.1-8B-Instruct"
-    GRANITE_8B = "ibm-granite/granite-4.1-8b"
+    QWEN3_4B = "Qwen/Qwen3-4B-Instruct-2507"
+    QWEN3_8B = "Qwen/Qwen3-8B-Instruct"
 
     @property
     def path(self):
-        folder_name = self.value.split("/")[-1].lower()
-        return os.path.join(".", "models", folder_name)
+        return os.path.join(".", "models", self.value.split("/")[-1].lower())
 
 
-_PIPELINES = {}
+_MODELS = {}
 
 
-def get_pipeline(model_choice: LocalModel):
-    if model_choice in _PIPELINES:
-        return _PIPELINES[model_choice]
+def get_model(model_choice: LocalModel):
+    if model_choice in _MODELS:
+        return _MODELS[model_choice]
 
     model_path = model_choice.path
 
     if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model folder missing: {model_path}")
+        raise FileNotFoundError(f"Missing model: {model_path}")
 
-    print(f"<walter> Loading {model_choice.name} from {model_path}...")
+    print(f"<walter> Loading {model_choice.name}...")
 
     tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
 
-    load_params = {
-        "low_cpu_mem_usage": True,
-        "device_map": "auto",
-    }
+    tokenizer.pad_token = tokenizer.eos_token
 
-    if torch.cuda.is_available():
-        model = transformers.AutoModelForCausalLM.from_pretrained(
-            model_path, torch_dtype=torch.bfloat16, **load_params
-        )
-    else:
-        model = transformers.AutoModelForCausalLM.from_pretrained(
-            model_path, torch_dtype=torch.float32, **load_params
-        )
-
-    pipe = transformers.pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
+    model = transformers.AutoModelForCausalLM.from_pretrained(
+        model_path,
+        dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
+        device_map="auto",
+        low_cpu_mem_usage=False,   # CRITICAL FIX
     )
 
-    _PIPELINES[model_choice] = pipe
-    return pipe
+    model.config.pad_token_id = model.config.eos_token_id
+    model.generation_config.pad_token_id = model.config.eos_token_id
+
+    model.eval()
+
+    _MODELS[model_choice] = (model, tokenizer)
+    return model, tokenizer
 
 
 def _clean_output(text: str, candidates: list[str]) -> list[str]:
-    lines = text.strip().split("\n")
-
     candidate_set = {c.lower() for c in candidates}
     seen = set()
     valid = []
 
-    for line in lines:
+    for line in text.strip().split("\n"):
         line = line.strip().lower()
-
         if line in candidate_set and line not in seen:
             valid.append(line)
             seen.add(line)
@@ -80,25 +66,24 @@ def _clean_output(text: str, candidates: list[str]) -> list[str]:
     return valid
 
 
-def response(
-    user_prompt: str,
-    model: LocalModel,
-    candidates: list[str],
-    new_toks_len: int = 64,
-):
-    pipe = get_pipeline(model)
+def response(user_prompt: str, model: LocalModel, candidates: list[str], new_toks_len: int = 64):
+    model_obj, tokenizer = get_model(model)
 
-    flat_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}\n\nOutput:"
+    prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}\n\nOutput:"
 
-    output = pipe(
-        flat_prompt,
-        max_new_tokens=new_toks_len,
-        do_sample=False,
-        temperature=None,
-        top_p=None,
-        return_full_text=False,
-    )
+    inputs = tokenizer(prompt, return_tensors="pt")
 
-    raw_text = output[0].get("generated_text", "")
+    # IMPORTANT: move inputs to model device
+    device = next(model_obj.parameters()).device
+    inputs = {k: v.to(device) for k, v in inputs.items()}
 
-    return _clean_output(raw_text, candidates)
+    with torch.no_grad():
+        output = model_obj.generate(
+            **inputs,
+            max_new_tokens=new_toks_len,
+            do_sample=False,
+        )
+
+    decoded = tokenizer.decode(output[0], skip_special_tokens=True)
+
+    return _clean_output(decoded, candidates)

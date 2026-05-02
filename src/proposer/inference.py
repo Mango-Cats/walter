@@ -12,7 +12,7 @@ LABEL_COL = "Confusible"
 def run_inference(
     output_path: str,
     D_clean: pd.DataFrame,
-    model_choice: LocalModel = LocalModel.DEEPSEEK_1_5B,
+    model_choice: LocalModel,
     iterations: int = 1,
     n_proposals: int = 5,
 ) -> Path:
