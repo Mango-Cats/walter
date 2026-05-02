@@ -32,8 +32,7 @@ def get_pipeline(model_choice: LocalModel):
     print(f"Loading tokenizer for {model_path}...")
     tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
 
-    # The code below checks your hardware, I added this since I
-    # (zhean) don't have a GPU but I have an NPU.
+    # GPU path
     if torch.cuda.is_available():
         print("Hardware detected: NVIDIA GPU (CUDA). Loading model...")
         model = transformers.AutoModelForCausalLM.from_pretrained(
@@ -41,49 +40,27 @@ def get_pipeline(model_choice: LocalModel):
             torch_dtype=torch.bfloat16,
             device_map="auto",
         )
+
         pipe = transformers.pipeline(
             "text-generation",
             model=model,
             tokenizer=tokenizer,
         )
 
-    # NPU
+    # CPU fallback
     else:
-        npu_loaded = False
-        try:
-            from optimum.intel.openvino import OVModelForCausalLM
-            from openvino.runtime import Core
+        print("No GPU detected. Falling back to CPU...")
+        model = transformers.AutoModelForCausalLM.from_pretrained(
+            model_path,
+            torch_dtype=torch.float32,
+        )
 
-            core = Core()
-            if "NPU" in core.available_devices:
-                print("Hardware detected: Intel NPU. Compiling via OpenVINO...")
-                model = OVModelForCausalLM.from_pretrained(
-                    model_path,
-                    export=True,
-                    device="NPU"
-                )
-                pipe = transformers.pipeline(
-                    "text-generation",
-                    model=model,
-                    tokenizer=tokenizer,
-                )
-                npu_loaded = True
-        except Exception as e:
-            print(f"OpenVINO/NPU setup skipped: {e}")
-
-        # CPU Fallback
-        if not npu_loaded:
-            print("No accelerator detected. Falling back to standard CPU...")
-            model = transformers.AutoModelForCausalLM.from_pretrained(
-                model_path,
-                torch_dtype=torch.float32,
-            )
-            pipe = transformers.pipeline(
-                "text-generation",
-                model=model,
-                tokenizer=tokenizer,
-                device=-1,
-            )
+        pipe = transformers.pipeline(
+            "text-generation",
+            model=model,
+            tokenizer=tokenizer,
+            device=-1,
+        )
 
     _PIPELINES[model_choice] = pipe
     return pipe
