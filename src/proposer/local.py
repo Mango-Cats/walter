@@ -13,16 +13,53 @@ torch.backends.mkldnn.enabled = True
 
 
 class LocalModel(Enum):
-    DEEPSEEK_8B = "deepseek_8b"
-    DEEPSEEK_1_5B = "deepseek_1_5b"
+    DEEPSEEK_8B = "deepseek-8b"
+    DEEPSEEK_1_5B = "deepseek-1.5b"
+    LLAMA_8B = "llama-3.1-8b"
 
+    @property
+    def path(self):
+        return os.path.join(".", "models", self.value)
 
-MODEL_REGISTRY = {
-    LocalModel.DEEPSEEK_8B: "./models/deepseek-r1-distill-llama-8b",
-    LocalModel.DEEPSEEK_1_5B: "./models/deepseek-r1-distill-qwen-1.5b",
-}
 
 _PIPELINES = {}
+
+
+def get_pipeline(model_choice: LocalModel):
+    if model_choice in _PIPELINES:
+        return _PIPELINES[model_choice]
+
+    model_path = model_choice.path
+
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model folder missing: {model_path}")
+
+    print(f"<walter> Loading {model_choice.name} from {model_path}...")
+
+    tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
+
+    load_params = {
+        "low_cpu_mem_usage": True,
+        "device_map": "auto",
+    }
+
+    if torch.cuda.is_available():
+        model = transformers.AutoModelForCausalLM.from_pretrained(
+            model_path, torch_dtype=torch.bfloat16, **load_params
+        )
+    else:
+        model = transformers.AutoModelForCausalLM.from_pretrained(
+            model_path, torch_dtype=torch.float32, **load_params
+        )
+
+    pipe = transformers.pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tokenizer,
+    )
+
+    _PIPELINES[model_choice] = pipe
+    return pipe
 
 
 def _clean_output(text: str, candidates: list[str]) -> list[str]:
@@ -40,42 +77,6 @@ def _clean_output(text: str, candidates: list[str]) -> list[str]:
             seen.add(line)
 
     return valid
-
-
-def get_pipeline(model_choice: LocalModel):
-    if model_choice in _PIPELINES:
-        return _PIPELINES[model_choice]
-
-    model_path = MODEL_REGISTRY[model_choice]
-
-    if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model not found at {model_path}")
-
-    print(f"<walter> Loading tokenizer for {model_path}...")
-    tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
-
-    if torch.cuda.is_available():
-        print("<walter> Using CUDA...")
-        model = transformers.AutoModelForCausalLM.from_pretrained(
-            model_path,
-            torch_dtype=torch.bfloat16,
-            device_map="auto",
-        )
-    else:
-        print("<walter> Using CPU...")
-        model = transformers.AutoModelForCausalLM.from_pretrained(
-            model_path,
-            torch_dtype=torch.float32,
-        )
-
-    pipe = transformers.pipeline(
-        "text-generation",
-        model=model,
-        tokenizer=tokenizer,
-    )
-
-    _PIPELINES[model_choice] = pipe
-    return pipe
 
 
 def response(
