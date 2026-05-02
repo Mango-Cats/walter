@@ -44,9 +44,9 @@ def run_inference(
 
         results.append(
             {
-                "iteration": i + 1,
+                "Run": i + 1,
                 TARGET_COL: sample_drug,
-                "candidates": candidate_list,
+                "Candidates": candidate_list,
                 LABEL_COL: raw_output,
             }
         )

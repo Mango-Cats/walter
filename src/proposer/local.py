@@ -13,6 +13,7 @@ class LocalModel(Enum):
     """
     These models can be downloaded locally using scripts.model_setup.
     """
+
     QWEN3_4B = "Qwen/Qwen3-4B-Instruct-2507"
     # QWEN3_8B = "Qwen/Qwen3-8B"
     SMOLLM2 = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
@@ -45,7 +46,7 @@ def get_model(model_choice: LocalModel):
         model_path,
         dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32,
         device_map="auto",
-        low_cpu_mem_usage=False,   # CRITICAL FIX
+        low_cpu_mem_usage=False,  # CRITICAL FIX
     )
 
     model.config.pad_token_id = model.config.eos_token_id
@@ -71,7 +72,9 @@ def _clean_output(text: str, candidates: list[str]) -> list[str]:
     return valid
 
 
-def response(user_prompt: str, model: LocalModel, candidates: list[str], new_toks_len: int = 64):
+def response(
+    user_prompt: str, model: LocalModel, candidates: list[str], new_toks_len: int = 64
+):
     model_obj, tokenizer = get_model(model)
 
     prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}\n\nOutput:"

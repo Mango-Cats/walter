@@ -12,6 +12,7 @@ BLUE = "\033[94m"
 RESET = "\033[0m"
 PREFIX = f"{BLUE}<scripts.model_setup>{RESET}"
 
+
 def log(msg: str):
     print(f"{PREFIX} {msg}")
 
