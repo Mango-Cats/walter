@@ -38,7 +38,7 @@ If fewer than N valid candidates exist, return only the valid ones.
 def construct_user_prompt(
     drug_name: str,
     dataset: str,
-    n: int=1,
+    n: int = 1,
 ) -> str:
     """
     This constructs a user prompt given a specific `drug_name`, a

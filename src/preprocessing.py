@@ -4,13 +4,12 @@ Contains parsing and cleaning.
 """
 
 import pandas as pd
-from src.utils import finder
 from pathlib import Path
 from random import randint
 
 FILE_DIR = "data/"
 PRIMARY_FNAME = "drug_products.csv"
-CLEANED_FNAME = str(FILE_DIR + "cleaned_" + PRIMARY_FNAME)
+CLEANED_FNAME = str(FILE_DIR + "cleaned_" + PRIMARY_FNAME.replace(".csv", ".parquet"))
 TARGET_COL = "Brand Name"
 
 
@@ -97,7 +96,7 @@ def cleaning_report(raw: pd.DataFrame, clean: pd.DataFrame) -> None:
     print("<walter> Cleaning Report: ")
 
     row_diff = len(raw) - len(clean)
-    print(f"  - Total rows dropped during cleaning: {row_diff}")
+    print(f"\t- Total rows dropped during cleaning: {row_diff}")
 
     raw_non_ascii = (
         raw[TARGET_COL].astype(str).str.contains(r"[^\x00-\x7F]", na=False).sum()
@@ -108,11 +107,11 @@ def cleaning_report(raw: pd.DataFrame, clean: pd.DataFrame) -> None:
 
     if raw_non_ascii > 0:
         print(
-            f"  - Non-ASCII entries sanitized/removed: {raw_non_ascii - clean_non_ascii} "
+            f"\t- Non-ASCII entries sanitized/removed: {raw_non_ascii - clean_non_ascii} "
             f"(Out of {raw_non_ascii} original dirty entries)."
         )
     else:
-        print("  - No non-ASCII characters were found in the raw data.")
+        print("\t- No non-ASCII characters were found in the raw data.")
 
     common_idx = raw.index.intersection(clean.index)
     raw_has_text = ~raw[TARGET_COL].astype(str).str.fullmatch(r"\s*")
@@ -121,26 +120,26 @@ def cleaning_report(raw: pd.DataFrame, clean: pd.DataFrame) -> None:
     newly_empty = (raw_has_text.loc[common_idx] & clean_is_empty.loc[common_idx]).sum()
     if newly_empty > 0:
         print(
-            f"  - <walter> Warning: {newly_empty} entries had text but were reduced to empty strings."
+            f"\t- <walter> Warning: {newly_empty} entries had text but were reduced to empty strings."
         )
 
-    print("  - Samples of modified text (repr format):")
+    print("\t- Samples of modified text (repr format):")
     sample_count = 0
     for idx in common_idx:
         orig = str(raw.loc[idx, TARGET_COL])
         new = str(clean.loc[idx, TARGET_COL])
 
         if orig != new:
-            print(f"    Original: {repr(orig)}")
-            print(f"    Cleaned:  {repr(new)}")
-            print("    ---")
+            print(f"\t\tOriginal: {repr(orig)}")
+            print(f"\t\tCleaned:  {repr(new)}")
+            print("\t\t---")
             sample_count += 1
 
         if sample_count >= 5:
             break
 
     if sample_count == 0:
-        print("    (No text modifications detected in remaining rows)")
+        print("\t\t(No text modifications detected in remaining rows)")
 
 
 def master_maker(sort: bool = False, save: bool = False) -> pd.DataFrame:
@@ -152,7 +151,7 @@ def master_maker(sort: bool = False, save: bool = False) -> pd.DataFrame:
     does not exist anywhere from the root folder (see how `finder`
     works).
     """
-    path: Path = finder(fname=PRIMARY_FNAME)
+    path: Path = Path(FILE_DIR + PRIMARY_FNAME)
 
     raw: pd.DataFrame = pandafy(csv_file=path)
 
@@ -165,7 +164,8 @@ def master_maker(sort: bool = False, save: bool = False) -> pd.DataFrame:
     clean = clean.reset_index(drop=True)
 
     if save:
-        clean.to_csv(path_or_buf=CLEANED_FNAME, index=False)
+        clean.to_parquet(path=CLEANED_FNAME, index=False)
+        print(f"<walter> Saved in {CLEANED_FNAME}")
 
     return clean
 
