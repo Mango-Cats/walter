@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-llm = ["torch", "transformers", "accelerate"]
+hf = ["torch", "transformers", "accelerate"]
 
 [dependency-groups]
 dev = [

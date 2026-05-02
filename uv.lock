@@ -1601,7 +1601,7 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-llm = [
+hf = [
     { name = "accelerate" },
     { name = "torch" },
     { name = "transformers" },
@@ -1614,14 +1614,14 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "accelerate", marker = "extra == 'llm'" },
+    { name = "accelerate", marker = "extra == 'hf'" },
     { name = "ipykernel", specifier = ">=7.2.0" },
     { name = "pandas", specifier = ">=3.0.2" },
     { name = "pathlib", specifier = ">=1.0.1" },
-    { name = "torch", marker = "extra == 'llm'" },
-    { name = "transformers", marker = "extra == 'llm'" },
+    { name = "torch", marker = "extra == 'hf'" },
+    { name = "transformers", marker = "extra == 'hf'" },
 ]
-provides-extras = ["llm"]
+provides-extras = ["hf"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "ruff", specifier = ">=0.15.12" }]

@@ -1,4 +1,23 @@
 # walter
+
 LLM-assisted dataset construction for LASA drugs. "Walter, are these two LASA drugs? Make no mistakes."
 
-<img width="560" height="420" alt="image" src="https://github.com/user-attachments/assets/4f6d2351-f740-4b46-b7fd-461969789d2e" />
+## Setup
+
+Simply run
+
+```bash
+uv sync
+```
+
+this will add all required dependencies of the project.
+
+Then, running
+
+```bash
+uv sync --extra llm
+```
+
+will add all dependencies for the Decoder-only transformers (generative
+LLMs). These dependencies are one the heavier-side and some of these
+are already included in Google Colab which is why it's separated.
