@@ -5,8 +5,10 @@ from enum import Enum
 from .prompt import SYSTEM_PROMPT
 
 
-torch.set_num_threads(os.cpu_count())
-torch.set_num_interop_threads(os.cpu_count())
+n_threads = os.cpu_count() or 4
+
+torch.set_num_threads(n_threads)
+torch.set_num_interop_threads(max(1, n_threads // 2))
 torch.backends.mkldnn.enabled = True
 
 
@@ -25,14 +27,17 @@ _PIPELINES = {}
 
 def _clean_output(text: str, candidates: list[str]) -> list[str]:
     lines = text.strip().split("\n")
-    valid = []
 
-    candidate_set = set(x.lower() for x in candidates)
+    candidate_set = {c.lower() for c in candidates}
+    seen = set()
+    valid = []
 
     for line in lines:
         line = line.strip().lower()
-        if line in candidate_set and line not in valid:
+
+        if line in candidate_set and line not in seen:
             valid.append(line)
+            seen.add(line)
 
     return valid
 
@@ -48,6 +53,8 @@ def get_pipeline(model_choice: LocalModel):
 
     print(f"Loading tokenizer for {model_path}...")
     tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
+
+    print("Loading model...")
 
     if torch.cuda.is_available():
         print("Using CUDA...")
@@ -67,7 +74,6 @@ def get_pipeline(model_choice: LocalModel):
         "text-generation",
         model=model,
         tokenizer=tokenizer,
-        device=0 if torch.cuda.is_available() else -1,
     )
 
     _PIPELINES[model_choice] = pipe
@@ -82,19 +88,18 @@ def response(
 ):
     pipe = get_pipeline(model)
 
-    flat_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}"
+    # Flat prompt for better CPU + small-model stability
+    flat_prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}\n\nOutput:"
 
     output = pipe(
         flat_prompt,
         max_new_tokens=new_toks_len,
         do_sample=False,
-        temperature=0.0,
-        top_p=1.0,
+        temperature=None,
+        top_p=None,
         return_full_text=False,
     )
 
-    raw_text = output[0]["generated_text"]
+    raw_text = output[0].get("generated_text", "")
 
-    cleaned = _clean_output(raw_text, candidates)
-
-    return cleaned
+    return _clean_output(raw_text, candidates)

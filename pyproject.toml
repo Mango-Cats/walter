@@ -9,6 +9,8 @@ dependencies = [
     "numpy<2",
     "pyarrow>=24.0.0",
     "rapidfuzz>=3.14.5",
+    "ipywidgets>=8.1.8",
+    "scikit-learn>=1.8.0",
 ]
 
 [project.optional-dependencies]

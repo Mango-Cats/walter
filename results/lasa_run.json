@@ -1,0 +1,104 @@
+[
+  {
+    "iteration": 1,
+    "Brand Name": "Domped",
+    "candidates": [
+      "Dompedone",
+      "Domper",
+      "Duomed",
+      "Domperiqo",
+      "Domperone",
+      "Dompesaph",
+      "DompeSave",
+      "Dompewell",
+      "Diosmed",
+      "Dobumed"
+    ],
+    "Confusible": [
+      "domper",
+      "domperiqo",
+      "dompesaph",
+      "dompewell",
+      "diosmed"
+    ]
+  },
+  {
+    "iteration": 2,
+    "Brand Name": "Vostrin",
+    "candidates": [
+      "Varostin",
+      "Votrient",
+      "Lotrin",
+      "Clostin",
+      "Kostien",
+      "Nystrin",
+      "Rosutin",
+      "Vasitin",
+      "Vorigen",
+      "Vytorin"
+    ],
+    "Confusible": []
+  },
+  {
+    "iteration": 3,
+    "Brand Name": "Memaray",
+    "candidates": [
+      "Memry",
+      "Hemaway",
+      "Memanta",
+      "Hemarate FA",
+      "Lara",
+      "Amara",
+      "Hemarate",
+      "Hematran",
+      "Meera",
+      "Megapraz"
+    ],
+    "Confusible": [
+      "hemaway",
+      "meera",
+      "lara",
+      "hematran",
+      "megapraz"
+    ]
+  },
+  {
+    "iteration": 4,
+    "Brand Name": "Cobiomax",
+    "candidates": [
+      "Corbimax",
+      "Cobis",
+      "Colimax",
+      "Combimax Cee",
+      "Colb",
+      "Cobax",
+      "Cholimax",
+      "Cipromax",
+      "Clotimax",
+      "Clovimax"
+    ],
+    "Confusible": [
+      "corbimax",
+      "cobis",
+      "colimax",
+      "cipromax"
+    ]
+  },
+  {
+    "iteration": 5,
+    "Brand Name": "Pomadex 3",
+    "candidates": [
+      "Pomadex 2",
+      "Pomadex 4",
+      "Calciubone Vita 3",
+      "CAPD/DPCA 3 Stay Safe Link Solution for Peritoneal Dialysis",
+      "Dr. Alvin Rejumax 3",
+      "Dr. Alvin Rejuvenating Toner 3",
+      "Kidz Kit 3 Forte",
+      "MXP Solution No. 3",
+      "Pomalid 3",
+      "Cladex"
+    ],
+    "Confusible": []
+  }
+]

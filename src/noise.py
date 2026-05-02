@@ -5,9 +5,11 @@ Noise pairs generation.
 from typing import Any
 from itertools import permutations
 import pandas as pd
+from .preprocessing import TARGET_COL
+from .proposer.inference import LABEL_COL
 
-FDA_EXPECTED_COLS: list[str] = ["Brand Name"]
-TRUE_EXPECTED_COLS: list[str] = ["Drug Name 1", "Drug Name 2"]
+FDA_EXPECTED_COLS: list[str] = [TARGET_COL]
+TRUE_EXPECTED_COLS: list[str] = [TARGET_COL, LABEL_COL]
 
 
 def validate_columns(fda_df: pd.DataFrame, true_df: pd.DataFrame) -> None:
@@ -38,8 +40,8 @@ def get_lasa_set(true_df: pd.DataFrame) -> set[Any]:
     LASA dataset. This is an internal function of `make_noise()`.
     """
 
-    lasa_set = set(true_df["Drug Name 1"])
-    return lasa_set.union(set(true_df["Drug Name 2"]))
+    lasa_set = set(true_df[TARGET_COL])
+    return lasa_set.union(set(true_df[LABEL_COL]))
 
 
 def make_noise(fda_df: pd.DataFrame, true_df: pd.DataFrame, n: int):
@@ -55,10 +57,10 @@ def make_noise(fda_df: pd.DataFrame, true_df: pd.DataFrame, n: int):
 
     lasa_set: set[Any] = get_lasa_set(true_df=true_df)
 
-    set_diff: pd.DataFrame = fda_df[~fda_df["Brand Name"].isin(values=lasa_set)]
-    noise_set: set[Any] = set(set_diff["Brand Name"].sample(n=n))
+    set_diff: pd.DataFrame = fda_df[~fda_df[TARGET_COL].isin(values=lasa_set)]
+    noise_set: set[Any] = set(set_diff[TARGET_COL].sample(n=n))
 
     return pd.DataFrame(
         data=permutations(iterable=noise_set, r=2),
-        columns=["Drug Name 1", "Drug Name 2"],
+        columns=[TARGET_COL, LABEL_COL],
     )
