@@ -26,12 +26,11 @@ def get_pipeline(model: HFModel):
     pipe = transformers.pipeline(
         "text-generation",
         model=model_id,
-        model_kwargs={"dtype": torch.float32},
+        model_kwargs={"torch_dtype": torch.float32}, 
     )
-
+    
     _PIPELINES[model] = pipe
     return pipe
-
 
 def response(user_prompt: str, model: HFModel, new_toks_len: int = 64) -> str:
     pipe = get_pipeline(model)
