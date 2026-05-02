@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-hf = [
+llm = [
     "transformers==4.45.2",
     "accelerate==0.33.0",
     "torch>=2.1",
