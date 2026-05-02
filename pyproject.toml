@@ -10,6 +10,9 @@ dependencies = [
     "pathlib>=1.0.1",
 ]
 
+[project.optional-dependencies]
+llm = ["torch", "transformers"]
+
 [dependency-groups]
 dev = [
     "ruff>=0.15.12",
