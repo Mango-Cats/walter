@@ -1,14 +1,14 @@
 import transformers
 import torch
 
-from src.proposer._core import SYSTEM_PROMPT
+from . import SYSTEM_PROMPT
 
-MODEL_ID = "meta-llama/Llama-3.3-70B-Instruct"
-PIPELINE: transformers.TextGenerationPipeline = transformers.pipeline(
+MODEL_ID = "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+PIPELINE = transformers.pipeline(
     "text-generation",
     model=MODEL_ID,
-    model_kwargs={"torch_dtype": torch.bfloat16},
     device_map="auto",
+    dtype=torch.bfloat16
 )
 MAX_NEW_TOKENS = 64
 
@@ -25,11 +25,14 @@ def response(user_prompt: str) -> str:
 
     Reference. https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct
     """
-    message = [
+    messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": user_prompt},
     ]
 
-    output = PIPELINE(message, max_new_tokens=MAX_NEW_TOKENS)
+    output = PIPELINE(
+        messages,
+        max_new_tokens=MAX_NEW_TOKENS,
+    )
 
     return output[0]["generated_text"][-1]["content"]

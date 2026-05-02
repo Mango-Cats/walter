@@ -179,3 +179,12 @@ def get_rand_entries(df: pd.DataFrame, count: int = 10) -> pd.DataFrame:
     """
     n: int = randint(a=0, b=df.shape[0] - count)
     return df.iloc[n : n + count]
+
+
+def table_to_string(df: pd.DataFrame) -> str:
+    """
+    Takes in a `df` and returns a single column (`TARGET_COL`) as a
+    comma separated string. Suppose df = [1,2,3,4,5], this function
+    given that df returns "1, 2, 3, 4, 5".
+    """
+    return ", ".join(df[TARGET_COL].astype(str).tolist())

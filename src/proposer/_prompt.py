@@ -35,25 +35,23 @@ If fewer than N valid candidates exist, return only the valid ones.
 """
 
 
-def construct_prompt(
+def construct_user_prompt(
     drug_name: str,
-    dataset: list[str],
+    dataset: str,
     n: int,
-) -> tuple[str, str]:
+) -> str:
     """
     This constructs a user prompt given a specific `drug_name`, a
     set of candidates from `dataset`, and the number `n` of drugs to
     select from the `dataset`.
     """
     # FIXME(zhean): we should have some few-shot examples here i think
-    dataset_str = "\n".join(dataset)
-
     user_prompt = f"""
 Target Drug:
 {drug_name}
 
 Dataset (candidate drugs):
-{dataset_str}
+{dataset}
 
 Task:
 From the dataset above, return EXACTLY {n} drug names that are most likely to be confused with the target drug based on LOOK-ALIKE or SOUND-ALIKE properties.
@@ -64,4 +62,4 @@ Reminder:
 - No explanations
 """
 
-    return SYSTEM_PROMPT, user_prompt
+    return user_prompt
