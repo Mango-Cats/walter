@@ -1,11 +1,11 @@
 import os
 from huggingface_hub import snapshot_download
 
-MODELS_TO_DOWNLOAD = {
-    # "deepseek-8b": "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
-    "deepseek-1.5b": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
-    "llama-3.1-8b": "meta-llama/Meta-Llama-3.1-8B-Instruct",
-}
+MODELS_TO_DOWNLOAD = [
+    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+    "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    "ibm-granite/granite-4.1-8b",
+]
 
 BASE_DIR = "./models"
 
@@ -15,11 +15,12 @@ def setup_local_models():
         os.makedirs(BASE_DIR)
         print(f"<walter> Created directory: {BASE_DIR}")
 
-    for folder_name, repo_id in MODELS_TO_DOWNLOAD.items():
+    for repo_id in MODELS_TO_DOWNLOAD:
+        folder_name = repo_id.split("/")[-1].lower()
         target_path = os.path.join(BASE_DIR, folder_name)
 
         if os.path.exists(target_path) and any(os.scandir(target_path)):
-            print(f"<walter> Skipping {folder_name} (Already exists in {target_path})")
+            print(f"<walter> Skipping {folder_name} (Already exists)")
             continue
 
         print(f"\n<walter> Preparing to download: {repo_id}")
@@ -35,9 +36,10 @@ def setup_local_models():
             print(f"<walter> Successfully downloaded {folder_name}!")
         except Exception as e:
             print(f"<walter> Error downloading {repo_id}: {e}")
-            print(
-                "<walter> Make sure you are logged in via 'huggingface-cli login' for gated models."
-            )
+            if "meta-llama" in repo_id:
+                print(
+                    "<walter> Note: Llama models require 'huggingface-cli login' and approved access."
+                )
 
 
 if __name__ == "__main__":

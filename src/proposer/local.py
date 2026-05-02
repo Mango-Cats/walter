@@ -13,13 +13,14 @@ torch.backends.mkldnn.enabled = True
 
 
 class LocalModel(Enum):
-    DEEPSEEK_8B = "deepseek-8b"
-    DEEPSEEK_1_5B = "deepseek-1.5b"
-    LLAMA_8B = "llama-3.1-8b"
+    DEEPSEEK_1_5B = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+    LLAMA_8B = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+    GRANITE_8B = "ibm-granite/granite-4.1-8b"
 
     @property
     def path(self):
-        return os.path.join(".", "models", self.value)
+        folder_name = self.value.split("/")[-1].lower()
+        return os.path.join(".", "models", folder_name)
 
 
 _PIPELINES = {}
