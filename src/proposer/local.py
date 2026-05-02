@@ -10,8 +10,13 @@ torch.set_num_interop_threads(max(1, n_threads // 2))
 
 
 class LocalModel(Enum):
+    """
+    These models can be downloaded locally using scripts.model_setup.
+    """
     QWEN3_4B = "Qwen/Qwen3-4B-Instruct-2507"
-    QWEN3_8B = "Qwen/Qwen3-8B-Instruct"
+    # QWEN3_8B = "Qwen/Qwen3-8B"
+    SMOLLM2 = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+    QWEN3_1_7B = "Qwen/Qwen3-1.7B"
 
     @property
     def path(self):
