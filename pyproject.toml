@@ -1,13 +1,19 @@
 [project]
 name = "walter"
 version = "0.1.0"
-description = "LLM-assisted dataset construction for LASA drugs. 'Walter are these two LASA drugs? Make no mistakes.'"
-readme = "README.md"
 requires-python = ">=3.11"
+
 dependencies = [
     "ipykernel>=7.2.0",
-    "pandas>=3.0.2",
-    "pathlib>=1.0.1",
+    "pandas>=2.2,<3",
+    "numpy<2",
+]
+
+[project.optional-dependencies]
+hf = [
+    "transformers==4.45.2",
+    "accelerate==0.33.0",
+    "torch>=2.1",
 ]
 
 [tool.setuptools]
@@ -15,9 +21,6 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[project.optional-dependencies]
-hf = ["torch", "transformers", "accelerate"]
 
 [dependency-groups]
 dev = [

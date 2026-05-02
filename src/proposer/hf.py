@@ -26,7 +26,6 @@ def get_pipeline(model: HFModel):
     pipe = transformers.pipeline(
         "text-generation",
         model=model_id,
-        device_map="auto",
         model_kwargs={"dtype": torch.float32},
     )
 
@@ -45,8 +44,7 @@ def response(user_prompt: str, model: HFModel, new_toks_len: int = 64) -> str:
     output = pipe(
         messages,
         max_new_tokens=new_toks_len,
-        do_sample=False,
-        temperature=0.0,
+        max_length=None,
     )
 
     return output[0]["generated_text"][-1]["content"]
