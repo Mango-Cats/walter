@@ -9,7 +9,7 @@ from random import randint
 
 FILE_DIR = "data/"
 PRIMARY_FNAME = "drug_products.csv"
-CLEANED_FNAME = str(FILE_DIR + "cleaned_" + PRIMARY_FNAME.replace(".csv", ".parquet"))
+CLEANED_FNAME = str(FILE_DIR + "cleaned_" + PRIMARY_FNAME.removesuffix(".csv"))
 TARGET_COL = "Brand Name"
 
 
@@ -164,7 +164,8 @@ def master_maker(sort: bool = False, save: bool = False) -> pd.DataFrame:
     clean = clean.reset_index(drop=True)
 
     if save:
-        clean.to_parquet(path=CLEANED_FNAME, index=False)
+        clean.to_parquet(path=CLEANED_FNAME+".parquet", index=False)
+        clean.to_csv(path_or_buf=CLEANED_FNAME+".csv", index=False)
         print(f"<walter> Saved in {CLEANED_FNAME}")
 
     return clean
