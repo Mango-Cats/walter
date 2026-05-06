@@ -1,31 +1,19 @@
 """
 Noise pairs generation.
 """
-
 from typing import Any
-from itertools import permutations
+from itertools import combinations
 import pandas as pd
 from .preprocessing import TARGET_COL
 from .proposer.inference import LABEL_COL
 
-FDA_EXPECTED_COLS: list[str] = [TARGET_COL]
 TRUE_EXPECTED_COLS: list[str] = [TARGET_COL, LABEL_COL]
 
 
-def validate_columns(fda_df: pd.DataFrame, true_df: pd.DataFrame) -> None:
+def validate_columns(true_df: pd.DataFrame) -> None:
     """
-    This validates the columns of the Philippine drug dataset and the
-    true LASA dataset. This returns nothing but may raise an Exception.
-    This is an internal function of `make_noise()`.
+    Validates the columns of the true LASA dataset.
     """
-
-    fda_df_cols = list(fda_df.columns)
-    if fda_df_cols != FDA_EXPECTED_COLS:
-        raise ValueError(
-            f"Invalid `fda_df` columns. "
-            f"Found: {fda_df_cols}. Expected: {FDA_EXPECTED_COLS}."
-        )
-
     true_df_cols = list(true_df.columns)
     if true_df_cols != TRUE_EXPECTED_COLS:
         raise ValueError(
@@ -34,33 +22,48 @@ def validate_columns(fda_df: pd.DataFrame, true_df: pd.DataFrame) -> None:
         )
 
 
-def get_lasa_set(true_df: pd.DataFrame) -> set[Any]:
+def get_positive_set(true_df: pd.DataFrame) -> set[Any]:
     """
-    This returns the set of all brand names included in the true
-    LASA dataset. This is an internal function of `make_noise()`.
+    Returns all unique drug names appearing in the positive pairs.
     """
-
-    lasa_set = set(true_df[TARGET_COL])
-    return lasa_set.union(set(true_df[LABEL_COL]))
+    return set(true_df[TARGET_COL]) | set(true_df[LABEL_COL])
 
 
-def make_noise(fda_df: pd.DataFrame, true_df: pd.DataFrame, n: int):
+def get_positive_pairs(true_df: pd.DataFrame) -> set[tuple]:
     """
-    This orchestrates the creation of noise drug pairs. This returns
-    a 2-permutations from a subset of brand name drugs in the
-    Philippine drug dataset but are not in the true LASA dataset.
-
-    This function should only be called after cleaning the datasets.
+    Returns the set of known positive LASA pairs as frozensets
+    so that (A, B) and (B, A) are treated as the same pair.
     """
+    return {
+        frozenset([row[TARGET_COL], row[LABEL_COL]])
+        for _, row in true_df.iterrows()
+    }
 
-    validate_columns(fda_df=fda_df, true_df=true_df)
 
-    lasa_set: set[Any] = get_lasa_set(true_df=true_df)
+def make_noise(true_df: pd.DataFrame):
+    """
+    Generates unlabeled pairs from the `true_df` itself.
 
-    set_diff: pd.DataFrame = fda_df[~fda_df[TARGET_COL].isin(values=lasa_set)]
-    noise_set: set[Any] = set(set_diff[TARGET_COL].sample(n=n))
+    All combinatorial pairs of `true_df` are generated, then known
+    positive LASA pairs are removed. The remaining pairs serve as
+    unlabeled examples — they may or may not be true LASA pairs,
+    but none are confirmed positives. This mirrors Kondrak & Dorr's
+    dataset construction exactly.
+    """
+    validate_columns(true_df=true_df)
 
-    return pd.DataFrame(
-        data=permutations(iterable=noise_set, r=2),
-        columns=[TARGET_COL, LABEL_COL],
-    )
+    ismp_vocab: set[Any] = get_positive_set(true_df=true_df)
+    positive_pairs: set[frozenset] = get_positive_pairs(true_df=true_df)
+
+    unlabeled_rows = []
+    for a, b in combinations(sorted(ismp_vocab), 2):
+        if frozenset([a, b]) not in positive_pairs:
+            unlabeled_rows.append({TARGET_COL: a, LABEL_COL: b})
+
+    noise_df = pd.DataFrame(unlabeled_rows, columns=[TARGET_COL, LABEL_COL])
+
+    print(f"<walter> ISMP vocabulary size: {len(ismp_vocab)}")
+    print(f"<walter> Known positive pairs: {len(positive_pairs)}")
+    print(f"<walter> Unlabeled pairs generated: {len(noise_df):,}")
+
+    return noise_df
