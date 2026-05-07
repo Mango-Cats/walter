@@ -164,8 +164,8 @@ def master_maker(sort: bool = False, save: bool = False) -> pd.DataFrame:
     clean = clean.reset_index(drop=True)
 
     if save:
-        clean.to_parquet(path=CLEANED_FNAME+".parquet", index=False)
-        clean.to_csv(path_or_buf=CLEANED_FNAME+".csv", index=False)
+        clean.to_parquet(path=CLEANED_FNAME + ".parquet", index=False)
+        clean.to_csv(path_or_buf=CLEANED_FNAME + ".csv", index=False)
         print(f"<walter> Saved in {CLEANED_FNAME}")
 
     return clean
