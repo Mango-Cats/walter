@@ -18,6 +18,15 @@ Then, running
 uv sync --extra llm
 ```
 
-will add all dependencies for the Decoder-only transformers (generative
-LLMs). These dependencies are one the heavier-side and some of these
-are already included in Google Colab which is why it's separated.
+will add all dependencies for the Decoder-only transformers (GPTs;
+see how it's used in [src.proposer](/src/proposer/)).
+
+### eSpeak-NG
+
+IPA transcription requires eSpeak-NG installed at the system level:
+
+- **Windows**: download the `.msi` from <https://github.com/espeak-ng/espeak-ng/releases>
+- **Linux**: `apt install espeak-ng`
+- **macOS**: `brew install espeak-ng`
+
+On Colab this is handled automatically by the setup cell in `walter.ipynb`.

@@ -1,82 +1,100 @@
-from .local import LocalModel, response
-from .prompt import construct_user_prompt
-from rapidfuzz import process, fuzz
-from src.preprocessing import TARGET_COL
-import pandas as pd
+"""
+LLM-based LASA pair proposer.
+Used when FROM_FILE = False in config.py.
+"""
+
 import json
 from pathlib import Path
 
-LABEL_COL = "Confusible"
+import pandas as pd
+from rapidfuzz import fuzz, process
+
+from config import (
+    REGISTRY_COL,
+    COL_X1,
+    COL_X2,
+    LLM_ITERATIONS,
+    LLM_N_PROPOSALS,
+    LLM_OUTPUT_JSON,
+    RESULTS_DIR,
+)
+from src.proposer.llm import LocalModel, response
+from src.proposer.prompt import construct_user_prompt
 
 
 def run_inference(
-    output_path: str,
-    D_clean: pd.DataFrame,
+    registry_df: pd.DataFrame,
     model_choice: LocalModel,
-    iterations: int = 1,
-    n_proposals: int = 5,
+    iterations: int = LLM_ITERATIONS,
+    n_proposals: int = LLM_N_PROPOSALS,
+    output_path: Path = LLM_OUTPUT_JSON,
 ) -> Path:
     """
-    Runs LASA inference and writes results to a JSON file.
-    Returns the path to the output file.
+    Randomly sample drugs from registry_df, find similar candidates via
+    fuzzy matching, then ask the LLM which are true confusibles.
+
+    Writes results to a JSON file and returns the path.
+
+    Args:
+        registry_df:   Cleaned drug registry [REGISTRY_COL].
+        model_choice:  Which LocalModel to use.
+        iterations:    Number of drugs to sample.
+        n_proposals:   Number of confusibles to request per drug.
+        output_path:   Where to write the JSON output.
+
+    Returns:
+        Path to the written JSON file.
     """
-    all_drugs = D_clean[TARGET_COL].to_list()
+    all_drugs = registry_df[REGISTRY_COL].tolist()
     results = []
 
     for i in range(iterations):
-        sample_drug = D_clean.sample(n=1)[TARGET_COL].iloc[0]
+        sample_drug = registry_df.sample(n=1)[REGISTRY_COL].iloc[0]
         top_matches = process.extract(
             sample_drug, all_drugs, scorer=fuzz.WRatio, limit=11
         )
-        candidate_list = [match[0] for match in top_matches if match[0] != sample_drug][
-            :10
-        ]
+        candidates = [m[0] for m in top_matches if m[0] != sample_drug][:10]
 
         user_prompt = construct_user_prompt(
-            sample_drug, "\n".join(candidate_list), n_proposals
+            sample_drug, "\n".join(candidates), n_proposals
         )
-        raw_output = response(
+        proposed = response(
             user_prompt,
             model=model_choice,
-            candidates=candidate_list,
+            candidates=candidates,
             new_toks_len=64,
         )
 
         results.append(
             {
-                "Run": i + 1,
-                TARGET_COL: sample_drug,
-                "Candidates": candidate_list,
-                LABEL_COL: raw_output,
+                "run": i + 1,
+                COL_X1: sample_drug,
+                "candidates": candidates,
+                COL_X2: proposed,
             }
         )
 
-        proposed_str = ", ".join(raw_output) if raw_output else "(No drugs proposed)"
-        print(f"<walter> Iteration {i + 1}:")
-        print(f"\tSelected Drug Name: {sample_drug}")
-        print(f"\tProposed Confusibles: {proposed_str}\n")
+        proposed_str = ", ".join(proposed) if proposed else "(none proposed)"
+        print(f"[inference] Iteration {i + 1}: {sample_drug!r} → {proposed_str}")
 
-    out = Path(output_path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(results, indent=2), encoding="utf-8")
-    print(f"<walter> Results saved to {out.resolve()}")
-    return out
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(results, indent=2), encoding="utf-8")
+    print(f"[inference] Results saved → {output_path.resolve()}")
+    return output_path
 
 
-def load_inference(json_path: str | Path) -> pd.DataFrame:
+def load_inference(json_path: Path | str) -> pd.DataFrame:
     """
-    Converts the inference JSON output of `run_inference()` into a
-    DataFrame of LASA pairs. Drugs with no proposals are skipped.
+    Parse the JSON written by run_inference() into a pairs DataFrame
+    with columns [COL_X1, COL_X2]. Entries with no proposals are skipped.
     """
     data = json.loads(Path(json_path).read_text(encoding="utf-8"))
-
     rows = []
     for entry in data:
-        drug = entry[TARGET_COL]
-        proposed = entry[LABEL_COL]
+        drug = entry[COL_X1]
+        proposed = entry.get(COL_X2, [])
         if not proposed:
             continue
         for confusible in proposed:
-            rows.append({TARGET_COL: drug, LABEL_COL: confusible})
-
-    return pd.DataFrame(rows, columns=[TARGET_COL, LABEL_COL])
+            rows.append({COL_X1: drug, COL_X2: confusible})
+    return pd.DataFrame(rows, columns=[COL_X1, COL_X2])

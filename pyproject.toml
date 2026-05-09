@@ -12,6 +12,7 @@ dependencies = [
     "ipywidgets>=8.1.8",
     "scikit-learn>=1.8.0",
     "jellyfish>=1.2.1",
+    "phonemizer>=3.3.0",
 ]
 
 [project.optional-dependencies]
