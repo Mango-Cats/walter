@@ -50,6 +50,9 @@ def run_inference(
 
     for i in range(iterations):
         sample_drug = registry_df.sample(n=1)[REGISTRY_COL].iloc[0]
+        
+        # remove this to allow the entire dataset to be fed to the LLM
+        # @hootawsneaks
         top_matches = process.extract(
             sample_drug, all_drugs, scorer=fuzz.WRatio, limit=11
         )
