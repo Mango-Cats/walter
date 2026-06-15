@@ -7,6 +7,11 @@ Usage:
 """
 
 import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from huggingface_hub import snapshot_download
 
 from config import MODELS_DIR
@@ -22,7 +27,7 @@ RESET = "\033[0m"
 def log(msg: str) -> None:
     print(f"{BLUE}[model_setup]{RESET} {msg}")
 
-s
+
 def download_all() -> None:
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     token = os.environ.get("HF_TOKEN")
