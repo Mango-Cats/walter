@@ -388,12 +388,6 @@ wheels = [
 ]
 
 [[package]]
-name = "eng-to-ipa"
-version = "0.0.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/62/3d/8656290e2d537ef66e984a04e903d1a0028ea01524e9dd89e45bb165bc7b/eng_to_ipa-0.0.2.tar.gz", hash = "sha256:0e4fac8370b0ffeaf696193e971b3ff9bd3762e4d153c6d0d280147887e008b1", size = 2808070, upload-time = "2020-04-17T05:02:07.852Z" }
-
-[[package]]
 name = "executing"
 version = "2.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2188,7 +2182,6 @@ name = "walter"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "eng-to-ipa" },
     { name = "ipykernel" },
     { name = "ipywidgets" },
     { name = "jellyfish" },
@@ -2215,7 +2208,6 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "accelerate", marker = "extra == 'llm'", specifier = "==0.33.0" },
-    { name = "eng-to-ipa", specifier = ">=0.0.2" },
     { name = "ipykernel", specifier = ">=7.2.0" },
     { name = "ipywidgets", specifier = ">=8.1.8" },
     { name = "jellyfish", specifier = ">=1.2.1" },
