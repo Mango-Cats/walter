@@ -2,7 +2,7 @@
 Loads and cleans a drug name registry for the selected DataSource.
 
 Input:  _data/drug_set_ph.csv  or  _data/drug_set_us.csv
-        One-column CSV of raw drug names 
+        One-column CSV of raw drug names
         (header optional; first column used).
 
 Output: Single-column DataFrame with column REGISTRY_COL ("drug_name"),

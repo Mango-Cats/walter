@@ -8,6 +8,7 @@ Requirements:
         Linux   : apt install espeak-ng
         macOS   : brew install espeak-ng
 """
+
 import os
 import time
 import pandas as pd
@@ -29,9 +30,9 @@ def _normalize_ipa(ipa: str) -> str:
       - Syllabic diacritics (e.g. n̩ -> n)
     """
     replacements = {
-        "\u0261": "g",   # ɡ (IPA velar stop) -> g (ASCII lookalike already in config)
-        "\u1D7B": "ɪ",   # ᵻ (cover symbol)   -> ɪ
-        "\u0329": "",    # combining syllabic diacritic -> drop it (n̩ -> n)
+        "\u0261": "g",  # ɡ (IPA velar stop) -> g (ASCII lookalike already in config)
+        "\u1d7b": "ɪ",  # ᵻ (cover symbol)   -> ɪ
+        "\u0329": "",  # combining syllabic diacritic -> drop it (n̩ -> n)
     }
     for src, tgt in replacements.items():
         ipa = ipa.replace(src, tgt)
@@ -88,9 +89,11 @@ def transcribe_dataframe(
         cache.update(zip(batch, results))
         if verbose:
             done = min(i + batch_size, total)
-            print(f"  {done:>6,} / {total:,}  ({done/total*100:.1f}%)  [{time.time()-t0:.1f}s]")
+            print(
+                f"  {done:>6,} / {total:,}  ({done / total * 100:.1f}%)  [{time.time() - t0:.1f}s]"
+            )
     if verbose:
-        print(f"[phonemes] Done in {time.time()-t0:.1f}s")
+        print(f"[phonemes] Done in {time.time() - t0:.1f}s")
     df[COL_T1] = [cache.get(n, "") for n in names_x1]
     df[COL_T2] = [cache.get(n, "") for n in names_x2]
     empty_1 = (df[COL_T1] == "").sum()

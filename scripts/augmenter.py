@@ -72,7 +72,9 @@ def _sample_new_pairs(
 ) -> list[dict]:
     n = len(names)
     if n < 2:
-        warnings.warn("[augmenter] Registry has fewer than 2 names — cannot generate pairs.")
+        warnings.warn(
+            "[augmenter] Registry has fewer than 2 names — cannot generate pairs."
+        )
         return []
 
     max_possible = n * (n - 1) // 2
@@ -166,12 +168,25 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Augment a dataset CSV with random unlabeled drug-name pairs."
     )
-    parser.add_argument("--input", required=True, type=Path, help="Existing dataset CSV")
-    parser.add_argument("--registry", required=True, type=Path, help="One-column drug name registry CSV")
-    parser.add_argument("--in-place", required=True, choices=["y", "n"], dest="in_place",
-                        help="Overwrite input file (y) or write to <input>-aug.csv (n)")
-    parser.add_argument("--csize", required=True, type=int,
-                        help="Target total number of rows after augmenting")
+    parser.add_argument(
+        "--input", required=True, type=Path, help="Existing dataset CSV"
+    )
+    parser.add_argument(
+        "--registry", required=True, type=Path, help="One-column drug name registry CSV"
+    )
+    parser.add_argument(
+        "--in-place",
+        required=True,
+        choices=["y", "n"],
+        dest="in_place",
+        help="Overwrite input file (y) or write to <input>-aug.csv (n)",
+    )
+    parser.add_argument(
+        "--csize",
+        required=True,
+        type=int,
+        help="Target total number of rows after augmenting",
+    )
     args = parser.parse_args()
 
     if not args.input.exists():

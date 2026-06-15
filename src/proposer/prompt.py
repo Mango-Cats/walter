@@ -122,6 +122,7 @@ Rules:
 - Prefer high-risk confusion pairs
 """
 
+
 def construct_user_prompt(drug_name: str, candidates: str, n: int = 1) -> str:
     """
     Build the user-turn prompt for the LLM.
