@@ -17,8 +17,10 @@ from config import (
     LLM_N_PROPOSALS,
     LLM_OUTPUT_JSON,
     RESULTS_DIR,
+    USE_API_MODEL,
 )
 from src.proposer.llm import LocalModel, response
+from src.proposer.api_llm import api_response
 from src.proposer.prompt import construct_user_prompt
 
 
@@ -54,28 +56,35 @@ def run_inference(
         # remove this to allow the entire dataset to be fed to the LLM
         # @hootawsneaks
         top_matches = process.extract(
-            sample_drug, all_drugs, scorer=fuzz.WRatio, limit=11
+            sample_drug, all_drugs, scorer=fuzz.WRatio, limit=21
         )
-        candidates = [m[0] for m in top_matches if m[0] != sample_drug][:10]
+        candidates = [m[0] for m in top_matches if m[0] != sample_drug][:20]
 
         user_prompt = construct_user_prompt(
             sample_drug, "\n".join(candidates), n_proposals
         )
-        proposed = response(
-            user_prompt,
-            model=model_choice,
-            candidates=candidates,
-            new_toks_len=64,
-        )
+        reasoning = ""
+        if USE_API_MODEL:
+            proposed, reasoning = api_response(
+                user_prompt, candidates=candidates, return_reasoning=True
+            )
+        else:
+            proposed = response(
+                user_prompt,
+                model=model_choice,
+                candidates=candidates,
+                new_toks_len=64,
+            )
 
-        results.append(
-            {
-                "run": i + 1,
-                COL_X1: sample_drug,
-                "candidates": candidates,
-                COL_X2: proposed,
-            }
-        )
+        entry = {
+            "run": i + 1,
+            COL_X1: sample_drug,
+            "candidates": candidates,
+            COL_X2: proposed,
+        }
+        if reasoning:
+            entry["reasoning"] = reasoning
+        results.append(entry)
 
         proposed_str = ", ".join(proposed) if proposed else "(none proposed)"
         print(f"[inference] Iteration {i + 1}: {sample_drug!r} → {proposed_str}")

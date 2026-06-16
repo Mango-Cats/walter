@@ -13,6 +13,7 @@ dependencies = [
     "scikit-learn>=1.8.0",
     "jellyfish>=1.2.1",
     "phonemizer>=3.3.0",
+    "openai>=2.38.0",
 ]
 
 [project.optional-dependencies]
@@ -20,6 +21,9 @@ llm = [
     "transformers==4.45.2",
     "accelerate==0.33.0",
     "torch>=2.1",
+]
+api = [
+    "openai>=1.0",
 ]
 
 [tool.setuptools]
