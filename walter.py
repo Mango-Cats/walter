@@ -44,6 +44,34 @@ from src.dataset import assemble_and_save
 import src.noise as noise
 import src.preprocessing as pre
 from pathlib import Path
+import time
+
+from rich.console import Console
+
+_console = Console()
+
+
+class Spinner:
+    """Per-stage loading indicator, backed by rich's Console.status()."""
+
+    def __init__(self, label: str):
+        self.label = label
+        self._status = _console.status(f"[bold cyan]{label}...", spinner="dots")
+        self._start = 0.0
+
+    def __enter__(self) -> "Spinner":
+        self._start = time.monotonic()
+        self._status.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        self._status.__exit__(exc_type, exc, tb)
+        elapsed = time.monotonic() - self._start
+        if exc_type is None:
+            _console.print(f"[bold green]✓[/] {self.label} done in {elapsed:.1f}s")
+        else:
+            _console.print(f"[bold red]✗[/] {self.label} FAILED in {elapsed:.1f}s")
+
 
 def _load_positive_pairs(R_clean: pd.DataFrame, source: DataSource) -> pd.DataFrame:
     if FROM_FILE:
@@ -77,27 +105,31 @@ def main() -> None:
     print(f"Output: D → {D_OUT_CSV}")
 
     # --- Preprocessing ---
-    R_clean: DataFrame = pre.run(source=DATA_SOURCE)
+    with Spinner("Preprocessing registry"):
+        R_clean: DataFrame = pre.run(source=DATA_SOURCE)
     print(f"\nCleaned registry: {len(R_clean):,} drug names")
     print(R_clean.head(10))
 
     # --- Confirmed LASA pairs (P) ---
-    P_load: pd.DataFrame = _load_positive_pairs(R_clean, source=DATA_SOURCE)
+    with Spinner("Loading confirmed pairs (P)"):
+        P_load: pd.DataFrame = _load_positive_pairs(R_clean, source=DATA_SOURCE)
     print(P_load.head())
     print("Columns:", list(P_load.columns))
 
     # --- Unlabeled pairs (U) ---
-    U = noise.make_noise(
-        pairs_df=P_load,
-        registry_df=R_clean,
-        ratio=CLASS_RATIO,
-        tier_2_sample_size=TIER_2_SAMPLE_SIZE,
-        seed=SEED,
-    )
+    with Spinner("Sampling unlabeled pairs (U)"):
+        U = noise.make_noise(
+            pairs_df=P_load,
+            registry_df=R_clean,
+            ratio=CLASS_RATIO,
+            tier_2_sample_size=TIER_2_SAMPLE_SIZE,
+            seed=SEED,
+        )
     print(U.head())
 
     # --- Assemble and save ---
-    D = assemble_and_save(P_load, U, add_phonemes=True)
+    with Spinner("Assembling and saving D"):
+        D = assemble_and_save(P_load, U, add_phonemes=True)
     print(D.head(10))
     print(f"\nD shape: {D.shape}")
     print(D["label"].value_counts().to_string())
