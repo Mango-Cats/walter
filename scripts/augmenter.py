@@ -1,16 +1,28 @@
 """
 Augments an existing dataset CSV with additional random unlabeled pairs.
 
+Every new pair attaches one never-before-seen registry name to a name
+that already appears in the input dataset. This can only grow an
+existing connected component, never merge two of them together, so
+the name graph stays split-safe (see src/clustering.py and src/noise.py
+for why that matters). It also means a new pair is never both-unseen,
+which would form a useless all-negative component.
+
 Input schema (--input CSV):
     x_1, t_1, x_2, t_2, label
 
 Registry (--registry CSV):
     One-column CSV of drug names (header ignored, first column used).
 
+Writes two outputs: the augmented pairs (same schema as --input) and a
+ranking counterpart with an added `group` column (connected-component
+id of each row's x_1/x_2 edge — see src/clustering.py).
+
 Usage:
     python scripts/augmenter.py --input _results/D.csv --registry _data/R_ph.csv \
         --in-place n --csize 5000
 """
+
 
 import argparse
 import random
@@ -23,6 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pandas as pd
 
 from config import (
+    COL_GROUP,
     COL_LABEL,
     COL_T1,
     COL_T2,
@@ -33,7 +46,8 @@ from config import (
     SHUFFLE_SEED,
     UNLABELED_LABEL,
 )
-from src.dataset import _canonical_key, clean_and_deduplicate
+from src.clustering import assign_group_ids
+from src.dataset import clean_and_deduplicate
 from src.phonemes import transcribe_dataframe
 from src.preprocessing import clean_registry
 
@@ -58,55 +72,37 @@ def _load_registry(path: Path) -> pd.DataFrame:
     return df
 
 
-def _build_existing_keys(df: pd.DataFrame) -> set[tuple[str, str]]:
-    keys = set(df.apply(lambda r: _canonical_key(r[COL_X1], r[COL_X2]), axis=1))
-    print(f"[augmenter] Existing canonical pairs: {len(keys):,}")
-    return keys
-
-
 def _sample_new_pairs(
-    names: list[str],
-    existing_keys: set[tuple[str, str]],
+    anchors: list[str],
+    fresh_names: list[str],
     csize: int,
     seed: int,
 ) -> list[dict]:
-    n = len(names)
-    if n < 2:
+    """
+    Each new pair = (random existing anchor, random never-seen registry name).
+    Every fresh name is consumed at most once, so it can attach to exactly
+    one existing cluster and never bridge two of them.
+    """
+    if not anchors or not fresh_names:
         warnings.warn(
-            "[augmenter] Registry has fewer than 2 names — cannot generate pairs."
+            "[augmenter] No existing names or no fresh registry names available "
+            "— cannot generate cluster-safe pairs."
         )
         return []
 
-    max_possible = n * (n - 1) // 2
-    estimated_available = max(0, max_possible - len(existing_keys))
-    target = min(csize, estimated_available)
+    rng = random.Random(seed)
+    pool = fresh_names[:]
+    rng.shuffle(pool)
 
+    target = min(csize, len(pool))
     if target < csize:
         warnings.warn(
-            f"[augmenter] Requested {csize:,} pairs but only ~{estimated_available:,} "
-            "estimated valid pairs exist. Will return all available."
+            f"[augmenter] Requested {csize:,} pairs but only {len(pool):,} fresh "
+            "registry names are available to attach without bridging clusters. "
+            "Will return all available."
         )
 
-    max_attempts = max(target * 20, 100_000)
-    rng = random.Random(seed)
-    new_pairs: list[dict] = []
-    seen_keys: set[tuple[str, str]] = set()
-    attempts = 0
-
-    while len(new_pairs) < target and attempts < max_attempts:
-        a, b = rng.sample(names, 2)
-        key = _canonical_key(a, b)
-        attempts += 1
-        if key in existing_keys or key in seen_keys:
-            continue
-        seen_keys.add(key)
-        new_pairs.append({COL_X1: a, COL_X2: b})
-
-    if len(new_pairs) < csize and len(new_pairs) < estimated_available:
-        warnings.warn(
-            f"[augmenter] Generated {len(new_pairs):,} pairs (requested {csize:,}) "
-            f"after {max_attempts:,} attempts. Consider a larger registry."
-        )
+    new_pairs = [{COL_X1: rng.choice(anchors), COL_X2: b} for b in pool[:target]]
 
     print(f"[augmenter] New pairs sampled: {len(new_pairs):,}")
     return new_pairs
@@ -129,10 +125,16 @@ def augment(
         return
 
     registry_df = _load_registry(registry_path)
-    existing_keys = _build_existing_keys(input_df)
 
-    names = registry_df[REGISTRY_COL].tolist()
-    raw_pairs = _sample_new_pairs(names, existing_keys, csize, SEED)
+    existing_names = set(input_df[COL_X1]) | set(input_df[COL_X2])
+    anchors = sorted(existing_names)
+    fresh_names = [n for n in registry_df[REGISTRY_COL].tolist() if n not in existing_names]
+    print(
+        f"[augmenter] Existing names: {len(anchors):,}  "
+        f"Fresh (unused) registry names: {len(fresh_names):,}"
+    )
+
+    raw_pairs = _sample_new_pairs(anchors, fresh_names, csize, SEED)
 
     if not raw_pairs:
         print("[augmenter] No new pairs generated — output unchanged.")
@@ -154,14 +156,23 @@ def augment(
         out_path = input_path
     else:
         out_path = input_path.parent / f"{input_path.stem}-aug.csv"
+    rank_path = out_path.parent / f"{out_path.stem}-rank.csv"
 
     combined.to_csv(out_path, index=False)
 
+    combined_rank = combined.copy()
+    combined_rank[COL_GROUP] = assign_group_ids(combined_rank, COL_X1, COL_X2)
+    combined_rank.to_csv(rank_path, index=False)
+
     print(f"\n[augmenter] Done.")
-    print(f"  Existing pairs : {len(input_df):,}")
-    print(f"  New pairs added: {len(raw_pairs):,}")
-    print(f"  Total rows     : {len(combined):,}")
-    print(f"  Output         : {out_path}")
+    print(f"  Existing pairs   : {len(input_df):,}")
+    print(f"  New pairs added  : {len(raw_pairs):,}")
+    print(f"  Total rows       : {len(combined):,}")
+    print(f"  Output (pairs)   : {out_path}")
+    print(
+        f"  Output (ranking) : {rank_path}  "
+        f"({combined_rank[COL_GROUP].nunique():,} groups)"
+    )
 
 
 def main() -> None:

@@ -29,4 +29,12 @@ IPA transcription requires eSpeak-NG installed at the system level:
 - **Linux**: `apt install espeak-ng`
 - **macOS**: `brew install espeak-ng`
 
-On Colab this is handled automatically by the setup cell in `walter.ipynb`.
+## Running
+
+```bash
+python walter.py
+```
+
+Builds the full dataset per `config.py` and saves `_results/D.csv`
+(classification) and `_results/D_rank.csv` (same rows + a group id, for
+a downstream grouped/ranking split).

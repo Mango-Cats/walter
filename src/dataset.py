@@ -1,17 +1,13 @@
 """
-Assembles P and U into the final dataset D, then saves all three as CSVs.
+Assembles P and U into the final dataset D, then saves two CSVs:
 
-Output schema for all three files:
-    x_1    : drug name A
-    x_2    : drug name B
-    t_1    : IPA transcription of x_1
-    t_2    : IPA transcription of x_2
-    label  : 1 = confirmed LASA (P rows), 0 = unlabeled (U rows)
+D.csv (classification) — x_1, t_1, x_2, t_2, label. Unchanged schema.
+D_rank.csv (ranking) — identical rows plus a `group` column: the
+connected-component id of that row's x_1/x_2 edge. Rows in the same
+group are the ones that must stay on the same side of any train/test
+split (see src/clustering.py).
 
-P.csv and U.csv also carry this schema so they are self-contained and
-can be inspected or reloaded independently.
-
-D.csv is the shuffled union of P and U, deduplicated.
+D is the shuffled union of P and U, deduplicated.
 """
 
 import re
@@ -25,12 +21,15 @@ from config import (
     COL_T1,
     COL_T2,
     COL_LABEL,
+    COL_GROUP,
     POSITIVE_LABEL,
     UNLABELED_LABEL,
     RESULTS_DIR,
     D_OUT_CSV,
+    D_RANK_OUT_CSV,
     SHUFFLE_SEED,
 )
+from src.clustering import assign_group_ids
 from src.phonemes import transcribe_dataframe
 
 
@@ -104,7 +103,7 @@ def assemble_and_save(
     verbose: bool = True,
 ) -> pd.DataFrame:
     """
-    Clean, deduplicate, transcribe, and save P, U, and D.
+    Clean, deduplicate, transcribe, and save D.
 
     Steps:
       1. Normalize column names and labels for both P and U
@@ -113,9 +112,10 @@ def assemble_and_save(
       4. Add IPA transcriptions (t_1, t_2)
       5. Reorder columns to [x_1, t_1, x_2, t_2, label]
       6. Shuffle D
-      7. Save P.csv, U.csv, D.csv to RESULTS_DIR
+      7. Save D.csv (classification) and D_rank.csv (D + group id, for
+         a downstream grouped/ranking split) to RESULTS_DIR
 
-    Returns the assembled D DataFrame.
+    Returns the assembled D DataFrame (classification schema).
     """
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -161,8 +161,14 @@ def assemble_and_save(
 
     D.to_csv(D_OUT_CSV, index=False)
 
+    D_rank = D.copy()
+    D_rank[COL_GROUP] = assign_group_ids(D_rank, COL_X1, COL_X2)
+    D_rank.to_csv(D_RANK_OUT_CSV, index=False)
+
     if verbose:
+        n_groups = D_rank[COL_GROUP].nunique()
         print("\n[dataset] Saved:")
-        print(f"  D → {D_OUT_CSV}  ({len(D):,} rows)")
+        print(f"  D      → {D_OUT_CSV}  ({len(D):,} rows)")
+        print(f"  D_rank → {D_RANK_OUT_CSV}  ({len(D_rank):,} rows, {n_groups:,} groups)")
 
     return D
