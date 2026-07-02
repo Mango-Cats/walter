@@ -44,7 +44,7 @@ from config import (
 )
 
 from src.dataset import assemble_and_save
-from src.phonetic import run_phoc
+from src.phoc_runner import run_phoc
 import src.noise as noise
 import src.preprocessing as pre
 from pathlib import Path
