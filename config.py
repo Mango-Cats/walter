@@ -66,6 +66,12 @@ PHOC_CONFIG_DIR: Path = Path("bin/pho_conf")
 D_PHO_OUT_CSV: Path = RESULTS_DIR / "D_pho.csv"
 D_RANK_PHO_OUT_CSV: Path = RESULTS_DIR / "D_rank_pho.csv"
 
+# Feature-engineering step — src/feature_engineering.py appends META_FEATURES
+# (orthographic / edit-distance features) onto the phoc outputs, so _engi is
+# "engineered and pho'd": every phonetic column plus the META_FEATURES.
+D_ENGI_OUT_CSV: Path = RESULTS_DIR / "D_engi.csv"
+D_RANK_ENGI_OUT_CSV: Path = RESULTS_DIR / "D_rank_engi.csv"
+
 # Single-column name in the raw / cleaned registry
 REGISTRY_COL: str = "drug_name"
 
