@@ -72,7 +72,7 @@ TIER_2_PROPORTION: float = 0.35
 TIER_2_SAMPLE_SIZE: int = 10_000
 
 # Minimum similarity for a pair to qualify for U (ANY measure)
-SIMILARITY_THRESHOLD: int = 20
+SIMILARITY_THRESHOLD: int = 65
 
 # Labels
 POSITIVE_LABEL: int = 1
