@@ -7,6 +7,16 @@ O(1) per pair, deterministic. They complement the phonetic-similarity columns
 phoc adds with orthographic / edit-distance signal (lengths, prefixes,
 Levenshtein, Jaro-Winkler, fuzzy ratios, Soundex/Metaphone agreement).
 
+The features here fall into three groups:
+
+* **structural** — length and shared-affix comparisons of the raw strings.
+* **prosodic** — syllable / vowel / consonant-count differences, i.e. how the
+  two names differ in spoken "weight" and length.
+* **phonetic (Filipino nativization)** — indicators describing *structural*
+  properties of the pair the way a Filipino (Tagalog) speaker would hear them,
+  so a downstream gate can decide which string-similarity score to trust. They
+  are indicators, not similarity scores themselves.
+
 FEATURE_REGISTRY is the single source of truth for which columns get added: an
 ordered ``{column_name: fn(x_1, x_2) -> value}`` map. Add or remove an entry
 here and the pipeline picks it up — column names are taken straight from the
@@ -19,57 +29,151 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-import jellyfish
 import pandas as pd
-from rapidfuzz import fuzz
 
 from config import COL_X1, COL_X2
+from src.tbb_client import nativize as _nativize
+
+_VOWELS: frozenset[str] = frozenset("aeiou")
 
 
-def _common_prefix_len(a: str, b: str) -> int:
+# --------------------------------------------------------------------------- #
+# Structural features (lengths / shared affixes)
+# --------------------------------------------------------------------------- #
+def len_diff(x1: str, x2: str) -> int:
+    """Absolute difference in raw string length."""
+    return abs(len(x1) - len(x2))
+
+
+def common_prefix_len(x1: str, x2: str) -> int:
+    """Number of leading characters the two names share."""
     n = 0
-    for ca, cb in zip(a, b):
-        if ca != cb:
+    for c1, c2 in zip(x1, x2):
+        if c1 != c2:
             break
         n += 1
     return n
 
 
-def _common_suffix_len(a: str, b: str) -> int:
-    return _common_prefix_len(a[::-1], b[::-1])
+def common_suffix_len(x1: str, x2: str) -> int:
+    """Number of trailing characters the two names share."""
+    return common_prefix_len(x1[::-1], x2[::-1])
 
 
-def _len_ratio(a: str, b: str) -> float:
-    longer = max(len(a), len(b))
-    return min(len(a), len(b)) / longer if longer else 1.0
+# --------------------------------------------------------------------------- #
+# Phonetic features — Filipino (Tagalog) nativization
+#
+# Nativization (English/Spanish orthography → Filipino orthography) is delegated
+# to the bundled ``bin/tbb-cli`` TagaBaybay worker via ``src.tbb_client``:
+# ``_nativize`` is that client's ``nativize`` (e.g. "chocolate" → "tsokoleyt",
+# "amoxicillin" → "amoksisilin"). The worker is a proper loanword adapter, so it
+# supersedes the hand-rolled substitution table this module used to carry.
+#
+# ``_vowel_seq`` additionally collapses the 5-vowel orthography onto the native
+# 3-vowel system (e→i, o→u), since /e/~/i/ and /o/~/u/ freely alternate in
+# Filipino and are a common source of sound-alike confusion. Filipino stress is
+# by default penultimate, motivating ``fil_penult_vowel_match``.
+# --------------------------------------------------------------------------- #
+
+
+def _vowel_seq(word: str) -> str:
+    """Nativized vowel skeleton with the native 3-vowel collapse (e→i, o→u)."""
+    nat = _nativize(word)
+    return "".join(
+        "i" if v == "e" else "u" if v == "o" else v
+        for v in nat
+        if v in _VOWELS
+    )
+
+
+def fil_onset_match(x1: str, x2: str) -> int:
+    """1 if the nativized initial phonemes agree (shared onset)."""
+    a, b = _nativize(x1), _nativize(x2)
+    return int(bool(a) and bool(b) and a[0] == b[0])
+
+
+def fil_coda_match(x1: str, x2: str) -> int:
+    """1 if the nativized final phonemes agree (shared coda)."""
+    a, b = _nativize(x1), _nativize(x2)
+    return int(bool(a) and bool(b) and a[-1] == b[-1])
+
+
+def fil_vowel_skeleton_match(x1: str, x2: str) -> int:
+    """1 if the collapsed vowel sequences are identical (prosodic shape)."""
+    return int(_vowel_seq(x1) == _vowel_seq(x2))
+
+
+def fil_penult_vowel_match(x1: str, x2: str) -> int:
+    """1 if the penultimate (default-stress) vowels agree.
+
+    Falls back to the final vowel for monosyllables; 0 if either has no vowel.
+    """
+    v1, v2 = _vowel_seq(x1), _vowel_seq(x2)
+    p1 = v1[-2] if len(v1) >= 2 else (v1[-1:] or "")
+    p2 = v2[-2] if len(v2) >= 2 else (v2[-1:] or "")
+    return int(p1 != "" and p1 == p2)
+
+
+def fil_phonetic_equal(x1: str, x2: str) -> int:
+    """1 if the two names are homographs after Filipino nativization."""
+    return int(_nativize(x1) == _nativize(x2))
+
+
+# --------------------------------------------------------------------------- #
+# Prosodic features (syllable / vowel / consonant counts)
+# --------------------------------------------------------------------------- #
+def _count_syllables(s: str) -> int:
+    """Count syllable nuclei as maximal runs of vowel letters."""
+    count = 0
+    prev_vowel = False
+    for c in s.lower():
+        is_vowel = c in _VOWELS
+        if is_vowel and not prev_vowel:
+            count += 1
+        prev_vowel = is_vowel
+    return count
+
+
+def _count_vowels(s: str) -> int:
+    return sum(c in _VOWELS for c in s.lower())
+
+
+def _count_consonants(s: str) -> int:
+    return sum(c.isalpha() and c.lower() not in _VOWELS for c in s)
+
+
+def syllable_diff(x1: str, x2: str) -> int:
+    """Absolute difference in syllable counts (prosodic length mismatch)."""
+    return abs(_count_syllables(x1) - _count_syllables(x2))
+
+
+def vowel_count_diff(x1: str, x2: str) -> int:
+    """Absolute difference in vowel-nucleus counts (prosodic weight)."""
+    return abs(_count_vowels(x1) - _count_vowels(x2))
+
+
+def consonant_count_diff(x1: str, x2: str) -> int:
+    """Absolute difference in consonant counts (segmental complexity)."""
+    return abs(_count_consonants(x1) - _count_consonants(x2))
 
 
 # Ordered map of META_FEATURE column name -> pair function. Insertion order is
 # the column order in the output CSV.
-FEATURE_REGISTRY: dict[str, Callable[[str, str], float]] = {
-    "len_1": lambda a, b: len(a),
-    "len_2": lambda a, b: len(b),
-    "len_diff": lambda a, b: abs(len(a) - len(b)),
-    "len_ratio": _len_ratio,
-    "prefix_match": _common_prefix_len,
-    "suffix_match": _common_suffix_len,
-    "same_first_char": lambda a, b: int(bool(a) and bool(b) and a[0] == b[0]),
-    "same_last_char": lambda a, b: int(bool(a) and bool(b) and a[-1] == b[-1]),
-    "levenshtein": lambda a, b: jellyfish.levenshtein_distance(a, b),
-    "damerau_levenshtein": lambda a, b: jellyfish.damerau_levenshtein_distance(a, b),
-    "hamming": lambda a, b: jellyfish.hamming_distance(a, b),
-    "jaro": lambda a, b: jellyfish.jaro_similarity(a, b),
-    "jaro_winkler": lambda a, b: jellyfish.jaro_winkler_similarity(a, b),
-    "ratio": lambda a, b: fuzz.ratio(a, b),
-    "partial_ratio": lambda a, b: fuzz.partial_ratio(a, b),
-    "token_sort_ratio": lambda a, b: fuzz.token_sort_ratio(a, b),
-    "wratio": lambda a, b: fuzz.WRatio(a, b),
-    "soundex_match": lambda a, b: int(
-        bool(a) and bool(b) and jellyfish.soundex(a) == jellyfish.soundex(b)
-    ),
-    "metaphone_match": lambda a, b: int(
-        bool(a) and bool(b) and jellyfish.metaphone(a) == jellyfish.metaphone(b)
-    ),
+FEATURE_REGISTRY: dict[str, Callable[[str, str], float | int]] = {
+    # structural
+    "len_diff": len_diff,
+    "common_prefix_len": common_prefix_len,
+    "common_suffix_len": common_suffix_len,
+    "consonant_count_diff": consonant_count_diff,
+    # prosodic
+    "syllable_diff": syllable_diff,
+    "vowel_count_diff": vowel_count_diff,
+    "fil_vowel_skeleton_match": fil_vowel_skeleton_match,
+    "fil_penult_vowel_match": fil_penult_vowel_match,
+    # phonetic (Filipino nativization)
+    "fil_onset_match": fil_onset_match,
+    "fil_coda_match": fil_coda_match,
+    "fil_phonetic_equal": fil_phonetic_equal,
 }
 
 

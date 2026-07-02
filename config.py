@@ -62,6 +62,12 @@ D_RANK_OUT_CSV: Path = RESULTS_DIR / "D_rank.csv"
 PHOC_BIN: Path = Path("bin/phoc")
 PHOC_CONFIG_DIR: Path = Path("bin/pho_conf")
 
+# Filipino nativization — bin/tbb-cli (TagaBaybay Rust worker, see its module
+# docstring). A long-lived JSONL stream worker that adapts loanwords into
+# Filipino orthography; src/feature_engineering.py drives it (via
+# src/tbb_client.py) to build its phonetic (nativization) features.
+TBB_BIN: Path = Path("bin/tbb-cli")
+
 # phoc outputs — D / D_rank with the phonetic-similarity feature columns added
 D_PHO_OUT_CSV: Path = RESULTS_DIR / "D_pho.csv"
 D_RANK_PHO_OUT_CSV: Path = RESULTS_DIR / "D_rank_pho.csv"

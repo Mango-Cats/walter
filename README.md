@@ -29,7 +29,7 @@ IPA transcription requires eSpeak-NG installed at the system level:
 - **Linux**: `apt install espeak-ng`
 - **macOS**: `brew install espeak-ng`
 
-### Pho
+### Pho (phoc)
 
 Similarity features are computed by [`phoc`](https://github.com/Mango-Cats/pho),
 a Rust CLI. This project expects:
@@ -42,18 +42,29 @@ a Rust CLI. This project expects:
 
 See the `pho` docs for how the configs work.
 
+### TagaBaybay (tbb-cli)
+
+The Filipino-nativization features in [`src.feature_engineering`](/src/feature_engineering.py)
+are computed by [`tbb-cli`](https://github.com/Mango-Cats/tagabaybay/), the TagaBaybay
+loanword-adaptation worker.
+
+- the `tbb-cli` executable at `bin/tbb-cli`.
+
 ## Running
 
 ```bash
 python walter.py
 ```
 
-Builds the full dataset per `config.py` and saves four CSVs to `_results/`:
+Builds the full dataset per `config.py` and saves these CSVs to `_results/`:
 
 - `D.csv` — classification: `x_1, t_1, x_2, t_2, label`
 - `D_rank.csv` — same rows + a `group` id, for a downstream grouped/ranking split
 - `D_pho.csv` — `D` with one phonetic-similarity feature column per `bin/pho_conf/*.toml`
 - `D_rank_pho.csv` — `D_rank` with those same feature columns appended
+- `D_engi.csv` — `D_pho` with the META_FEATURES from `src/feature_engineering.py`
+  appended (structural / prosodic + the Filipino-nativization features from `bin/tbb-cli`)
+- `D_rank_engi.csv` — `D_rank_pho` with those same META_FEATURES appended
 
 `D.csv` / `D_rank.csv` are always written before `phoc` runs, so a `phoc`
 failure leaves them intact.
