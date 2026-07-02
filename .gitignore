@@ -3,9 +3,8 @@
 _models/
 _results/
 
-# phoc binary — 186MB, exceeds GitHub's 100MB limit. Configs (bin/pho_conf)
-# are committed; the binary must be built/fetched separately (see README).
 bin/phoc
+bin/tbb-cli
 
 # VS Code
 .vscode/
