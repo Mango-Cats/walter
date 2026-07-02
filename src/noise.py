@@ -54,6 +54,8 @@ from config import (
     TIER_2_PROPORTION,
     TIER_2_SAMPLE_SIZE,
     TIER_2_MAX_POOL_PER_CLUSTER,
+    CANDIDATE_OVERSAMPLE_FACTOR,
+    CANDIDATE_MIN_POOL,
     SEED,
 )
 from src.clustering import build_components
@@ -152,6 +154,46 @@ def _claimable(candidate: str, cluster_id: str, owner: dict[str, str]) -> bool:
     return current is None or current == cluster_id
 
 
+def _cluster_tier_targets(
+    cluster_order: list[str],
+    pos_counts: dict[str, int],
+    num_positives: int,
+    target_total: float,
+    tier_1_proportion: float,
+    tier_2_proportion: float,
+) -> dict[str, tuple[int, int]]:
+    """
+    Per-cluster (tier_1_target, tier_2_target), each cluster's share of the
+    target |U| scaled by its share of the confirmed positives. Single source
+    of truth for both the accumulation caps (below) and the final
+    down-sampling in make_noise — they must agree so the caps never starve
+    the sampler.
+    """
+    targets: dict[str, tuple[int, int]] = {}
+    for cid in cluster_order:
+        cluster_total = target_total * pos_counts.get(cid, 0) / num_positives
+        t1 = round(cluster_total * tier_1_proportion)
+        t2 = round(cluster_total * tier_2_proportion)
+        targets[cid] = (t1, t2)
+    return targets
+
+
+def _accumulation_caps(
+    targets: dict[str, tuple[int, int]],
+    which: int,
+    factor: int,
+    floor: int,
+) -> dict[str, int]:
+    """
+    Per-cluster cap on how many candidates to *accumulate* before
+    down-sampling: factor × that cluster's tier target, floored so tiny
+    clusters still keep a spread to sample from. `which` selects the tier
+    (0 = tier 1, 1 = tier 2). Bounds memory to O(|U|) instead of
+    O(all qualifying pairs).
+    """
+    return {cid: max(floor, factor * tgt[which]) for cid, tgt in targets.items()}
+
+
 def _build_tier_1(
     clusters: dict[str, set[str]],
     cluster_order: list[str],
@@ -159,15 +201,30 @@ def _build_tier_1(
     positive_pairs: set[frozenset],
     threshold: int,
     owner: dict[str, str],
+    caps: dict[str, int],
 ) -> dict[str, list[dict]]:
     """
     Per-cluster anchor-based hard negatives. Scans outside names still
     unclaimed by another cluster; on a qualifying match, claims that
     name exclusively for this cluster so it can never bridge to another.
+
+    Accumulation is capped per cluster (`caps`): once a cluster has
+    collected its cap of candidates we stop scanning its remaining
+    anchors/outside names. Without this cap a single "hub" cluster whose
+    anchors Soundex/Metaphone-collide with a large slice of a big registry
+    accumulates millions of rows and OOMs — the cap bounds memory to
+    O(|U|). `outside` is expected pre-shuffled so early-stopping doesn't
+    bias toward registry insertion order.
     """
     rows_by_cluster: dict[str, list[dict]] = {cid: [] for cid in clusters}
     for cluster_id in cluster_order:
+        cap = caps.get(cluster_id, 0)
+        rows = rows_by_cluster[cluster_id]
+        if cap <= 0:
+            continue
         for anchor in sorted(clusters[cluster_id]):
+            if len(rows) >= cap:
+                break
             for candidate in outside:
                 if not _claimable(candidate, cluster_id, owner):
                     continue
@@ -177,7 +234,7 @@ def _build_tier_1(
                 qualifies, score = is_similar_enough(anchor, candidate, threshold)
                 if qualifies:
                     owner[candidate] = cluster_id
-                    rows_by_cluster[cluster_id].append(
+                    rows.append(
                         {
                             COL_X1: anchor,
                             COL_X2: candidate,
@@ -186,6 +243,8 @@ def _build_tier_1(
                             COL_LABEL: UNLABELED_LABEL,
                         }
                     )
+                    if len(rows) >= cap:
+                        break
     return rows_by_cluster
 
 
@@ -199,6 +258,7 @@ def _build_tier_2(
     extra_per_cluster: int,
     owner: dict[str, str],
     rng: random.Random,
+    caps: dict[str, int],
     max_pool_per_cluster: int = TIER_2_MAX_POOL_PER_CLUSTER,
 ) -> dict[str, list[dict]]:
     """
@@ -213,6 +273,10 @@ def _build_tier_2(
     extra_per_cluster would suggest. combinations(pool, 2) is quadratic
     in that pool size, so an uncapped pool is what floods memory — cap
     and subsample it before scoring pairs.
+
+    Emitted rows are additionally capped per cluster (`caps`) so a cluster
+    never accumulates far more than it will sample (defense in depth,
+    mirroring Tier 1).
     """
     rows_by_cluster: dict[str, list[dict]] = {cid: [] for cid in clusters}
     free = [n for n in outside if n not in owner]
@@ -226,17 +290,24 @@ def _build_tier_2(
         for name in extra:
             owner[name] = cluster_id
 
+        cap = caps.get(cluster_id, 0)
+        rows = rows_by_cluster[cluster_id]
+        if cap <= 0:
+            continue
+
         pool = sorted(tier_1_pool.get(cluster_id, set()) | set(extra))
         if len(pool) > max_pool_per_cluster:
             pool = sorted(rng.sample(pool, max_pool_per_cluster))
             capped_clusters += 1
         for a, b in combinations(pool, 2):
+            if len(rows) >= cap:
+                break
             pair = frozenset([a, b])
             if pair in positive_pairs:
                 continue
             qualifies, score = is_similar_enough(a, b, threshold)
             if qualifies:
-                rows_by_cluster[cluster_id].append(
+                rows.append(
                     {
                         COL_X1: a,
                         COL_X2: b,
@@ -300,6 +371,8 @@ def make_noise(
     tier_2_proportion: float = TIER_2_PROPORTION,
     tier_2_sample_size: int = TIER_2_SAMPLE_SIZE,
     tier_2_max_pool_per_cluster: int = TIER_2_MAX_POOL_PER_CLUSTER,
+    candidate_oversample_factor: int = CANDIDATE_OVERSAMPLE_FACTOR,
+    candidate_min_pool: int = CANDIDATE_MIN_POOL,
     seed: int | None = SEED,
 ) -> pd.DataFrame:
     """
@@ -319,6 +392,14 @@ def make_noise(
                               Tier 2-extra pool before pairwise scoring,
                               to bound the quadratic cost/memory of
                               combinations() on "hub" clusters.
+        candidate_oversample_factor: Cap each cluster's *accumulated* Tier 1
+                              and Tier 2 candidates at this multiple of its
+                              tier target before down-sampling. Bounds total
+                              memory to O(|U|) instead of O(all qualifying
+                              pairs) — this is what keeps a large registry
+                              from OOM-ing during Tier 1.
+        candidate_min_pool:  Floor on that per-cluster cap, so tiny clusters
+                              still keep a spread to sample from.
         seed:                Random seed.
 
     Returns:
@@ -343,6 +424,9 @@ def make_noise(
 
     all_names_norm = [normalize(n) for n in registry_df[REGISTRY_COL].dropna().tolist()]
     outside = [n for n in all_names_norm if n not in p_vocab]
+    # Shuffle once (seeded) so that per-cluster candidate caps, which stop
+    # scanning early, don't systematically favor registry insertion order.
+    rng.shuffle(outside)
 
     cluster_order = list(clusters.keys())
     rng.shuffle(cluster_order)  # claim order shouldn't systematically favor any cluster
@@ -351,6 +435,21 @@ def make_noise(
 
     target_total = num_positives * ratio
     extra_per_cluster = max(1, tier_2_sample_size // max(1, len(clusters)))
+
+    tier_targets = _cluster_tier_targets(
+        cluster_order,
+        pos_counts,
+        num_positives,
+        target_total,
+        tier_1_proportion,
+        tier_2_proportion,
+    )
+    t1_caps = _accumulation_caps(
+        tier_targets, 0, candidate_oversample_factor, candidate_min_pool
+    )
+    t2_caps = _accumulation_caps(
+        tier_targets, 1, candidate_oversample_factor, candidate_min_pool
+    )
 
     print(f"\n[noise] P-vocabulary size   : {len(p_vocab):,}")
     print(f"[noise] Known positive pairs: {num_positives:,}")
@@ -361,12 +460,22 @@ def make_noise(
     print(f"[noise] Similarity threshold: {similarity_threshold} (ANY measure)")
     print(f"[noise] Tier 2 extra/cluster: {extra_per_cluster:,}")
     print(f"[noise] Tier 2 max pool/cluster: {tier_2_max_pool_per_cluster:,}")
+    print(
+        f"[noise] Candidate cap         : {candidate_oversample_factor}x tier target "
+        f"(min {candidate_min_pool}); Tier 1 cap total {sum(t1_caps.values()):,}"
+    )
 
     owner: dict[str, str] = {}
 
     print("\n[noise] Building Tier 1 (anchor-based hard negatives, per cluster)...")
     t1_by_cluster = _build_tier_1(
-        clusters, cluster_order, outside, positive_pairs, similarity_threshold, owner
+        clusters,
+        cluster_order,
+        outside,
+        positive_pairs,
+        similarity_threshold,
+        owner,
+        t1_caps,
     )
     t1_pool = {
         cid: {row[COL_X2] for row in rows} for cid, rows in t1_by_cluster.items()
@@ -384,6 +493,7 @@ def make_noise(
         extra_per_cluster,
         owner,
         rng,
+        t2_caps,
         tier_2_max_pool_per_cluster,
     )
     print(f"[noise] Tier 2 candidates: {sum(len(v) for v in t2_by_cluster.values()):,}")
@@ -391,9 +501,7 @@ def make_noise(
     all_rows: list[dict] = []
     empty_clusters = 0
     for cluster_id in cluster_order:
-        cluster_total = target_total * pos_counts.get(cluster_id, 0) / num_positives
-        tier_1_target = round(cluster_total * tier_1_proportion)
-        tier_2_target = round(cluster_total * tier_2_proportion)
+        tier_1_target, tier_2_target = tier_targets[cluster_id]
 
         t1_candidates = t1_by_cluster.get(cluster_id, [])
         t2_candidates = t2_by_cluster.get(cluster_id, [])
