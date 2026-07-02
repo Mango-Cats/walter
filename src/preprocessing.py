@@ -21,7 +21,9 @@ import pandas as pd
 from config import (
     DataSource,
     R,
+    R_CLEAN,
     REGISTRY_COL,
+    USE_PRECLEANED_REGISTRY,
 )
 
 
@@ -102,22 +104,56 @@ def cleaning_report(raw: pd.DataFrame, clean: pd.DataFrame) -> None:
     )
 
 
+def save_clean_registry(df: pd.DataFrame, source: DataSource) -> None:
+    """Write the cleaned registry to R_CLEAN[source] for reuse by later runs."""
+    path: Path = R_CLEAN[source]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, index=False)
+    print(f"[preprocessing] Saved cleaned registry → {path}")
+
+
+def load_clean_registry(source: DataSource) -> pd.DataFrame:
+    """
+    Load a previously-saved cleaned registry, skipping clean_registry()
+    entirely. Used when USE_PRECLEANED_REGISTRY = True.
+    """
+    path: Path = R_CLEAN[source]
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Pre-cleaned registry not found: {path}\n"
+            "Set USE_PRECLEANED_REGISTRY = False in config.py to generate it first."
+        )
+    df = pd.read_csv(path, usecols=[0], header=0)
+    df.columns = [REGISTRY_COL]
+    return df.dropna().reset_index(drop=True)
+
+
 def run(source: DataSource) -> pd.DataFrame:
     """
     Full preprocessing pipeline for the given DataSource.
 
+    If USE_PRECLEANED_REGISTRY is True, loads the cached clean registry
+    from R_CLEAN[source] directly, skipping cleaning entirely. Otherwise:
+
     1. Load raw CSV (R_ph.csv or R_us.csv)
     2. Validate
-    3. Clean and return
+    3. Clean
+    4. Save the cleaned registry to R_CLEAN[source] for next time
 
-    R_clean is an in-memory intermediate only — not written to disk.
     Returns cleaned single-column DataFrame [REGISTRY_COL].
     """
+    if USE_PRECLEANED_REGISTRY:
+        print(f"[preprocessing] Source: {source.name} (pre-cleaned cache)")
+        clean = load_clean_registry(source)
+        print(f"[preprocessing] Loaded {len(clean):,} pre-cleaned rows from {R_CLEAN[source]}")
+        return clean
+
     print(f"[preprocessing] Source: {source.name}")
     raw = load_registry(source)
     validate_raw(raw)
     clean = clean_registry(raw)
     cleaning_report(raw, clean)
+    save_clean_registry(clean, source)
     return clean
 
 

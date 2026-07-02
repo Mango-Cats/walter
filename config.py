@@ -30,6 +30,18 @@ R: dict[DataSource, Path] = {
     DataSource.US: DATA_DIR / "R_us.csv",
 }
 
+# Cleaned registry cache — written by src/preprocessing.py every time it
+# cleans a raw registry, so a slow clean never has to be repeated.
+R_CLEAN: dict[DataSource, Path] = {
+    DataSource.PH: DATA_DIR / "R_ph_clean.csv",
+    DataSource.US: DATA_DIR / "R_us_clean.csv",
+}
+
+# If True, preprocessing loads R_CLEAN[source] directly instead of
+# re-cleaning R[source]. Toggle on once you have a cached clean registry
+# you trust; toggle off (or delete the cache file) to force a re-clean.
+USE_PRECLEANED_REGISTRY: bool = False
+
 # Confirmed LASA pairs input — used when FROM_FILE = True
 # Must have columns x_1, x_2 (see P_INPUT_COLS below)
 P: dict[DataSource, Path] = {
@@ -70,6 +82,18 @@ TIER_2_PROPORTION: float = 0.35
 # clusters (each cluster only ever scores pairs within its own share —
 # see src/noise.py for why sampling must stay per-cluster)
 TIER_2_SAMPLE_SIZE: int = 10_000
+
+# Hard cap on a cluster's combined Tier 1 + Tier 2-extra pool before it's
+# fed into Tier 2's pairwise combinations. Some anchors are generic
+# enough (short, digit-heavy names) that Soundex/Metaphone collide with a
+# large slice of the outside vocabulary — is_similar_enough() qualifies
+# on ANY of WRatio/Soundex/Metaphone, so that collision isn't filtered by
+# SIMILARITY_THRESHOLD. Without this cap, one such "hub" cluster turns
+# into combinations(n, 2) with n in the thousands, which is quadratic in
+# both CPU and the number of qualifying rows held in memory before
+# down-sampling — that's what blows up RAM. Oversized pools are
+# subsampled down to this size (seeded, so still deterministic).
+TIER_2_MAX_POOL_PER_CLUSTER: int = 300
 
 # Minimum similarity for a pair to qualify for U (ANY measure)
 SIMILARITY_THRESHOLD: int = 65

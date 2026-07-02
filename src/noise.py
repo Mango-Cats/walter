@@ -53,6 +53,7 @@ from config import (
     TIER_1_PROPORTION,
     TIER_2_PROPORTION,
     TIER_2_SAMPLE_SIZE,
+    TIER_2_MAX_POOL_PER_CLUSTER,
     SEED,
 )
 from src.clustering import build_components
@@ -198,17 +199,26 @@ def _build_tier_2(
     extra_per_cluster: int,
     owner: dict[str, str],
     rng: random.Random,
+    max_pool_per_cluster: int = TIER_2_MAX_POOL_PER_CLUSTER,
 ) -> dict[str, list[dict]]:
     """
     Per-cluster broader coverage. Each cluster claims a further small
     random sample of still-unclaimed outside names (not anchored to a
     specific match), then all pairs within its combined claimed pool
     (Tier 1 matches + this sample) are scored pairwise.
+
+    A handful of "hub" anchors (short, generic names) Soundex/Metaphone-
+    collide with a disproportionate slice of the outside vocabulary in
+    Tier 1, so their combined pool here can be far larger than
+    extra_per_cluster would suggest. combinations(pool, 2) is quadratic
+    in that pool size, so an uncapped pool is what floods memory — cap
+    and subsample it before scoring pairs.
     """
     rows_by_cluster: dict[str, list[dict]] = {cid: [] for cid in clusters}
     free = [n for n in outside if n not in owner]
     rng.shuffle(free)
 
+    capped_clusters = 0
     idx = 0
     for cluster_id in cluster_order:
         extra = free[idx : idx + extra_per_cluster]
@@ -217,6 +227,9 @@ def _build_tier_2(
             owner[name] = cluster_id
 
         pool = sorted(tier_1_pool.get(cluster_id, set()) | set(extra))
+        if len(pool) > max_pool_per_cluster:
+            pool = sorted(rng.sample(pool, max_pool_per_cluster))
+            capped_clusters += 1
         for a, b in combinations(pool, 2):
             pair = frozenset([a, b])
             if pair in positive_pairs:
@@ -232,6 +245,11 @@ def _build_tier_2(
                         COL_LABEL: UNLABELED_LABEL,
                     }
                 )
+    if capped_clusters:
+        print(
+            f"[noise] Capped {capped_clusters:,} oversized cluster pool(s) to "
+            f"{max_pool_per_cluster:,} names before pairwise scoring (hub anchors)"
+        )
     return rows_by_cluster
 
 
@@ -281,6 +299,7 @@ def make_noise(
     tier_1_proportion: float = TIER_1_PROPORTION,
     tier_2_proportion: float = TIER_2_PROPORTION,
     tier_2_sample_size: int = TIER_2_SAMPLE_SIZE,
+    tier_2_max_pool_per_cluster: int = TIER_2_MAX_POOL_PER_CLUSTER,
     seed: int | None = SEED,
 ) -> pd.DataFrame:
     """
@@ -296,6 +315,10 @@ def make_noise(
         tier_2_proportion:   Fraction of U from Tier 2 (must sum to 1 with tier_1).
         tier_2_sample_size:  Total outside-vocab names sampled for Tier 2,
                               distributed evenly across clusters.
+        tier_2_max_pool_per_cluster: Cap on a cluster's combined Tier 1 +
+                              Tier 2-extra pool before pairwise scoring,
+                              to bound the quadratic cost/memory of
+                              combinations() on "hub" clusters.
         seed:                Random seed.
 
     Returns:
@@ -337,6 +360,7 @@ def make_noise(
     print(f"[noise] Target |U|          : {target_total:,}  (ratio 1:{ratio})")
     print(f"[noise] Similarity threshold: {similarity_threshold} (ANY measure)")
     print(f"[noise] Tier 2 extra/cluster: {extra_per_cluster:,}")
+    print(f"[noise] Tier 2 max pool/cluster: {tier_2_max_pool_per_cluster:,}")
 
     owner: dict[str, str] = {}
 
@@ -360,6 +384,7 @@ def make_noise(
         extra_per_cluster,
         owner,
         rng,
+        tier_2_max_pool_per_cluster,
     )
     print(f"[noise] Tier 2 candidates: {sum(len(v) for v in t2_by_cluster.values()):,}")
 
