@@ -13,9 +13,11 @@ clear error and leaves the base CSVs on disk.
 """
 
 import csv
+import errno
 import os
 import stat
 import subprocess
+import time
 from pathlib import Path
 
 from config import PHOC_BIN, PHOC_CONFIG_DIR
@@ -63,19 +65,27 @@ def run_phoc(
 
     input_cols = _header(input_csv)
 
-    result = subprocess.run(
-        [
-            str(PHOC_BIN),
-            "--input",
-            str(input_csv),
-            "--output",
-            str(output_csv),
-            "--config-dir",
-            str(config_dir),
-        ],
-        capture_output=True,
-        text=True,
-    )
+    cmd = [
+        str(PHOC_BIN),
+        "--input",
+        str(input_csv),
+        "--output",
+        str(output_csv),
+        "--config-dir",
+        str(config_dir),
+    ]
+    # ETXTBSY (Errno 26) means the binary is still open for writing elsewhere
+    # (e.g. bin/phoc is 194 MB and may still be syncing/copying when the run
+    # starts). It clears on its own, so retry a few times with a short backoff.
+    for attempt in range(5):
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            break
+        except OSError as e:
+            if e.errno == errno.ETXTBSY and attempt < 4:
+                time.sleep(0.5 * (attempt + 1))
+                continue
+            raise
     if result.returncode != 0:
         raise RuntimeError(
             f"phoc failed (exit {result.returncode}) on {input_csv}:\n"
