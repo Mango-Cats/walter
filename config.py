@@ -56,6 +56,16 @@ D_OUT_CSV: Path = RESULTS_DIR / "D.csv"  # full assembled dataset
 # downstream repo can group rows by connected component for a ranking task
 D_RANK_OUT_CSV: Path = RESULTS_DIR / "D_rank.csv"
 
+# Phonetic-feature step — bin/phoc (Rust CLI, see bin/phoc summary). Reads a
+# scored pair CSV, preserves every input column, and appends one similarity
+# feature column per .toml in PHOC_CONFIG_DIR (column name = file stem).
+PHOC_BIN: Path = Path("bin/phoc")
+PHOC_CONFIG_DIR: Path = Path("bin/pho_conf")
+
+# phoc outputs — D / D_rank with the phonetic-similarity feature columns added
+D_PHO_OUT_CSV: Path = RESULTS_DIR / "D_pho.csv"
+D_RANK_PHO_OUT_CSV: Path = RESULTS_DIR / "D_rank_pho.csv"
+
 # Single-column name in the raw / cleaned registry
 REGISTRY_COL: str = "drug_name"
 

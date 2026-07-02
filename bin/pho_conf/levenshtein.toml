@@ -1,0 +1,7 @@
+algorithm = "levenshtein"
+case_insensitive = false
+
+[costs]
+insert = 1.0
+delete = 1.0
+substitute = 1.0

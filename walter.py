@@ -36,11 +36,15 @@ from config import (
     FROM_FILE,
     P,
     D_OUT_CSV,
+    D_RANK_OUT_CSV,
+    D_PHO_OUT_CSV,
+    D_RANK_PHO_OUT_CSV,
     SEED,
     TIER_2_SAMPLE_SIZE,
 )
 
 from src.dataset import assemble_and_save
+from src.phonetic import run_phoc
 import src.noise as noise
 import src.preprocessing as pre
 from pathlib import Path
@@ -133,6 +137,16 @@ def main() -> None:
     print(D.head(10))
     print(f"\nD shape: {D.shape}")
     print(D["label"].value_counts().to_string())
+
+    # --- Phonetic features (phoc) ---
+    # D.csv / D_rank.csv already exist on disk at this point, so a phoc
+    # failure aborts the run but leaves the base datasets intact.
+    with Spinner("Adding phonetic features (phoc)"):
+        feats = run_phoc(D_OUT_CSV, D_PHO_OUT_CSV)
+        run_phoc(D_RANK_OUT_CSV, D_RANK_PHO_OUT_CSV)
+    print(f"\nPhonetic features ({len(feats)}): {', '.join(feats)}")
+    print(f"  D_pho      → {D_PHO_OUT_CSV}")
+    print(f"  D_rank_pho → {D_RANK_PHO_OUT_CSV}")
 
 
 if __name__ == "__main__":
