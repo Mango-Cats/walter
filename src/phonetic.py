@@ -13,6 +13,8 @@ clear error and leaves the base CSVs on disk.
 """
 
 import csv
+import os
+import stat
 import subprocess
 from pathlib import Path
 
@@ -42,6 +44,17 @@ def run_phoc(
             f"phoc binary not found at {PHOC_BIN}. "
             "It ships in the repo under bin/phoc — check it out or rebuild it."
         )
+    # bin/phoc is gitignored (194 MB) and gets copied between machines, which
+    # can strip the execute bit. Restore it rather than fail with Errno 13.
+    if not os.access(PHOC_BIN, os.X_OK):
+        try:
+            mode = PHOC_BIN.stat().st_mode
+            PHOC_BIN.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        except OSError as e:
+            raise PermissionError(
+                f"phoc binary at {PHOC_BIN} is not executable and could not be "
+                f"made executable ({e}). Run: chmod +x {PHOC_BIN}"
+            ) from e
     if not config_dir.is_dir():
         raise FileNotFoundError(
             f"phoc config dir not found at {config_dir}. "
@@ -71,3 +84,4 @@ def run_phoc(
 
     output_cols = _header(output_csv)
     return [c for c in output_cols if c not in input_cols]
+    
