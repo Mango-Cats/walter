@@ -7,7 +7,6 @@ No other file should hardcode these values.
 from enum import Enum, auto
 from pathlib import Path
 
-
 class DataSource(Enum):
     PH = auto()  # Philippine FDA registry  →  _data/drug_set_ph.csv
     US = auto()  # US FDA registry          →  _data/drug_set_us.csv
@@ -15,7 +14,6 @@ class DataSource(Enum):
 
 # Active data source — change this to switch registries
 DATA_SOURCE: DataSource = DataSource.PH
-
 
 DATA_DIR = Path("_data")
 RESULTS_DIR = Path("_results")
@@ -26,21 +24,21 @@ MODELS_DIR = Path("models")
 
 # Raw drug name registries — one-column CSVs, header ignored, first column used
 R: dict[DataSource, Path] = {
-    DataSource.PH: DATA_DIR / "R_ph.csv",
-    DataSource.US: DATA_DIR / "R_us.csv",
+    DataSource.PH: DATA_DIR / "R_ph_raw.csv",
+    DataSource.US: DATA_DIR / "R_us_raw.csv",
 }
 
 # Cleaned registry cache — written by src/preprocessing.py every time it
 # cleans a raw registry, so a slow clean never has to be repeated.
 R_CLEAN: dict[DataSource, Path] = {
-    DataSource.PH: DATA_DIR / "R_ph_clean.csv",
-    DataSource.US: DATA_DIR / "R_us_clean.csv",
+    DataSource.PH: DATA_DIR / "R_ph.csv",
+    DataSource.US: DATA_DIR / "R_us.csv",
 }
 
 # If True, preprocessing loads R_CLEAN[source] directly instead of
 # re-cleaning R[source]. Toggle on once you have a cached clean registry
 # you trust; toggle off (or delete the cache file) to force a re-clean.
-USE_PRECLEANED_REGISTRY: bool = False
+USE_PRECLEANED_REGISTRY: bool = True
 
 # Confirmed LASA pairs input — used when FROM_FILE = True
 # Must have columns x_1, x_2 (see P_INPUT_COLS below)
