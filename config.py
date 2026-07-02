@@ -95,6 +95,21 @@ TIER_2_SAMPLE_SIZE: int = 10_000
 # subsampled down to this size (seeded, so still deterministic).
 TIER_2_MAX_POOL_PER_CLUSTER: int = 300
 
+# Oversample factor: cap each cluster's accumulated Tier-1/Tier-2 candidates at
+# factor × that cluster's tier target before down-sampling. This bounds memory
+# to O(|U|) instead of O(all qualifying pairs). Tier 1 was previously uncapped,
+# so on a large registry "hub" anchors (short/digit-heavy names that Soundex/
+# Metaphone-collide with a huge slice of the vocabulary) made the candidate list
+# grow into the millions of rows and OOM-killed the process. We only ever need
+# an oversample of each cluster's target to still draw a representative random
+# sample, so accumulation stops once a cluster hits its cap. Higher = more
+# sampling diversity but more memory.
+CANDIDATE_OVERSAMPLE_FACTOR: int = 4
+
+# Floor on a cluster's candidate cap, so tiny clusters (target of 0-1) still
+# accumulate a small spread to sample from rather than the first match only.
+CANDIDATE_MIN_POOL: int = 50
+
 # Minimum similarity for a pair to qualify for U (ANY measure)
 SIMILARITY_THRESHOLD: int = 65
 

@@ -10,6 +10,16 @@ Requirements:
 """
 
 import os
+import tempfile
+
+# eSpeak-NG pulls in libpulse, which on init tries to create its audio
+# runtime dir under $XDG_RUNTIME_DIR (e.g. /run/user/1000/pulse). On WSL
+# that path often doesn't exist, so libpulse spams stderr with
+# "Failed to create secure directory (...)". We never play audio (text
+# -> IPA only), so redirect pulse's runtime dir somewhere writable to
+# silence it. Must be set before phonemizer imports espeak below.
+os.environ.setdefault("PULSE_RUNTIME_PATH", os.path.join(tempfile.gettempdir(), "pulse"))
+
 import time
 import pandas as pd
 from phonemizer import phonemize
