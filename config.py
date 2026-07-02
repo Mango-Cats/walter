@@ -82,7 +82,7 @@ P_INPUT_COLS: list[str] = [COL_X1, COL_X2]
 
 
 # Target ratio of unlabeled pairs to confirmed positives
-CLASS_RATIO: int = 30
+CLASS_RATIO: int = 450
 
 # Fraction of U drawn from each tier
 TIER_1_PROPORTION: float = 0.65
