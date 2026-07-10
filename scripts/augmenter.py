@@ -9,14 +9,12 @@ for why that matters). It also means a new pair is never both-unseen,
 which would form a useless all-negative component.
 
 Input schema (--input CSV):
-    x_1, t_1, x_2, t_2, label
+    x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label
 
 Registry (--registry CSV):
     One-column CSV of drug names (header ignored, first column used).
 
-Writes two outputs: the augmented pairs (same schema as --input) and a
-ranking counterpart with an added `group` column (connected-component
-id of each row's x_1/x_2 edge — see src/clustering.py).
+Writes the augmented pairs (same schema as --input).
 
 Usage:
     python scripts/augmenter.py --input _results/D.csv --registry _data/R_ph.csv \
@@ -35,10 +33,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pandas as pd
 
 from config import (
-    COL_GROUP,
     COL_LABEL,
-    COL_T1,
-    COL_T2,
+    COL_T_ENG_1,
+    COL_T_ENG_2,
+    COL_T_FIL_1,
+    COL_T_FIL_2,
     COL_X1,
     COL_X2,
     REGISTRY_COL,
@@ -46,12 +45,17 @@ from config import (
     SHUFFLE_SEED,
     UNLABELED_LABEL,
 )
-from src.clustering import assign_group_ids
 from src.dataset import clean_and_deduplicate
-from src.phonemes import transcribe_dataframe
+from src.eng_g2p import transcribe_dataframe as transcribe_eng
+from src.fil_g2p import transcribe_dataframe as transcribe_fil
 from src.preprocessing import clean_registry
 
-_REQUIRED_COLS: frozenset = frozenset({COL_X1, COL_T1, COL_X2, COL_T2, COL_LABEL})
+# x_1's transcriptions, then x_2's, in language order.
+_T1_COLS: list[str] = [COL_T_ENG_1, COL_T_FIL_1]
+_T2_COLS: list[str] = [COL_T_ENG_2, COL_T_FIL_2]
+_FINAL_COLS: list[str] = [COL_X1, *_T1_COLS, COL_X2, *_T2_COLS, COL_LABEL]
+
+_REQUIRED_COLS: frozenset = frozenset(_FINAL_COLS)
 
 
 def _load_input(path: Path) -> pd.DataFrame:
@@ -141,38 +145,30 @@ def augment(
         return
 
     new_df = pd.DataFrame(raw_pairs)
-    print("\n[augmenter] Adding IPA transcriptions to new pairs...")
-    new_df = transcribe_dataframe(new_df, verbose=True)
+    print("\n[augmenter] Adding English IPA transcriptions to new pairs...")
+    new_df = transcribe_eng(new_df, verbose=True)
+    print("\n[augmenter] Adding Filipino IPA transcriptions to new pairs...")
+    new_df = transcribe_fil(new_df, verbose=True)
     new_df[COL_LABEL] = UNLABELED_LABEL
 
-    final_cols = [COL_X1, COL_T1, COL_X2, COL_T2, COL_LABEL]
-    new_df = new_df.reindex(columns=final_cols, fill_value="")
+    new_df = new_df.reindex(columns=_FINAL_COLS, fill_value="")
 
     combined = pd.concat([input_df, new_df], ignore_index=True)
-    combined = combined[final_cols]
+    combined = combined[_FINAL_COLS]
     combined = combined.sample(frac=1, random_state=SHUFFLE_SEED).reset_index(drop=True)
 
     if in_place:
         out_path = input_path
     else:
         out_path = input_path.parent / f"{input_path.stem}-aug.csv"
-    rank_path = out_path.parent / f"{out_path.stem}-rank.csv"
 
     combined.to_csv(out_path, index=False)
 
-    combined_rank = combined.copy()
-    combined_rank[COL_GROUP] = assign_group_ids(combined_rank, COL_X1, COL_X2)
-    combined_rank.to_csv(rank_path, index=False)
-
     print(f"\n[augmenter] Done.")
-    print(f"  Existing pairs   : {len(input_df):,}")
-    print(f"  New pairs added  : {len(raw_pairs):,}")
-    print(f"  Total rows       : {len(combined):,}")
-    print(f"  Output (pairs)   : {out_path}")
-    print(
-        f"  Output (ranking) : {rank_path}  "
-        f"({combined_rank[COL_GROUP].nunique():,} groups)"
-    )
+    print(f"  Existing pairs  : {len(input_df):,}")
+    print(f"  New pairs added : {len(raw_pairs):,}")
+    print(f"  Total rows      : {len(combined):,}")
+    print(f"  Output (pairs)  : {out_path}")
 
 
 def main() -> None:

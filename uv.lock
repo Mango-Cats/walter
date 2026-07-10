@@ -1129,6 +1129,14 @@ wheels = [
 ]
 
 [[package]]
+name = "phonetisaurus"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f8/dd/8bee1dc1f6944fec8a5a8a3a1e5a70e2680ef1e129c0ee946202a65ecf37/phonetisaurus-0.3.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:4ad830d748234d778c9e55da731df319f92805120d158825cf8162616bbccc09", size = 12058364, upload-time = "2020-11-25T19:05:57.47Z" },
+]
+
+[[package]]
 name = "platformdirs"
 version = "4.9.6"
 source = { registry = "https://pypi.org/simple" }
@@ -2222,6 +2230,7 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "phonemizer" },
+    { name = "phonetisaurus" },
     { name = "pyarrow" },
     { name = "rapidfuzz" },
     { name = "rich" },
@@ -2249,6 +2258,7 @@ requires-dist = [
     { name = "numpy", specifier = "<2" },
     { name = "pandas", specifier = ">=2.2,<3" },
     { name = "phonemizer", specifier = ">=3.3.0" },
+    { name = "phonetisaurus", specifier = ">=0.3.0" },
     { name = "pyarrow", specifier = ">=24.0.0" },
     { name = "rapidfuzz", specifier = ">=3.14.5" },
     { name = "rich", specifier = ">=13.7" },

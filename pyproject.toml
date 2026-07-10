@@ -14,6 +14,7 @@ dependencies = [
     "jellyfish>=1.2.1",
     "phonemizer>=3.3.0",
     "rich>=13.7",
+    "phonetisaurus>=0.3.0",
 ]
 
 [project.optional-dependencies]

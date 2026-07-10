@@ -58,13 +58,11 @@ python walter.py
 
 Builds the full dataset per `config.py` and saves these CSVs to `_results/`:
 
-- `D.csv` — classification: `x_1, t_1, x_2, t_2, label`
-- `D_rank.csv` — same rows + a `group` id, for a downstream grouped/ranking split
-- `D_pho.csv` — `D` with one phonetic-similarity feature column per `bin/pho_conf/*.toml`
-- `D_rank_pho.csv` — `D_rank` with those same feature columns appended
+- `D.csv` — classification: `x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label`
+- `D_pho.csv` — `D` with one phonetic-similarity feature column per `bin/pho_conf/*.toml`.
+  Transcription-dependent configs (`aline`) yield one column per language
+  (`aline_ph_mc_eng`, `aline_ph_mc_fil`); the rest score `x_1`/`x_2` only and appear once.
 - `D_engi.csv` — `D_pho` with the META_FEATURES from `src/feature_engineering.py`
   appended (structural / prosodic + the Filipino-nativization features from `bin/tbb-cli`)
-- `D_rank_engi.csv` — `D_rank_pho` with those same META_FEATURES appended
 
-`D.csv` / `D_rank.csv` are always written before `phoc` runs, so a `phoc`
-failure leaves them intact.
+`D.csv` is always written before `phoc` runs, so a `phoc` failure leaves it intact.

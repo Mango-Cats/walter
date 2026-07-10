@@ -1,6 +1,6 @@
 """
-Adds IPA phonetic transcriptions to a drug-pair DataFrame using
-phonemizer (eSpeak-NG backend).
+English (en-us) G2P: adds IPA phonetic transcriptions to a drug-pair
+DataFrame using phonemizer (eSpeak-NG backend).
 Requirements:
     pip install phonemizer
     + espeak-ng installed on the system:
@@ -20,11 +20,14 @@ import tempfile
 # silence it. Must be set before phonemizer imports espeak below.
 os.environ.setdefault("PULSE_RUNTIME_PATH", os.path.join(tempfile.gettempdir(), "pulse"))
 
-import time
 import pandas as pd
 from phonemizer import phonemize
 from phonemizer.backend import EspeakBackend
-from config import COL_X1, COL_X2, COL_T1, COL_T2, IPA_BATCH_SIZE
+
+from config import COL_T_ENG_1, COL_T_ENG_2, IPA_BATCH_SIZE
+from src.g2p_common import transcribe_dataframe as _transcribe_dataframe
+
+_TAG = "eng_g2p"
 
 _ESPEAK_DLL = r"C:\Program Files\eSpeak NG\libespeak-ng.dll"
 if os.path.exists(_ESPEAK_DLL):
@@ -73,44 +76,21 @@ def transcribe_dataframe(
     verbose: bool = True,
 ) -> pd.DataFrame:
     """
-    Add IPA transcription columns t_1 and t_2 to a drug-pair DataFrame.
-    Deduplicates all unique drug names before transcription so each name
-    is only transcribed once regardless of how many pairs it appears in.
+    Add English IPA transcription columns COL_T_ENG_1 / COL_T_ENG_2 to a
+    drug-pair DataFrame.
+
     Args:
         df:         DataFrame with columns COL_X1 and COL_X2.
         batch_size: Number of unique names per eSpeak call.
         verbose:    Print progress.
     Returns:
-        Copy of df with added columns COL_T1 and COL_T2.
+        Copy of df with added columns COL_T_ENG_1 and COL_T_ENG_2.
     """
-    df = df.copy()
-    names_x1 = df[COL_X1].fillna("").tolist()
-    names_x2 = df[COL_X2].fillna("").tolist()
-    unique_names = list(set(names_x1 + names_x2))
-    if verbose:
-        print(f"[phonemes] Unique drug names: {len(unique_names):,}")
-        print(f"[phonemes] Batch size       : {batch_size}")
-    cache: dict[str, str] = {}
-    total = len(unique_names)
-    t0 = time.time()
-    for i in range(0, total, batch_size):
-        batch = unique_names[i : i + batch_size]
-        results = _transcribe_batch(batch)
-        cache.update(zip(batch, results))
-        if verbose:
-            done = min(i + batch_size, total)
-            print(
-                f"  {done:>6,} / {total:,}  ({done / total * 100:.1f}%)  [{time.time() - t0:.1f}s]"
-            )
-    if verbose:
-        print(f"[phonemes] Done in {time.time() - t0:.1f}s")
-    df[COL_T1] = [cache.get(n, "") for n in names_x1]
-    df[COL_T2] = [cache.get(n, "") for n in names_x2]
-    empty_1 = (df[COL_T1] == "").sum()
-    empty_2 = (df[COL_T2] == "").sum()
-    if empty_1 or empty_2:
-        print(
-            f"[phonemes] WARNING: empty transcriptions — "
-            f"{COL_T1}: {empty_1}, {COL_T2}: {empty_2}"
-        )
-    return df
+    return _transcribe_dataframe(
+        df,
+        batch_fn=_transcribe_batch,
+        out_cols=(COL_T_ENG_1, COL_T_ENG_2),
+        tag=_TAG,
+        batch_size=batch_size,
+        verbose=verbose,
+    )

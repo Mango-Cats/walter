@@ -18,13 +18,10 @@ stays a union of disjoint components. label=0, not confirmed negative.
 
 D = P ∪ U, deduplicated, with IPA transcriptions added. Saved, along with
 its phonetic (_pho) and feature-engineered (_engi) derivatives, as:
-    _results/D.csv           classification — x_1, t_1, x_2, t_2, label
-    _results/D_rank.csv       same rows + group id, for a downstream
-                              grouped/ranking split (see src/clustering.py)
-    _results/D_pho.csv        D + phonetic-similarity columns (bin/phoc)
-    _results/D_rank_pho.csv   D_rank + the same phonetic columns
-    _results/D_engi.csv       D_pho + META_FEATURES (src/feature_engineering)
-    _results/D_rank_engi.csv  D_rank_pho + the same META_FEATURES
+    _results/D.csv       classification — x_1, t_eng_1, t_fil_1,
+                         x_2, t_eng_2, t_fil_2, label
+    _results/D_pho.csv   D + phonetic-similarity columns (bin/phoc)
+    _results/D_engi.csv  D_pho + META_FEATURES (src/feature_engineering)
 
 Usage:
     python walter.py
@@ -41,17 +38,14 @@ from config import (
     FROM_FILE,
     P,
     D_OUT_CSV,
-    D_RANK_OUT_CSV,
     D_PHO_OUT_CSV,
-    D_RANK_PHO_OUT_CSV,
     D_ENGI_OUT_CSV,
-    D_RANK_ENGI_OUT_CSV,
     SEED,
     TIER_2_SAMPLE_SIZE,
 )
 
 from src.dataset import assemble_and_save
-from src.phoc_runner import run_phoc
+from src.phoc_runner import run_phoc_multilingual
 from src.feature_engineering import run_engineering
 import src.noise as noise
 import src.preprocessing as pre
@@ -147,25 +141,21 @@ def main() -> None:
     print(D["label"].value_counts().to_string())
 
     # --- Phonetic features (phoc) ---
-    # D.csv / D_rank.csv already exist on disk at this point, so a phoc
-    # failure aborts the run but leaves the base datasets intact.
+    # D.csv already exists on disk at this point, so a phoc failure aborts
+    # the run but leaves the base dataset intact.
     with Spinner("Adding phonetic features (phoc)"):
-        feats = run_phoc(D_OUT_CSV, D_PHO_OUT_CSV)
-        run_phoc(D_RANK_OUT_CSV, D_RANK_PHO_OUT_CSV)
+        feats = run_phoc_multilingual(D_OUT_CSV, D_PHO_OUT_CSV)
     print(f"\nPhonetic features ({len(feats)}): {', '.join(feats)}")
-    print(f"  D_pho      → {D_PHO_OUT_CSV}")
-    print(f"  D_rank_pho → {D_RANK_PHO_OUT_CSV}")
+    print(f"  D_pho → {D_PHO_OUT_CSV}")
 
     # --- Feature engineering (META_FEATURES) ---
     # Engineers the string / edit-distance META_FEATURES onto the phoc
-    # outputs, so _engi = engineered and pho'd (every phonetic column plus
-    # the META_FEATURES). D_pho / D_rank_pho stay intact on disk.
+    # output, so _engi = engineered and pho'd (every phonetic column plus
+    # the META_FEATURES). D_pho stays intact on disk.
     with Spinner("Engineering meta-features"):
         meta = run_engineering(D_PHO_OUT_CSV, D_ENGI_OUT_CSV)
-        run_engineering(D_RANK_PHO_OUT_CSV, D_RANK_ENGI_OUT_CSV)
     print(f"\nMeta-features ({len(meta)}): {', '.join(meta)}")
-    print(f"  D_engi      → {D_ENGI_OUT_CSV}")
-    print(f"  D_rank_engi → {D_RANK_ENGI_OUT_CSV}")
+    print(f"  D_engi → {D_ENGI_OUT_CSV}")
 
 
 if __name__ == "__main__":

@@ -8,9 +8,6 @@ is the single place that answers "are these two names already linked,
 directly or transitively?".
 """
 
-import pandas as pd
-
-
 class UnionFind:
     """Union-find over arbitrary hashable keys (drug names)."""
 
@@ -57,25 +54,3 @@ def build_components(pairs: list[tuple[str, str]]) -> dict[str, set[str]]:
     for name in uf._parent:
         components.setdefault(uf.find(name), set()).add(name)
     return components
-
-
-def assign_group_ids(df: pd.DataFrame, col_x1: str, col_x2: str) -> pd.Series:
-    """
-    One connected-component id per row, derived from that dataset's own
-    x_1/x_2 edges — the grouping a downstream ranking task would split on.
-    Ids are ordered by each component's alphabetically-smallest member so
-    they're stable and readable ("g0", "g1", ...), not by arbitrary
-    union-find root.
-    """
-    uf = UnionFind()
-    for a, b in zip(df[col_x1], df[col_x2]):
-        uf.union(a, b)
-
-    members_by_root: dict[str, set[str]] = {}
-    for name in set(df[col_x1]) | set(df[col_x2]):
-        members_by_root.setdefault(uf.find(name), set()).add(name)
-
-    ordered_roots = sorted(members_by_root, key=lambda r: min(members_by_root[r]))
-    root_to_id = {root: f"g{i}" for i, root in enumerate(ordered_roots)}
-
-    return df[col_x1].map(uf.find).map(root_to_id).rename("group")
