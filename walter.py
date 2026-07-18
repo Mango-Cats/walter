@@ -10,7 +10,7 @@ import pandas as pd
 from pandas import DataFrame
 
 from config import (
-    CLASS_RATIO,
+    POSITIVE_PREVALENCE,
     DataSource,
     DATA_SOURCE,
     FROM_FILE,
@@ -82,7 +82,7 @@ def _load_positive_pairs(R_clean: pd.DataFrame, source: DataSource) -> pd.DataFr
 
 def main() -> None:
     print(f"Data source    : {DATA_SOURCE.name}")
-    print(f"U/P ratio      : 1:{CLASS_RATIO}")
+    print(f"Pos. prevalence: {POSITIVE_PREVALENCE:.6f}")
     print(f"Tier 2 sample  : {TIER_2_SAMPLE_SIZE:,}")
     print(f"Seed           : {SEED}")
     print()
@@ -105,7 +105,7 @@ def main() -> None:
         U = noise.make_noise(
             pairs_df=P_load,
             registry_df=R_clean,
-            ratio=CLASS_RATIO,
+            positive_prevalence=POSITIVE_PREVALENCE,
             tier_2_sample_size=TIER_2_SAMPLE_SIZE,
             seed=SEED,
         )

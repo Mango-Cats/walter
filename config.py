@@ -113,12 +113,13 @@ COL_LABEL: str = "label"  # 1 = known positive (LASA), 0 = unlabeled
 P_INPUT_COLS: list[str] = [COL_X1, COL_X2]
 
 
-# Target ratio of unlabeled pairs to confirmed positives
-CLASS_RATIO: int = 450
+# Target share of D that is confirmed positives, i.e. |P| / (|P| + |U|).
+# 1/451 reproduces the previous 1:450 U-to-P ratio.
+POSITIVE_PREVALENCE: float = 1 / 451
 
 # Fraction of U drawn from each tier
 TIER_1_PROPORTION: float = 0.65
-TIER_2_PROPORTION: float = 0.35
+TIER_2_PROPORTION: float = 1 - TIER_1_PROPORTION
 
 # Total outside-vocabulary names sampled for Tier 2, split evenly across
 # clusters (each cluster only ever scores pairs within its own share —

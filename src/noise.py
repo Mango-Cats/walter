@@ -48,7 +48,7 @@ from config import (
     COL_LABEL,
     REGISTRY_COL,
     UNLABELED_LABEL,
-    CLASS_RATIO,
+    POSITIVE_PREVALENCE,
     SIMILARITY_THRESHOLD,
     TIER_1_PROPORTION,
     TIER_2_PROPORTION,
@@ -365,7 +365,7 @@ def _fallback_negative(
 def make_noise(
     pairs_df: pd.DataFrame,
     registry_df: pd.DataFrame,
-    ratio: int = CLASS_RATIO,
+    positive_prevalence: float = POSITIVE_PREVALENCE,
     similarity_threshold: int = SIMILARITY_THRESHOLD,
     tier_1_proportion: float = TIER_1_PROPORTION,
     tier_2_proportion: float = TIER_2_PROPORTION,
@@ -382,7 +382,8 @@ def make_noise(
     Args:
         pairs_df:            Confirmed LASA pairs DataFrame [COL_X1, COL_X2].
         registry_df:         Cleaned drug registry DataFrame [REGISTRY_COL].
-        ratio:               Target |U| / |P| ratio.
+        positive_prevalence: Target share of D that is positives,
+                              |P| / (|P| + |U|). Must be in (0, 1).
         similarity_threshold:Min score for ANY measure to qualify a pair.
         tier_1_proportion:   Fraction of U from Tier 1.
         tier_2_proportion:   Fraction of U from Tier 2 (must sum to 1 with tier_1).
@@ -406,6 +407,10 @@ def make_noise(
         DataFrame with columns: COL_X1, COL_X2, similarity, tier, COL_LABEL.
         All rows have COL_LABEL = UNLABELED_LABEL (0).
     """
+    if not 0.0 < positive_prevalence < 1.0:
+        raise ValueError(
+            f"positive_prevalence must be in (0, 1) (got {positive_prevalence})"
+        )
     if abs(tier_1_proportion + tier_2_proportion - 1.0) > 1e-6:
         raise ValueError(
             f"tier_1_proportion + tier_2_proportion must equal 1.0 "
@@ -433,7 +438,7 @@ def make_noise(
 
     pos_counts = _positives_per_cluster(clusters, positive_pairs)
 
-    target_total = num_positives * ratio
+    target_total = round(num_positives * (1 - positive_prevalence) / positive_prevalence)
     extra_per_cluster = max(1, tier_2_sample_size // max(1, len(clusters)))
 
     tier_targets = _cluster_tier_targets(
@@ -456,7 +461,10 @@ def make_noise(
     print(f"[noise] Clusters (P groups) : {len(clusters):,}")
     print(f"[noise] Registry size       : {len(all_names_norm):,}")
     print(f"[noise] Outside vocab       : {len(outside):,}")
-    print(f"[noise] Target |U|          : {target_total:,}  (ratio 1:{ratio})")
+    print(
+        f"[noise] Target |U|          : {target_total:,}  "
+        f"(positive prevalence {positive_prevalence:.6f})"
+    )
     print(f"[noise] Similarity threshold: {similarity_threshold} (ANY measure)")
     print(f"[noise] Tier 2 extra/cluster: {extra_per_cluster:,}")
     print(f"[noise] Tier 2 max pool/cluster: {tier_2_max_pool_per_cluster:,}")
@@ -537,6 +545,9 @@ def make_noise(
 
     u_df = pd.DataFrame(all_rows)
 
-    print(f"\n[noise] Total U     : {len(u_df):,}  (actual ratio 1:{len(u_df) / num_positives:.1f})")
+    print(
+        f"\n[noise] Total U     : {len(u_df):,}  "
+        f"(actual positive prevalence {num_positives / (num_positives + len(u_df)):.6f})"
+    )
 
     return u_df
