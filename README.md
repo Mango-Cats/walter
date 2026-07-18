@@ -70,10 +70,44 @@ loanword-adaptation worker.
 ## Running
 
 ```bash
-python walter.py
+uv run walter
 ```
 
-Builds the full dataset per `config.py` and saves these CSVs to `_results/`:
+Builds the full dataset per `config/` and saves the CSVs listed below.
+
+### Running one stage
+
+The pipeline is also split into stages that each read and write the paths in
+`config/`, so a run can start from any point. This matters because the stages
+differ enormously in cost: `propose` is 400 LLM calls and `assemble` transcribes
+the whole registry, while `noise` is cheap. Retuning a sampling knob costs one
+`walter noise` instead of a full rebuild.
+
+```bash
+uv run walter propose     # P via the LLM proposer  -> results/lasa_run.json
+uv run walter noise       # sample U                -> results/U.csv
+uv run walter assemble    # merge P + U, transcribe -> results/D.csv
+uv run walter phoc        # phonetic features       -> results/D_pho.csv
+uv run walter engineer    # META_FEATURES           -> results/D_engi.csv
+uv run walter all         # every stage (same as bare `uv run walter`)
+```
+
+Each stage takes `--input` / `--output` to point it at a different file:
+
+```bash
+uv run walter phoc --input results/D.csv --output /tmp/scratch_pho.csv
+```
+
+Running a stage whose input is missing names the command that produces it:
+
+```
+$ uv run walter phoc
+error: results/D.csv not found. Run `walter assemble` first.
+```
+
+### Outputs
+
+Saved to `results/`:
 
 - `D.csv` — classification: `x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label`
 - `D_pho.csv` — `D` with one phonetic-similarity feature column per `bin/pho_conf/*.toml`.
