@@ -50,13 +50,18 @@ P: dict[DataSource, Path] = {
     DataSource.US: DATA_DIR / "P_us.csv",
 }
 
+# Sampled unlabeled pairs, written so `walter noise` and `walter assemble`
+# can run as separate invocations. The full run keeps U in memory and writes
+# this as a checkpoint.
+U_CSV: Path = RESULTS_DIR / "U.csv"
+
 # Final output -- classification: pair + label, schema unchanged
-D_OUT_CSV: Path = RESULTS_DIR / "D.csv"  # full assembled dataset
+D_CSV: Path = RESULTS_DIR / "D.csv"  # full assembled dataset
 
 # phoc output -- D with the phonetic-similarity feature columns added
-D_PHO_OUT_CSV: Path = RESULTS_DIR / "D_pho.csv"
+D_PHO_CSV: Path = RESULTS_DIR / "D_pho.csv"
 
 # Feature-engineering step -- src/feature_engineering.py appends META_FEATURES
 # (orthographic / edit-distance features) onto the phoc output, so _engi is
 # "engineered and pho'd": every phonetic column plus the META_FEATURES.
-D_ENGI_OUT_CSV: Path = RESULTS_DIR / "D_engi.csv"
+D_ENGI_CSV: Path = RESULTS_DIR / "D_engi.csv"

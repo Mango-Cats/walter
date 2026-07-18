@@ -2537,7 +2537,7 @@ wheels = [
 [[package]]
 name = "walter"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "ipykernel" },
     { name = "ipywidgets" },

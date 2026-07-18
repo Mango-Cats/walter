@@ -17,9 +17,9 @@ to be explicit about which stage a knob belongs to.
 """
 
 from .paths import (
-    D_ENGI_OUT_CSV,
-    D_OUT_CSV,
-    D_PHO_OUT_CSV,
+    D_CSV,
+    D_ENGI_CSV,
+    D_PHO_CSV,
     DATA_DIR,
     DATA_SOURCE,
     DataSource,
@@ -28,6 +28,7 @@ from .paths import (
     R,
     R_CLEAN,
     RESULTS_DIR,
+    U_CSV,
     USE_PRECLEANED_REGISTRY,
 )
 from .phonetics import (
@@ -91,9 +92,10 @@ __all__ = [
     "R_CLEAN",
     "USE_PRECLEANED_REGISTRY",
     "P",
-    "D_OUT_CSV",
-    "D_PHO_OUT_CSV",
-    "D_ENGI_OUT_CSV",
+    "U_CSV",
+    "D_CSV",
+    "D_PHO_CSV",
+    "D_ENGI_CSV",
     # schema
     "REGISTRY_COL",
     "COL_X1",

@@ -9,6 +9,7 @@ D is the shuffled union of P and U, deduplicated.
 
 import re
 import unicodedata
+from pathlib import Path
 
 import pandas as pd
 
@@ -23,7 +24,7 @@ from config import (
     POSITIVE_LABEL,
     UNLABELED_LABEL,
     RESULTS_DIR,
-    D_OUT_CSV,
+    D_CSV,
     LASA_RUN_U_CSV,
     SHUFFLE_SEED,
 )
@@ -102,9 +103,10 @@ def assemble_and_save(
     U: pd.DataFrame,
     add_phonemes: bool = True,
     verbose: bool = True,
+    output_csv: Path = D_CSV,
 ) -> pd.DataFrame:
     """
-    Clean, deduplicate, transcribe, and save D.csv to RESULTS_DIR.
+    Clean, deduplicate, transcribe, and save D to output_csv.
 
     Steps:
       1. Normalize column names and labels for both P and U
@@ -113,7 +115,7 @@ def assemble_and_save(
       4. Add IPA transcriptions, one pair per language (English + Filipino)
       5. Reorder to [x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label]
       6. Shuffle D
-      7. Save D.csv (classification) to RESULTS_DIR
+      7. Save D (classification) to output_csv
 
     Returns the assembled D DataFrame (classification schema).
     """
@@ -157,11 +159,13 @@ def assemble_and_save(
 
     D = D.sample(frac=1, random_state=SHUFFLE_SEED).reset_index(drop=True)
 
-    D.to_csv(D_OUT_CSV, index=False)
+    output_csv = Path(output_csv)
+    output_csv.parent.mkdir(parents=True, exist_ok=True)
+    D.to_csv(output_csv, index=False)
 
     if verbose:
         print("\n[dataset] Saved:")
-        print(f"  D → {D_OUT_CSV}  ({len(D):,} rows)")
+        print(f"  D -> {output_csv}  ({len(D):,} rows)")
 
     return D
 

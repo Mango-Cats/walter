@@ -28,11 +28,19 @@ api = [
     "openai>=1.0",
 ]
 
+[project.scripts]
+walter = "walter:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [tool.setuptools]
-package-dir = {"" = "src"}
+py-modules = ["walter"]
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
+include = ["src*", "config*"]
 
 [dependency-groups]
 dev = [
