@@ -1,19 +1,37 @@
 """
 Constructs the unlabeled set U for PU learning via two-tier
-similarity-filtered sampling.
+similarity-filtered sampling, constrained per-cluster so the emitted
+name graph stays a union of disjoint components instead of one giant
+blob.
 
-Tier 1 (~65%): Anchor-based hard negatives.
-    For each known LASA drug x, find registry names outside the
-    P-vocabulary that are similar under ANY of: WRatio, Soundex, Metaphone.
-    These are the hard near-boundary cases.
+Downstream, the LASA classifier splits train/test by connected
+component of the name graph (x_1/x_2 pairs = edges). That only works
+if the graph actually decomposes into many components. P's confirmed
+pairs already do this naturally — each connected component of P is a
+LASA confusion group. The risk is entirely in how U is built: if
+negatives are drawn from one shared global pool, the same
+outside-vocabulary name can end up paired with anchors from two
+different P clusters, bridging them into one component.
 
-Tier 2 (~35%): Broader coverage.
-    Pre-sample TIER_2_SAMPLE_SIZE names from outside the P-vocabulary,
-    then score all pairs within that sample. Avoids O(n²) over the full
-    registry. Coverage is approximate (seeded random sample).
+To avoid that, every outside-vocabulary name is claimed *exclusively*
+by at most one cluster (tracked in `owner`). Once claimed, no other
+cluster may use it, so no name can ever bridge two clusters.
+
+Tier 1 (~65%): Anchor-based hard negatives, per cluster.
+    For each anchor in a cluster, scan the still-unclaimed outside pool
+    for names similar under ANY of: WRatio, Soundex, Metaphone. First
+    cluster to match a given outside name claims it.
+
+Tier 2 (~35%): Broader coverage, per cluster.
+    Each cluster claims a further small random sample of unclaimed
+    outside names (TIER_2_SAMPLE_SIZE distributed across all clusters),
+    then all pairs within that cluster's combined claimed pool
+    (Tier 1 + this sample) are scored pairwise.
 
 A pair qualifies for U if it exceeds SIMILARITY_THRESHOLD on ANY measure,
-and is not already a known positive pair.
+and is not already a known positive pair. A cluster that would otherwise
+end up with zero negatives (all-positive, useless for train/test) gets a
+best-effort fallback negative instead.
 """
 
 import random
@@ -30,13 +48,17 @@ from config import (
     COL_LABEL,
     REGISTRY_COL,
     UNLABELED_LABEL,
-    UNLABELED_TO_POSITIVE_RATIO,
+    CLASS_RATIO,
     SIMILARITY_THRESHOLD,
     TIER_1_PROPORTION,
     TIER_2_PROPORTION,
     TIER_2_SAMPLE_SIZE,
+    TIER_2_MAX_POOL_PER_CLUSTER,
+    CANDIDATE_OVERSAMPLE_FACTOR,
+    CANDIDATE_MIN_POOL,
     SEED,
 )
+from src.clustering import build_components
 
 
 def normalize(name: str) -> str:
@@ -97,82 +119,265 @@ def get_positive_pairs(pairs_df: pd.DataFrame) -> set[frozenset]:
     }
 
 
+def build_clusters(pairs_df: pd.DataFrame) -> dict[str, set[str]]:
+    """
+    Connected components of the confirmed P pairs. Each component is a
+    LASA confusion group and becomes one train/test-split-safe cluster.
+    """
+    edges = [
+        (normalize(row[COL_X1]), normalize(row[COL_X2]))
+        for _, row in pairs_df.iterrows()
+    ]
+    return build_components(edges)
+
+
+def _positives_per_cluster(
+    clusters: dict[str, set[str]],
+    positive_pairs: set[frozenset],
+) -> dict[str, int]:
+    """Count of confirmed positive edges whose endpoints fall in each cluster."""
+    node_to_cluster = {
+        name: cid for cid, members in clusters.items() for name in members
+    }
+    counts = {cid: 0 for cid in clusters}
+    for pair in positive_pairs:
+        anchor = next(iter(pair))
+        cid = node_to_cluster.get(anchor)
+        if cid is not None:
+            counts[cid] += 1
+    return counts
+
+
+def _claimable(candidate: str, cluster_id: str, owner: dict[str, str]) -> bool:
+    """True if `candidate` is unclaimed, or already claimed by this cluster."""
+    current = owner.get(candidate)
+    return current is None or current == cluster_id
+
+
+def _cluster_tier_targets(
+    cluster_order: list[str],
+    pos_counts: dict[str, int],
+    num_positives: int,
+    target_total: float,
+    tier_1_proportion: float,
+    tier_2_proportion: float,
+) -> dict[str, tuple[int, int]]:
+    """
+    Per-cluster (tier_1_target, tier_2_target), each cluster's share of the
+    target |U| scaled by its share of the confirmed positives. Single source
+    of truth for both the accumulation caps (below) and the final
+    down-sampling in make_noise — they must agree so the caps never starve
+    the sampler.
+    """
+    targets: dict[str, tuple[int, int]] = {}
+    for cid in cluster_order:
+        cluster_total = target_total * pos_counts.get(cid, 0) / num_positives
+        t1 = round(cluster_total * tier_1_proportion)
+        t2 = round(cluster_total * tier_2_proportion)
+        targets[cid] = (t1, t2)
+    return targets
+
+
+def _accumulation_caps(
+    targets: dict[str, tuple[int, int]],
+    which: int,
+    factor: int,
+    floor: int,
+) -> dict[str, int]:
+    """
+    Per-cluster cap on how many candidates to *accumulate* before
+    down-sampling: factor × that cluster's tier target, floored so tiny
+    clusters still keep a spread to sample from. `which` selects the tier
+    (0 = tier 1, 1 = tier 2). Bounds memory to O(|U|) instead of
+    O(all qualifying pairs).
+    """
+    return {cid: max(floor, factor * tgt[which]) for cid, tgt in targets.items()}
+
+
 def _build_tier_1(
-    p_vocabulary: set[str],
+    clusters: dict[str, set[str]],
+    cluster_order: list[str],
     outside: list[str],
     positive_pairs: set[frozenset],
     threshold: int,
-) -> list[dict]:
+    owner: dict[str, str],
+    caps: dict[str, int],
+) -> dict[str, list[dict]]:
     """
-    Tier 1: for each anchor in P-vocabulary, score every outside-vocab name.
-    Complexity: O(|p_vocabulary| × |outside|).
+    Per-cluster anchor-based hard negatives. Scans outside names still
+    unclaimed by another cluster; on a qualifying match, claims that
+    name exclusively for this cluster so it can never bridge to another.
+
+    Accumulation is capped per cluster (`caps`): once a cluster has
+    collected its cap of candidates we stop scanning its remaining
+    anchors/outside names. Without this cap a single "hub" cluster whose
+    anchors Soundex/Metaphone-collide with a large slice of a big registry
+    accumulates millions of rows and OOMs — the cap bounds memory to
+    O(|U|). `outside` is expected pre-shuffled so early-stopping doesn't
+    bias toward registry insertion order.
     """
-    rows = []
-    for anchor in sorted(p_vocabulary):
-        for candidate in outside:
-            pair = frozenset([anchor, candidate])
-            if pair in positive_pairs:
-                continue
-            qualifies, score = is_similar_enough(anchor, candidate, threshold)
-            if qualifies:
-                rows.append(
-                    {
-                        COL_X1: anchor,
-                        COL_X2: candidate,
-                        "similarity": score,
-                        "tier": 1,
-                        COL_LABEL: UNLABELED_LABEL,
-                    }
-                )
-    return rows
+    rows_by_cluster: dict[str, list[dict]] = {cid: [] for cid in clusters}
+    for cluster_id in cluster_order:
+        cap = caps.get(cluster_id, 0)
+        rows = rows_by_cluster[cluster_id]
+        if cap <= 0:
+            continue
+        for anchor in sorted(clusters[cluster_id]):
+            if len(rows) >= cap:
+                break
+            for candidate in outside:
+                if not _claimable(candidate, cluster_id, owner):
+                    continue
+                pair = frozenset([anchor, candidate])
+                if pair in positive_pairs:
+                    continue
+                qualifies, score = is_similar_enough(anchor, candidate, threshold)
+                if qualifies:
+                    owner[candidate] = cluster_id
+                    rows.append(
+                        {
+                            COL_X1: anchor,
+                            COL_X2: candidate,
+                            "similarity": score,
+                            "tier": 1,
+                            COL_LABEL: UNLABELED_LABEL,
+                        }
+                    )
+                    if len(rows) >= cap:
+                        break
+    return rows_by_cluster
 
 
 def _build_tier_2(
-    p_vocabulary: set[str],
+    clusters: dict[str, set[str]],
+    cluster_order: list[str],
+    tier_1_pool: dict[str, set[str]],
     outside: list[str],
     positive_pairs: set[frozenset],
     threshold: int,
-    sample_size: int,
-    seed: int | None,
-) -> list[dict]:
+    extra_per_cluster: int,
+    owner: dict[str, str],
+    rng: random.Random,
+    caps: dict[str, int],
+    max_pool_per_cluster: int = TIER_2_MAX_POOL_PER_CLUSTER,
+) -> dict[str, list[dict]]:
     """
-    Tier 2: pre-sample `sample_size` outside-vocab names, then score all pairs
-    within that sample. C(10000,2) ≈ 50M — still fast with rapidfuzz.
-    """
-    rng = random.Random(seed)
-    sample = rng.sample(outside, min(sample_size, len(outside)))
+    Per-cluster broader coverage. Each cluster claims a further small
+    random sample of still-unclaimed outside names (not anchored to a
+    specific match), then all pairs within its combined claimed pool
+    (Tier 1 matches + this sample) are scored pairwise.
 
-    rows = []
-    for a, b in combinations(sample, 2):
-        pair = frozenset([a, b])
-        if pair in positive_pairs:
+    A handful of "hub" anchors (short, generic names) Soundex/Metaphone-
+    collide with a disproportionate slice of the outside vocabulary in
+    Tier 1, so their combined pool here can be far larger than
+    extra_per_cluster would suggest. combinations(pool, 2) is quadratic
+    in that pool size, so an uncapped pool is what floods memory — cap
+    and subsample it before scoring pairs.
+
+    Emitted rows are additionally capped per cluster (`caps`) so a cluster
+    never accumulates far more than it will sample (defense in depth,
+    mirroring Tier 1).
+    """
+    rows_by_cluster: dict[str, list[dict]] = {cid: [] for cid in clusters}
+    free = [n for n in outside if n not in owner]
+    rng.shuffle(free)
+
+    capped_clusters = 0
+    idx = 0
+    for cluster_id in cluster_order:
+        extra = free[idx : idx + extra_per_cluster]
+        idx += extra_per_cluster
+        for name in extra:
+            owner[name] = cluster_id
+
+        cap = caps.get(cluster_id, 0)
+        rows = rows_by_cluster[cluster_id]
+        if cap <= 0:
             continue
-        qualifies, score = is_similar_enough(a, b, threshold)
-        if qualifies:
-            rows.append(
-                {
-                    COL_X1: a,
-                    COL_X2: b,
-                    "similarity": score,
-                    "tier": 2,
-                    COL_LABEL: UNLABELED_LABEL,
-                }
-            )
-    return rows
+
+        pool = sorted(tier_1_pool.get(cluster_id, set()) | set(extra))
+        if len(pool) > max_pool_per_cluster:
+            pool = sorted(rng.sample(pool, max_pool_per_cluster))
+            capped_clusters += 1
+        for a, b in combinations(pool, 2):
+            if len(rows) >= cap:
+                break
+            pair = frozenset([a, b])
+            if pair in positive_pairs:
+                continue
+            qualifies, score = is_similar_enough(a, b, threshold)
+            if qualifies:
+                rows.append(
+                    {
+                        COL_X1: a,
+                        COL_X2: b,
+                        "similarity": score,
+                        "tier": 2,
+                        COL_LABEL: UNLABELED_LABEL,
+                    }
+                )
+    if capped_clusters:
+        print(
+            f"[noise] Capped {capped_clusters:,} oversized cluster pool(s) to "
+            f"{max_pool_per_cluster:,} names before pairwise scoring (hub anchors)"
+        )
+    return rows_by_cluster
+
+
+def _fallback_negative(
+    cluster_id: str,
+    members: set[str],
+    outside: list[str],
+    positive_pairs: set[frozenset],
+    owner: dict[str, str],
+) -> dict | None:
+    """
+    Best-effort single negative for a cluster that matched nothing: pick
+    the anchor/unclaimed-candidate pair with the highest raw WRatio,
+    ignoring the similarity threshold. Keeps the cluster from being
+    all-positive (which downstream would drop as useless anyway).
+    """
+    best = None
+    best_score = -1
+    for anchor in sorted(members):
+        for candidate in outside:
+            if not _claimable(candidate, cluster_id, owner):
+                continue
+            if frozenset([anchor, candidate]) in positive_pairs:
+                continue
+            score = fuzz.WRatio(anchor, candidate)
+            if score > best_score:
+                best_score = score
+                best = (anchor, candidate)
+    if best is None:
+        return None
+    anchor, candidate = best
+    owner[candidate] = cluster_id
+    return {
+        COL_X1: anchor,
+        COL_X2: candidate,
+        "similarity": best_score,
+        "tier": 1,
+        COL_LABEL: UNLABELED_LABEL,
+    }
 
 
 def make_noise(
     pairs_df: pd.DataFrame,
     registry_df: pd.DataFrame,
-    ratio: int = UNLABELED_TO_POSITIVE_RATIO,
+    ratio: int = CLASS_RATIO,
     similarity_threshold: int = SIMILARITY_THRESHOLD,
     tier_1_proportion: float = TIER_1_PROPORTION,
     tier_2_proportion: float = TIER_2_PROPORTION,
     tier_2_sample_size: int = TIER_2_SAMPLE_SIZE,
+    tier_2_max_pool_per_cluster: int = TIER_2_MAX_POOL_PER_CLUSTER,
+    candidate_oversample_factor: int = CANDIDATE_OVERSAMPLE_FACTOR,
+    candidate_min_pool: int = CANDIDATE_MIN_POOL,
     seed: int | None = SEED,
 ) -> pd.DataFrame:
     """
-    Construct and return the unlabeled set U.
+    Construct and return the unlabeled set U, one cluster at a time so
+    the resulting name graph is a union of disjoint components.
 
     Args:
         pairs_df:            Confirmed LASA pairs DataFrame [COL_X1, COL_X2].
@@ -181,7 +386,20 @@ def make_noise(
         similarity_threshold:Min score for ANY measure to qualify a pair.
         tier_1_proportion:   Fraction of U from Tier 1.
         tier_2_proportion:   Fraction of U from Tier 2 (must sum to 1 with tier_1).
-        tier_2_sample_size:  Outside-vocab names pre-sampled for Tier 2.
+        tier_2_sample_size:  Total outside-vocab names sampled for Tier 2,
+                              distributed evenly across clusters.
+        tier_2_max_pool_per_cluster: Cap on a cluster's combined Tier 1 +
+                              Tier 2-extra pool before pairwise scoring,
+                              to bound the quadratic cost/memory of
+                              combinations() on "hub" clusters.
+        candidate_oversample_factor: Cap each cluster's *accumulated* Tier 1
+                              and Tier 2 candidates at this multiple of its
+                              tier target before down-sampling. Bounds total
+                              memory to O(|U|) instead of O(all qualifying
+                              pairs) — this is what keeps a large registry
+                              from OOM-ing during Tier 1.
+        candidate_min_pool:  Floor on that per-cluster cap, so tiny clusters
+                              still keep a spread to sample from.
         seed:                Random seed.
 
     Returns:
@@ -194,81 +412,131 @@ def make_noise(
             f"(got {tier_1_proportion} + {tier_2_proportion})"
         )
 
-    if seed is not None:
-        random.seed(seed)
+    rng = random.Random(seed)
 
-    p_vocab = get_positive_vocabulary(pairs_df)
+    clusters = build_clusters(pairs_df)
     positive_pairs = get_positive_pairs(pairs_df)
-
-    all_names_norm = [normalize(n) for n in registry_df[REGISTRY_COL].dropna().tolist()]
-    outside = [n for n in all_names_norm if n not in p_vocab]
+    p_vocab = {n for members in clusters.values() for n in members}
 
     num_positives = len(positive_pairs)
     if num_positives == 0:
         raise ValueError("No positive pairs found — cannot construct U.")
 
+    all_names_norm = [normalize(n) for n in registry_df[REGISTRY_COL].dropna().tolist()]
+    outside = [n for n in all_names_norm if n not in p_vocab]
+    # Shuffle once (seeded) so that per-cluster candidate caps, which stop
+    # scanning early, don't systematically favor registry insertion order.
+    rng.shuffle(outside)
+
+    cluster_order = list(clusters.keys())
+    rng.shuffle(cluster_order)  # claim order shouldn't systematically favor any cluster
+
+    pos_counts = _positives_per_cluster(clusters, positive_pairs)
+
     target_total = num_positives * ratio
-    tier_1_target = int(target_total * tier_1_proportion)
-    tier_2_target = int(target_total * tier_2_proportion)
+    extra_per_cluster = max(1, tier_2_sample_size // max(1, len(clusters)))
+
+    tier_targets = _cluster_tier_targets(
+        cluster_order,
+        pos_counts,
+        num_positives,
+        target_total,
+        tier_1_proportion,
+        tier_2_proportion,
+    )
+    t1_caps = _accumulation_caps(
+        tier_targets, 0, candidate_oversample_factor, candidate_min_pool
+    )
+    t2_caps = _accumulation_caps(
+        tier_targets, 1, candidate_oversample_factor, candidate_min_pool
+    )
 
     print(f"\n[noise] P-vocabulary size   : {len(p_vocab):,}")
     print(f"[noise] Known positive pairs: {num_positives:,}")
+    print(f"[noise] Clusters (P groups) : {len(clusters):,}")
     print(f"[noise] Registry size       : {len(all_names_norm):,}")
     print(f"[noise] Outside vocab       : {len(outside):,}")
     print(f"[noise] Target |U|          : {target_total:,}  (ratio 1:{ratio})")
     print(f"[noise] Similarity threshold: {similarity_threshold} (ANY measure)")
-    print(f"[noise] Tier 2 sample size  : {tier_2_sample_size:,}")
-
-    print("\n[noise] Building Tier 1 (anchor-based hard negatives)...")
-    t1_candidates = _build_tier_1(
-        p_vocab, outside, positive_pairs, similarity_threshold
-    )
-    print(f"[noise] Tier 1 candidates: {len(t1_candidates):,}")
-
+    print(f"[noise] Tier 2 extra/cluster: {extra_per_cluster:,}")
+    print(f"[noise] Tier 2 max pool/cluster: {tier_2_max_pool_per_cluster:,}")
     print(
-        f"[noise] Building Tier 2 (broader coverage, sample={tier_2_sample_size:,})..."
+        f"[noise] Candidate cap         : {candidate_oversample_factor}x tier target "
+        f"(min {candidate_min_pool}); Tier 1 cap total {sum(t1_caps.values()):,}"
     )
-    t2_candidates = _build_tier_2(
-        p_vocab,
+
+    owner: dict[str, str] = {}
+
+    print("\n[noise] Building Tier 1 (anchor-based hard negatives, per cluster)...")
+    t1_by_cluster = _build_tier_1(
+        clusters,
+        cluster_order,
         outside,
         positive_pairs,
         similarity_threshold,
-        tier_2_sample_size,
-        seed,
+        owner,
+        t1_caps,
     )
-    print(f"[noise] Tier 2 candidates: {len(t2_candidates):,}")
+    t1_pool = {
+        cid: {row[COL_X2] for row in rows} for cid, rows in t1_by_cluster.items()
+    }
+    print(f"[noise] Tier 1 candidates: {sum(len(v) for v in t1_by_cluster.values()):,}")
 
-    rng = random.Random(seed)
+    print(f"[noise] Building Tier 2 (broader coverage, per cluster)...")
+    t2_by_cluster = _build_tier_2(
+        clusters,
+        cluster_order,
+        t1_pool,
+        outside,
+        positive_pairs,
+        similarity_threshold,
+        extra_per_cluster,
+        owner,
+        rng,
+        t2_caps,
+        tier_2_max_pool_per_cluster,
+    )
+    print(f"[noise] Tier 2 candidates: {sum(len(v) for v in t2_by_cluster.values()):,}")
 
-    t1_sampled = rng.sample(t1_candidates, min(tier_1_target, len(t1_candidates)))
-    shortfall = tier_1_target - len(t1_sampled)
-    if shortfall > 0:
+    all_rows: list[dict] = []
+    empty_clusters = 0
+    for cluster_id in cluster_order:
+        tier_1_target, tier_2_target = tier_targets[cluster_id]
+
+        t1_candidates = t1_by_cluster.get(cluster_id, [])
+        t2_candidates = t2_by_cluster.get(cluster_id, [])
+
+        t1_sampled = rng.sample(t1_candidates, min(tier_1_target, len(t1_candidates)))
+        shortfall = tier_1_target - len(t1_sampled)
+        if shortfall > 0:
+            tier_2_target += shortfall
+        t2_sampled = rng.sample(t2_candidates, min(tier_2_target, len(t2_candidates)))
+
+        cluster_rows = t1_sampled + t2_sampled
+        if not cluster_rows:
+            fallback = _fallback_negative(
+                cluster_id, clusters[cluster_id], outside, positive_pairs, owner
+            )
+            if fallback is not None:
+                cluster_rows = [fallback]
+            else:
+                empty_clusters += 1
+        all_rows.extend(cluster_rows)
+
+    if empty_clusters:
         print(
-            f"[noise] WARNING: Tier 1 short by {shortfall:,}; reallocating to Tier 2."
-        )
-        tier_2_target += shortfall
-
-    t2_sampled = rng.sample(t2_candidates, min(tier_2_target, len(t2_candidates)))
-    shortfall2 = tier_2_target - len(t2_sampled)
-    if shortfall2 > 0:
-        print(
-            f"[noise] WARNING: Tier 2 short by {shortfall2:,}. "
-            "Total U will be smaller than target. "
-            "Consider lowering SIMILARITY_THRESHOLD or raising TIER_2_SAMPLE_SIZE."
+            f"[noise] WARNING: {empty_clusters:,} cluster(s) got no negatives at all "
+            "(outside vocab exhausted) — they will be all-positive and likely "
+            "dropped by the downstream split."
         )
 
-    all_unlabeled = t1_sampled + t2_sampled
-    if not all_unlabeled:
+    if not all_rows:
         raise ValueError(
             "No unlabeled pairs generated. SIMILARITY_THRESHOLD may be too strict."
         )
 
-    u_df = pd.DataFrame(all_unlabeled)
+    u_df = pd.DataFrame(all_rows)
 
-    print(f"\n[noise] Final Tier 1: {len(t1_sampled):,}")
-    print(f"[noise] Final Tier 2: {len(t2_sampled):,}")
-    print(
-        f"[noise] Total U     : {len(u_df):,}  (actual ratio 1:{len(u_df) / num_positives:.1f})"
-    )
+    print(f"\n[noise] Total U     : {len(u_df):,}  (actual ratio 1:{len(u_df) / num_positives:.1f})")
 
     return u_df

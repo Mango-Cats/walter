@@ -29,4 +29,40 @@ IPA transcription requires eSpeak-NG installed at the system level:
 - **Linux**: `apt install espeak-ng`
 - **macOS**: `brew install espeak-ng`
 
-On Colab this is handled automatically by the setup cell in `walter.ipynb`.
+### Pho (phoc)
+
+Similarity features are computed by [`phoc`](https://github.com/Mango-Cats/pho),
+a Rust CLI. This project expects:
+
+- the `phoc` executable at `bin/phoc` (git-ignored — it's ~186MB, over
+  GitHub's file limit; build it from the `pho` repo and drop it here);
+- the config TOMLs at `bin/pho_conf/` (committed). Each `.toml` becomes one
+  feature column named after the file; the file's `algorithm` key selects the
+  algorithm.
+
+See the `pho` docs for how the configs work.
+
+### TagaBaybay (tbb-cli)
+
+The Filipino-nativization features in [`src.feature_engineering`](/src/feature_engineering.py)
+are computed by [`tbb-cli`](https://github.com/Mango-Cats/tagabaybay/), the TagaBaybay
+loanword-adaptation worker.
+
+- the `tbb-cli` executable at `bin/tbb-cli`.
+
+## Running
+
+```bash
+python walter.py
+```
+
+Builds the full dataset per `config.py` and saves these CSVs to `_results/`:
+
+- `D.csv` — classification: `x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label`
+- `D_pho.csv` — `D` with one phonetic-similarity feature column per `bin/pho_conf/*.toml`.
+  Transcription-dependent configs (`aline`) yield one column per language
+  (`aline_ph_mc_eng`, `aline_ph_mc_fil`); the rest score `x_1`/`x_2` only and appear once.
+- `D_engi.csv` — `D_pho` with the META_FEATURES from `src/feature_engineering.py`
+  appended (structural / prosodic + the Filipino-nativization features from `bin/tbb-cli`)
+
+`D.csv` is always written before `phoc` runs, so a `phoc` failure leaves it intact.

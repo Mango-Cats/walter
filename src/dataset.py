@@ -1,17 +1,10 @@
 """
-Assembles P and U into the final dataset D, then saves all three as CSVs.
+Assembles P and U into the final dataset D and saves it:
 
-Output schema for all three files:
-    x_1    : drug name A
-    x_2    : drug name B
-    t_1    : IPA transcription of x_1
-    t_2    : IPA transcription of x_2
-    label  : 1 = confirmed LASA (P rows), 0 = unlabeled (U rows)
+D.csv (classification) — x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label.
+One IPA transcription per language per name (see config.TRANSCRIPTION_LANGS).
 
-P.csv and U.csv also carry this schema so they are self-contained and
-can be inspected or reloaded independently.
-
-D.csv is the shuffled union of P and U, deduplicated.
+D is the shuffled union of P and U, deduplicated.
 """
 
 import re
@@ -22,8 +15,10 @@ import pandas as pd
 from config import (
     COL_X1,
     COL_X2,
-    COL_T1,
-    COL_T2,
+    COL_T_ENG_1,
+    COL_T_ENG_2,
+    COL_T_FIL_1,
+    COL_T_FIL_2,
     COL_LABEL,
     POSITIVE_LABEL,
     UNLABELED_LABEL,
@@ -32,7 +27,12 @@ from config import (
     LASA_RUN_U_CSV,
     SHUFFLE_SEED,
 )
-from src.phonemes import transcribe_dataframe
+from src.eng_g2p import transcribe_dataframe as transcribe_eng
+from src.fil_g2p import transcribe_dataframe as transcribe_fil
+
+# x_1's transcriptions, then x_2's, in language order.
+_T1_COLS: list[str] = [COL_T_ENG_1, COL_T_FIL_1]
+_T2_COLS: list[str] = [COL_T_ENG_2, COL_T_FIL_2]
 
 
 def _clean_name(name: str) -> str:
@@ -105,18 +105,18 @@ def assemble_and_save(
     verbose: bool = True,
 ) -> pd.DataFrame:
     """
-    Clean, deduplicate, transcribe, and save P, U, and D.
+    Clean, deduplicate, transcribe, and save D.csv to RESULTS_DIR.
 
     Steps:
       1. Normalize column names and labels for both P and U
       2. Clean and deduplicate each independently
       3. Concatenate into D, deduplicate again across the union
-      4. Add IPA transcriptions (t_1, t_2)
-      5. Reorder columns to [x_1, t_1, x_2, t_2, label]
+      4. Add IPA transcriptions, one pair per language (English + Filipino)
+      5. Reorder to [x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label]
       6. Shuffle D
-      7. Save P.csv, U.csv, D.csv to RESULTS_DIR
+      7. Save D.csv (classification) to RESULTS_DIR
 
-    Returns the assembled D DataFrame.
+    Returns the assembled D DataFrame (classification schema).
     """
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -140,20 +140,23 @@ def assemble_and_save(
 
     if add_phonemes:
         if verbose:
-            print("\n[dataset] Adding IPA transcriptions...")
-        D = transcribe_dataframe(D, verbose=verbose)
-        trans_map_1 = dict(zip(D[COL_X1], D[COL_T1]))
-        trans_map_2 = dict(zip(D[COL_X2], D[COL_T2]))
+            print("\n[dataset] Adding English IPA transcriptions...")
+        D = transcribe_eng(D, verbose=verbose)
+        if verbose:
+            print("\n[dataset] Adding Filipino IPA transcriptions...")
+        D = transcribe_fil(D, verbose=verbose)
 
         for df_ in [P_clean, U_clean]:
-            df_[COL_T1] = df_[COL_X1].map(trans_map_1).fillna("")
-            df_[COL_T2] = df_[COL_X2].map(trans_map_2).fillna("")
+            for col in _T1_COLS:
+                df_[col] = df_[COL_X1].map(dict(zip(D[COL_X1], D[col]))).fillna("")
+            for col in _T2_COLS:
+                df_[col] = df_[COL_X2].map(dict(zip(D[COL_X2], D[col]))).fillna("")
     else:
         for df_ in [D, P_clean, U_clean]:
-            df_[COL_T1] = ""
-            df_[COL_T2] = ""
+            for col in _T1_COLS + _T2_COLS:
+                df_[col] = ""
 
-    final_cols = [COL_X1, COL_T1, COL_X2, COL_T2, COL_LABEL]
+    final_cols = [COL_X1, *_T1_COLS, COL_X2, *_T2_COLS, COL_LABEL]
     D = D[final_cols]
     P_clean = P_clean.reindex(columns=final_cols, fill_value="")
     U_clean = U_clean.reindex(columns=final_cols, fill_value="")

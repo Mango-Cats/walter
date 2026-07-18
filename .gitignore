@@ -3,6 +3,9 @@ _data/
 _models/
 _results/
 
+bin/phoc
+bin/tbb-cli
+
 # VS Code
 .vscode/
 
