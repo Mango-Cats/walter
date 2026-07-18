@@ -490,7 +490,7 @@ def make_noise(
     }
     print(f"[noise] Tier 1 candidates: {sum(len(v) for v in t1_by_cluster.values()):,}")
 
-    print(f"[noise] Building Tier 2 (broader coverage, per cluster)...")
+    print("[noise] Building Tier 2 (broader coverage, per cluster)...")
     t2_by_cluster = _build_tier_2(
         clusters,
         cluster_order,

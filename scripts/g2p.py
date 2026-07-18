@@ -20,11 +20,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pandas as pd
 
 from config import COL_X1, COL_X2
-from src.eng_g2p import transcribe_dataframe as transcribe_eng
-from src.fil_g2p import transcribe_dataframe as transcribe_fil
+from src.transcribe import transcribe_all
 
 _REQUIRED_COLS: frozenset = frozenset({COL_X1, COL_X2})
-_TRANSCRIBERS = {"eng": transcribe_eng, "fil": transcribe_fil}
 
 
 def g2p(input_path: Path, in_place: bool, langs: list[str]) -> None:
@@ -35,9 +33,7 @@ def g2p(input_path: Path, in_place: bool, langs: list[str]) -> None:
 
     print(f"[g2p] Loaded {len(df):,} rows from {input_path}")
 
-    for lang in langs:
-        print(f"\n[g2p] Transcribing: {lang}")
-        df = _TRANSCRIBERS[lang](df, verbose=True)
+    df = transcribe_all(df, langs=langs, tag="g2p", verbose=True)
 
     if in_place:
         out_path = input_path
@@ -46,7 +42,7 @@ def g2p(input_path: Path, in_place: bool, langs: list[str]) -> None:
 
     df.to_csv(out_path, index=False)
 
-    print(f"\n[g2p] Done.")
+    print("\n[g2p] Done.")
     print(f"  Rows transcribed : {len(df):,}")
     print(f"  Output           : {out_path}")
 

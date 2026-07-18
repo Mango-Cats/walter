@@ -46,8 +46,7 @@ from config import (
     UNLABELED_LABEL,
 )
 from src.dataset import clean_and_deduplicate
-from src.eng_g2p import transcribe_dataframe as transcribe_eng
-from src.fil_g2p import transcribe_dataframe as transcribe_fil
+from src.transcribe import transcribe_all
 from src.preprocessing import clean_registry
 
 # x_1's transcriptions, then x_2's, in language order.
@@ -145,10 +144,7 @@ def augment(
         return
 
     new_df = pd.DataFrame(raw_pairs)
-    print("\n[augmenter] Adding English IPA transcriptions to new pairs...")
-    new_df = transcribe_eng(new_df, verbose=True)
-    print("\n[augmenter] Adding Filipino IPA transcriptions to new pairs...")
-    new_df = transcribe_fil(new_df, verbose=True)
+    new_df = transcribe_all(new_df, tag="augmenter", verbose=True)
     new_df[COL_LABEL] = UNLABELED_LABEL
 
     new_df = new_df.reindex(columns=_FINAL_COLS, fill_value="")
@@ -164,7 +160,7 @@ def augment(
 
     combined.to_csv(out_path, index=False)
 
-    print(f"\n[augmenter] Done.")
+    print("\n[augmenter] Done.")
     print(f"  Existing pairs  : {len(input_df):,}")
     print(f"  New pairs added : {len(raw_pairs):,}")
     print(f"  Total rows      : {len(combined):,}")

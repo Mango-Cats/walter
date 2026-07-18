@@ -35,24 +35,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pandas as pd
 
-from config import COL_X1, COL_X2, TRANSCRIPTION_LANGS
-from src.eng_g2p import transcribe_dataframe as transcribe_eng
+from config import COL_X1, COL_X2
 from src.feature_engineering import run_engineering
-from src.fil_g2p import transcribe_dataframe as transcribe_fil
 from src.phoc_runner import run_phoc_multilingual
-
-_TRANSCRIBERS = {"eng": transcribe_eng, "fil": transcribe_fil}
-
-
-def _transcribe(df: pd.DataFrame, retranscribe: bool) -> pd.DataFrame:
-    """Add each language's transcription columns, skipping any already present."""
-    for lang, cols in TRANSCRIPTION_LANGS.items():
-        if not retranscribe and all(c in df.columns for c in cols):
-            print(f"[featurize] {lang}: columns {list(cols)} already present, reusing")
-            continue
-        print(f"\n[featurize] Transcribing: {lang}")
-        df = _TRANSCRIBERS[lang](df, verbose=True)
-    return df
+from src.transcribe import transcribe_all
 
 
 def featurize(
@@ -72,7 +58,9 @@ def featurize(
     t_csv = stage_dir / f"{input_path.stem}_t.csv"
     pho_csv = stage_dir / f"{input_path.stem}_pho.csv"
 
-    df = _transcribe(df, retranscribe)
+    df = transcribe_all(
+        df, skip_existing=not retranscribe, tag="featurize", verbose=True
+    )
     df.to_csv(t_csv, index=False)
     print(f"[featurize] Transcriptions: {t_csv}")
 
@@ -86,7 +74,7 @@ def featurize(
     print(f"[featurize] Meta-features ({len(meta)}): {', '.join(meta)}")
 
     final = pd.read_csv(output_path)
-    print(f"\n[featurize] Done.")
+    print("\n[featurize] Done.")
     print(f"  Rows    : {len(final):,}")
     print(f"  Columns : {len(final.columns)}")
     print(f"  Output  : {output_path}")

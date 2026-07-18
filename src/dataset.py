@@ -27,8 +27,7 @@ from config import (
     LASA_RUN_U_CSV,
     SHUFFLE_SEED,
 )
-from src.eng_g2p import transcribe_dataframe as transcribe_eng
-from src.fil_g2p import transcribe_dataframe as transcribe_fil
+from src.transcribe import transcribe_all
 
 # x_1's transcriptions, then x_2's, in language order.
 _T1_COLS: list[str] = [COL_T_ENG_1, COL_T_FIL_1]
@@ -139,12 +138,7 @@ def assemble_and_save(
         print(f"[dataset]   label=0 (U): {(D[COL_LABEL] == UNLABELED_LABEL).sum():,}")
 
     if add_phonemes:
-        if verbose:
-            print("\n[dataset] Adding English IPA transcriptions...")
-        D = transcribe_eng(D, verbose=verbose)
-        if verbose:
-            print("\n[dataset] Adding Filipino IPA transcriptions...")
-        D = transcribe_fil(D, verbose=verbose)
+        D = transcribe_all(D, tag="dataset", verbose=verbose)
 
         for df_ in [P_clean, U_clean]:
             for col in _T1_COLS:
@@ -261,22 +255,22 @@ def add_lasa_run_unlabeled(
     if verbose:
         print(f"\n[dataset] Unselected-candidate pairs: {before:,}")
         if dupes:
-            print(f"[dataset]   {dupes:,} already present in D — dropped")
+            print(f"[dataset]   {dupes:,} already present in D, dropped")
         print(f"[dataset]   {len(new_pairs):,} new label=0 rows to add")
 
     if add_phonemes and len(new_pairs):
-        new_pairs = transcribe_dataframe(new_pairs, verbose=verbose)
+        new_pairs = transcribe_all(new_pairs, tag="dataset", verbose=verbose)
     else:
-        new_pairs[COL_T1] = ""
-        new_pairs[COL_T2] = ""
+        for col in _T1_COLS + _T2_COLS:
+            new_pairs[col] = ""
 
-    final_cols = [COL_X1, COL_T1, COL_X2, COL_T2, COL_LABEL]
+    final_cols = [COL_X1, *_T1_COLS, COL_X2, *_T2_COLS, COL_LABEL]
     new_pairs = new_pairs.reindex(columns=final_cols, fill_value="")
 
     D_extended = pd.concat([D, new_pairs], ignore_index=True)
 
     if verbose:
-        print(f"\n[dataset] D extended: {len(D):,} → {len(D_extended):,} rows")
+        print(f"\n[dataset] D extended: {len(D):,} -> {len(D_extended):,} rows")
         print(D_extended[COL_LABEL].value_counts().to_string())
 
     return D_extended
