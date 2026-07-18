@@ -1,7 +1,4 @@
-# Models
-_data/
-_models/
-_results/
+models/
 
 bin/phoc
 bin/tbb-cli
