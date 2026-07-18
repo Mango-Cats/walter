@@ -5,11 +5,11 @@ No other file should hardcode these values.
 
 Split by pipeline stage:
 
-    paths      — the active registry, directories, dataset files
-    schema     — column names and label values
-    sampling   — how U is built (class balance, tiers, memory caps)
-    proposer   — where P comes from (file / local LLM / DeepSeek API)
-    phonetics  — phoc, tbb-cli, and the G2P toolchain
+    paths      the active registry, directories, dataset files
+    schema     column names and label values
+    sampling   how U is built (class balance, tiers, memory caps)
+    proposer   where P comes from (file / local LLM / DeepSeek API)
+    phonetics  phoc, tbb-cli, and the G2P toolchain
 
 Every name is re-exported here, so `from config import COL_X1` keeps working.
 Import from the submodule (`from config.sampling import SEED`) when you want

@@ -3,7 +3,7 @@ How the unlabeled set U is built (src/noise.py): class balance, the Tier 1 /
 Tier 2 split, and the caps that keep the pairwise scoring from blowing up
 memory on "hub" clusters.
 
-Most of the caps below exist because of a specific OOM — read the comments
+Most of the caps below exist because of a specific OOM. Read the comments
 before raising one.
 """
 
@@ -16,24 +16,24 @@ TIER_1_PROPORTION: float = 0.65
 TIER_2_PROPORTION: float = 1 - TIER_1_PROPORTION
 
 # Total outside-vocabulary names sampled for Tier 2, split evenly across
-# clusters (each cluster only ever scores pairs within its own share —
+# clusters (each cluster only ever scores pairs within its own share --
 # see src/noise.py for why sampling must stay per-cluster)
 TIER_2_SAMPLE_SIZE: int = 10_000
 
 # Hard cap on a cluster's combined Tier 1 + Tier 2-extra pool before it's
 # fed into Tier 2's pairwise combinations. Some anchors are generic
 # enough (short, digit-heavy names) that Soundex/Metaphone collide with a
-# large slice of the outside vocabulary — is_similar_enough() qualifies
+# large slice of the outside vocabulary -- is_similar_enough() qualifies
 # on ANY of WRatio/Soundex/Metaphone, so that collision isn't filtered by
 # SIMILARITY_THRESHOLD. Without this cap, one such "hub" cluster turns
 # into combinations(n, 2) with n in the thousands, which is quadratic in
 # both CPU and the number of qualifying rows held in memory before
-# down-sampling — that's what blows up RAM. Oversized pools are
+# down-sampling -- that's what blows up RAM. Oversized pools are
 # subsampled down to this size (seeded, so still deterministic).
 TIER_2_MAX_POOL_PER_CLUSTER: int = 300
 
 # Oversample factor: cap each cluster's accumulated Tier-1/Tier-2 candidates at
-# factor × that cluster's tier target before down-sampling. This bounds memory
+# factor x that cluster's tier target before down-sampling. This bounds memory
 # to O(|U|) instead of O(all qualifying pairs). Tier 1 was previously uncapped,
 # so on a large registry "hub" anchors (short/digit-heavy names that Soundex/
 # Metaphone-collide with a huge slice of the vocabulary) made the candidate list
@@ -50,7 +50,7 @@ CANDIDATE_MIN_POOL: int = 50
 # Minimum similarity for a pair to qualify for U (ANY measure)
 SIMILARITY_THRESHOLD: int = 65
 
-# Random seed — set to None for non-deterministic runs
+# Random seed -- set to None for non-deterministic runs
 SEED: int = 42
 
 # Random state for final shuffle
