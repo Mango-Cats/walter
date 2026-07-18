@@ -16,7 +16,7 @@ class DataSource(Enum):
 DATA_SOURCE: DataSource = DataSource.PH
 
 DATA_DIR = Path("_data")
-RESULTS_DIR = Path("_results")
+RESULTS_DIR = Path("results")
 
 # Models are downloaded here by scripts/model_setup.py
 MODELS_DIR = Path("models")

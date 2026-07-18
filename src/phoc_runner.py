@@ -140,6 +140,21 @@ def _classify_configs(config_dir: Path) -> tuple[list[str], list[str]]:
     return phonetic, orthographic
 
 
+def _feature_names(
+    phonetic: list[str],
+    orthographic: list[str],
+    langs: dict[str, tuple[str, str]],
+) -> list[str]:
+    """
+    Every feature column a run emits, in output order: the orthographic ones
+    (computed once), then each phonetic one with its languages grouped together
+    (aline_ph_mc_eng, aline_ph_mc_fil, ...).
+    """
+    return list(orthographic) + [
+        f"{stem}_{lang}" for stem in phonetic for lang in langs
+    ]
+
+
 def run_phoc_multilingual(
     input_csv: Path,
     output_csv: Path,
@@ -169,6 +184,14 @@ def run_phoc_multilingual(
         )
 
     phonetic, orthographic = _classify_configs(config_dir)
+
+    # Re-running over an already-scored CSV: phoc appends its column regardless
+    # of whether one of the same name came in, so the output would carry two
+    # `bisim` columns and pandas would resolve reads to the stale first one.
+    # Drop any prior feature columns up front, so they are always recomputed.
+    stale = [c for c in _feature_names(phonetic, orthographic, langs) if c in base.columns]
+    if stale:
+        base = base.drop(columns=stale)
 
     features: dict[str, pd.Series] = {}
     orth_reference: dict[str, pd.Series] = {}
@@ -206,10 +229,7 @@ def run_phoc_multilingual(
                         f"Add its `algorithm` to config.PHONETIC_ALGORITHMS."
                     )
 
-    # Stable column order: orthographic first, then each phonetic feature with
-    # its languages grouped together (aline_ph_mc_eng, aline_ph_mc_fil, ...).
-    ordered: list[str] = list(orthographic)
-    ordered += [f"{stem}_{lang}" for stem in phonetic for lang in langs]
+    ordered = _feature_names(phonetic, orthographic, langs)
 
     merged = base.copy()
     for stem in orthographic:

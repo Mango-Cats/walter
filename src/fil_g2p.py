@@ -12,8 +12,21 @@ Requirements:
 
 Shape mirrors src/eng_g2p.py: same transcribe_dataframe() entrypoint, same
 concatenated-IPA output format. Unlike eSpeak, the decoder is a subprocess and
-works one word at a time, so names are tokenized on whitespace and every unique
-token across the whole batch is decoded in a single --wordlist invocation.
+works one word at a time, so names are split into runs of model-alphabet
+graphemes and every unique run across the whole batch is decoded in a single
+--wordlist invocation.
+
+Names carry digits (preprocessing.clean_name keeps them: "b12", "stabigran
+150"), which the WFST cannot decode. Undecodable runs are passed through
+verbatim into the IPA string rather than dropped.
+
+Note that phoc's ALINE reader silently discards digits, whitespace, punctuation,
+and the length/stress marks (ː ˈ ˌ), so the passthrough preserves them in the IPA
+column but NOT in any phonetic-similarity score computed from it: "stabigran 150"
+and "stabigran 75" transcribe differently and still score aline == 1.0. That
+tolerance does not extend to every non-inventory character -- tone letters, for
+one, hard-error -- so anything the WFST can emit that ALINE lacks must be
+normalised away here (see _IPA_FIXUPS, _TONE_LETTERS).
 """
 
 import importlib.util
@@ -44,6 +57,31 @@ _TAG = "fil_g2p"
 # cannot map; we scrape it to detect out-of-alphabet input. The decoder drops
 # such characters silently, so its output for the affected word is unreliable.
 _UNKNOWN_SYM = re.compile(r"Symbol: '(.+?)' not found in input symbols table")
+
+# The model's grapheme alphabet, after NFC + lowercasing. clean_name() already
+# restricts names to [a-z0-9 ], so digits are the only undecodable runs we
+# expect, but the split is defined by what the model accepts, not by what we
+# expect to meet.
+_DECODABLE = re.compile(r"[a-z]+")
+
+# Rewrite the WFST's phones to the spellings bin/pho_conf's ALINE reader accepts.
+# It lists both spellings of each affricate but only tokenizes the precomposed
+# one, and keys the velar stop on the ASCII lookalike. Order matters: the
+# affricates must be replaced before any single-character rule could touch them.
+_IPA_FIXUPS = {
+    "d͡ʒ": "ʤ",  # U+0064 U+0361 U+0292 -> U+02A4
+    "t͡ʃ": "ʧ",  # U+0074 U+0361 U+0283 -> U+02A7
+    "ɡ": "g",  # ɡ (IPA velar stop, U+0261) -> g (U+0067)
+}
+
+# The WFST's output alphabet includes all five IPA tone letters (U+02E5..U+02E9),
+# inherited from tone-marked Wiktionary entries; the decoder emits them rarely
+# and unpredictably (~1 name in 85k). Tagalog is not tonal and ALINE has no tone
+# feature, so dropping them is lossless for scoring. This is not the same as the
+# length/stress marks (ː ˈ ˌ) or digits, which phoc's ALINE reader ignores on its
+# own -- tone letters are absent from that ignore set and hard-error as
+# UnknownToken instead, so they must be stripped here.
+_TONE_LETTERS = re.compile(r"[˥-˩]")
 
 
 def _resolve_model() -> Path:
@@ -149,8 +187,33 @@ def _decode(tokens: list[str], model: Path) -> dict[str, str]:
             word, _score, phones = parts
             # Concatenate phones to match eng_g2p's format. phoc's aline parser
             # ignores whitespace, so this is lossless for downstream scoring.
-            out.setdefault(word, "".join(phones.split()))
+            ipa = "".join(phones.split())
+            for src, tgt in _IPA_FIXUPS.items():
+                ipa = ipa.replace(src, tgt)
+            ipa = _TONE_LETTERS.sub("", ipa)
+            out.setdefault(word, ipa)
     return out
+
+
+def _chunk(name: str) -> list[tuple[str, bool]]:
+    """
+    Split a name into consecutive (text, decodable) runs, in order.
+
+    "stabigran 150" -> [("stabigran", True), (" 150", False)]
+    "b12"           -> [("b", True), ("12", False)]
+
+    Reassembling the texts reproduces `name` exactly.
+    """
+    chunks: list[tuple[str, bool]] = []
+    pos = 0
+    for m in _DECODABLE.finditer(name):
+        if m.start() > pos:
+            chunks.append((name[pos : m.start()], False))
+        chunks.append((m.group(), True))
+        pos = m.end()
+    if pos < len(name):
+        chunks.append((name[pos:], False))
+    return chunks
 
 
 def _transcribe_batch(names: list[str]) -> list[str]:
@@ -158,20 +221,34 @@ def _transcribe_batch(names: list[str]) -> list[str]:
     Transcribe a batch of drug names to IPA using the Phonetisaurus WFST.
     Returns one IPA string per name, aligned to the input order.
 
-    A name may be multi-word ("vitamin c"); the model is word-level, so each
-    whitespace token is decoded and the results concatenated. A name whose
-    tokens all fail to decode yields "".
+    A name may be multi-word ("vitamin c") and may carry digits ("b12"); the
+    model is word-level and letters-only, so each decodable run is decoded and
+    the results are concatenated with the undecodable runs left in place. A
+    decodable run the model produced no output for contributes "".
     """
     model = _resolve_model()
 
     # The model's grapheme alphabet is lowercase and NFC; match it.
     normalized = [unicodedata.normalize("NFC", n).lower() for n in names]
-    tokens = sorted({tok for n in normalized for tok in n.split()})
-    if not tokens:
-        return ["" for _ in names]
+    chunked = [_chunk(n) for n in normalized]
 
-    decoded = _decode(tokens, model)
-    return ["".join(decoded.get(tok, "") for tok in n.split()) for n in normalized]
+    tokens = sorted({text for cs in chunked for text, ok in cs if ok})
+    decoded = _decode(tokens, model) if tokens else {}
+
+    out = []
+    for cs in chunked:
+        parts = []
+        for text, ok in cs:
+            if ok:
+                parts.append(decoded.get(text, ""))
+            else:
+                # Whitespace is a separator, not content: eng_g2p emits phones
+                # unseparated, so drop it and keep only the literal graphemes.
+                literal = "".join(text.split())
+                if literal:
+                    parts.append(literal)
+        out.append("".join(parts))
+    return out
 
 
 def transcribe_dataframe(

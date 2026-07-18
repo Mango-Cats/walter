@@ -6,7 +6,6 @@ Usage:
     python walter.py
 """
 
-from numpy import source
 import pandas as pd
 from pandas import DataFrame
 
