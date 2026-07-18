@@ -4,17 +4,21 @@ Models are downloaded by scripts/model_setup.py into config.MODELS_DIR.
 """
 
 import os
-
-import torch
-import transformers
 from enum import Enum
 
 from config import MODELS_DIR
-from src.proposer.prompt import SYSTEM_PROMPT
 
-n_threads = os.cpu_count() or 4
-torch.set_num_threads(n_threads)
-torch.set_num_interop_threads(max(1, n_threads // 2))
+try:
+    import torch
+    import transformers
+    _TORCH_AVAILABLE = True
+except ImportError:
+    _TORCH_AVAILABLE = False
+
+if _TORCH_AVAILABLE:
+    n_threads = os.cpu_count() or 4
+    torch.set_num_threads(n_threads)
+    torch.set_num_interop_threads(max(1, n_threads // 2))
 
 
 class LocalModel(Enum):
@@ -33,6 +37,11 @@ _MODELS: dict[LocalModel, tuple] = {}
 
 
 def get_model(model_choice: LocalModel) -> tuple:
+    if not _TORCH_AVAILABLE:
+        raise RuntimeError(
+            "torch/transformers not installed. "
+            "Run: uv pip install -e '.[llm]'  or set USE_API_MODEL = True in config.py"
+        )
     if model_choice in _MODELS:
         return _MODELS[model_choice]
 

@@ -24,6 +24,7 @@ from config import (
     UNLABELED_LABEL,
     RESULTS_DIR,
     D_OUT_CSV,
+    LASA_RUN_U_CSV,
     SHUFFLE_SEED,
 )
 from src.eng_g2p import transcribe_dataframe as transcribe_eng
@@ -169,3 +170,113 @@ def assemble_and_save(
         print(f"  D → {D_OUT_CSV}  ({len(D):,} rows)")
 
     return D
+
+
+def _unselected_candidate_pairs(lasa_data: list[dict]) -> pd.DataFrame:
+    """
+    Build a (x_1, x_2, label=0) DataFrame from the candidates each entry
+    in lasa_run.json was shown but did NOT propose (candidates - x_2).
+
+    Args:
+        lasa_data: Parsed JSON from LLM_OUTPUT_JSON / LASA_RUN_JSON —
+                   a list of {"x_1": ..., "candidates": [...], "x_2": [...]}.
+
+    Returns:
+        DataFrame with columns [COL_X1, COL_X2, COL_LABEL], label=0.
+    """
+    rows = []
+    for entry in lasa_data:
+        x1 = entry.get(COL_X1)
+        if not x1:
+            continue
+        candidates = entry.get("candidates", [])
+        selected = {c.lower() for c in entry.get(COL_X2, [])}
+        for cand in candidates:
+            if cand.lower() not in selected:
+                rows.append({COL_X1: x1, COL_X2: cand, COL_LABEL: UNLABELED_LABEL})
+
+    return pd.DataFrame(rows, columns=[COL_X1, COL_X2, COL_LABEL])
+
+
+def write_lasa_run_unlabeled_csv(
+    lasa_data: list[dict],
+    output_path=LASA_RUN_U_CSV,
+    verbose: bool = True,
+) -> pd.DataFrame:
+    """
+    Write the (x_1, unselected candidate) pairs from lasa_run.json to
+    their own CSV, in isolation, for inspection.
+
+    Returns the cleaned, deduplicated DataFrame that was written.
+    """
+    df = _unselected_candidate_pairs(lasa_data)
+    df = clean_and_deduplicate(df)
+
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    df.to_csv(output_path, index=False)
+
+    if verbose:
+        print(f"[dataset] Saved unselected-candidate pairs → {output_path}  ({len(df):,} rows)")
+
+    return df
+
+
+def add_lasa_run_unlabeled(
+    lasa_data: list[dict],
+    D: pd.DataFrame,
+    add_phonemes: bool = True,
+    verbose: bool = True,
+) -> pd.DataFrame:
+    """
+    Extend D with (x_1, unselected candidate) pairs as label=0 rows.
+
+    Cleans and deduplicates the new pairs, drops any that already exist
+    in D (in either direction), optionally adds IPA transcriptions for
+    any new drug names, and returns the extended D.
+
+    Args:
+        lasa_data:    Parsed JSON from LLM_OUTPUT_JSON / LASA_RUN_JSON.
+        D:            Existing assembled dataset (columns x_1, t_1, x_2, t_2, label).
+        add_phonemes: If True, transcribe any new unique drug names to IPA.
+        verbose:      Print progress.
+
+    Returns:
+        Extended copy of D, NOT yet saved to disk.
+    """
+    new_pairs = _unselected_candidate_pairs(lasa_data)
+    new_pairs = clean_and_deduplicate(new_pairs)
+
+    # Drop new pairs that duplicate an existing row in D (either order)
+    existing_keys = {
+        _canonical_key(a, b) for a, b in zip(D[COL_X1], D[COL_X2])
+    }
+    new_pairs["_key"] = new_pairs.apply(
+        lambda r: _canonical_key(r[COL_X1], r[COL_X2]), axis=1
+    )
+    before = len(new_pairs)
+    new_pairs = new_pairs[~new_pairs["_key"].isin(existing_keys)]
+    new_pairs = new_pairs.drop(columns=["_key"]).reset_index(drop=True)
+    dupes = before - len(new_pairs)
+
+    if verbose:
+        print(f"\n[dataset] Unselected-candidate pairs: {before:,}")
+        if dupes:
+            print(f"[dataset]   {dupes:,} already present in D — dropped")
+        print(f"[dataset]   {len(new_pairs):,} new label=0 rows to add")
+
+    if add_phonemes and len(new_pairs):
+        new_pairs = transcribe_dataframe(new_pairs, verbose=verbose)
+    else:
+        new_pairs[COL_T1] = ""
+        new_pairs[COL_T2] = ""
+
+    final_cols = [COL_X1, COL_T1, COL_X2, COL_T2, COL_LABEL]
+    new_pairs = new_pairs.reindex(columns=final_cols, fill_value="")
+
+    D_extended = pd.concat([D, new_pairs], ignore_index=True)
+
+    if verbose:
+        print(f"\n[dataset] D extended: {len(D):,} → {len(D_extended):,} rows")
+        print(D_extended[COL_LABEL].value_counts().to_string())
+
+    return D_extended

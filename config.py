@@ -165,12 +165,27 @@ SEED: int = 42
 
 # If True, read confirmed LASA pairs from P_CSV.
 # If False, generate them via the local LLM proposer.
-FROM_FILE: bool = True
+FROM_FILE: bool = False
 
 # LLM proposer settings (only used when FROM_FILE = False)
 LLM_ITERATIONS: int = 400
 LLM_N_PROPOSALS: int = 5
 LLM_OUTPUT_JSON: Path = RESULTS_DIR / "lasa_run.json"
+
+# Same file as LLM_OUTPUT_JSON — used by Section 7 of the notebook to mine
+# unselected candidates (candidates - x_2) as additional label=0 pairs.
+LASA_RUN_JSON: Path = LLM_OUTPUT_JSON
+
+# Standalone CSV of (x_1, unselected candidate) pairs — see Section 7
+LASA_RUN_U_CSV: Path = RESULTS_DIR / "lasa_run_U.csv"
+
+# If True, use the DeepSeek API instead of a local model for generation.
+# Requires openai package: uv add openai  (or pip install openai)
+USE_API_MODEL: bool = True
+
+# DeepSeek API settings (only used when USE_API_MODEL = True)
+DEEPSEEK_MODEL: str = "deepseek-v4-pro"
+DEEPSEEK_API_KEY: str = ""
 
 
 # Batch size for transcription — tune down if eSpeak is slow on your machine
