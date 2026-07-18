@@ -1,6 +1,23 @@
 # walter
 
-LLM-assisted dataset construction for LASA drugs. "Walter, are these two LASA drugs? Make no mistakes."
+LLM-assisted dataset construction for LASA drugs. *"Walter, are these two LASA drugs? Make no mistakes."*
+
+All parameters, paths, and column names are in **`config.py`** — that is the single source of truth. Edit there, not here.
+
+## Nomenclature and Terminology
+
+**Raw registries** $\mathcal{R}^{\text{PH}}_{\text{raw}}$ and $\mathcal{R}^{\text{US}}_{\text{raw}}$ refer to the one-column drug name CSVs for the Philippine FDA and US FDA sources, stored at `_data/R_ph.csv` and `_data/R_us.csv` respectively. Only one is active per run, selected via `DATA_SOURCE` in `config.py`.
+
+**$\mathcal{R}_{\text{clean}}$** is the result of passing the active raw registry through the preprocessing pipeline: lowercased, symbols stripped, duplicates removed. It is an in-memory intermediate only and is not saved to disk. It serves as the sampling pool from which $U$ is drawn.
+
+The final dataset $D$ has columns `x_1, t_1, x_2, t_2, label`, where `x_1` and `x_2` are drug names, `t_1` and `t_2` are their IPA transcriptions, and `label` is the pair's class. $D$ is the union of:
+
+- **$P$** — confirmed LASA pairs. Registry-independent: sourced either from a pre-existing file (`_data/P.csv`, columns `x_1, x_2`) or proposed by a local LLM using $\mathcal{R}_{\text{clean}}$ as its candidate pool. All $P$ rows carry `label = 1`.
+- **$U$** — similarity-filtered unlabeled pairs drawn from $\mathcal{R}_{\text{clean}}$ via two-tier sampling. $U$ may contain undetected true LASA pairs. All $U$ rows carry `label = 0` (unlabeled, **not** confirmed negative).
+
+$|U| \gg |P|$, $\quad P \cap U = \emptyset$.
+
+Both $P$ and $U$ are recoverable from $D$ by filtering on `label`. Only $D$ is saved to disk (`_results/D.csv`).
 
 ## Setup
 
