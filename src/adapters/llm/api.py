@@ -1,7 +1,8 @@
 """
-DeepSeek API inference for the LASA proposer.
-OpenAI-compatible client pointed at https://api.deepseek.com.
-Used when USE_API_MODEL = True in config.py.
+DeepSeek API inference, backing the LASA proposer.
+
+OpenAI-compatible client pointed at https://api.deepseek.com. Used when
+USE_API_MODEL = True in config.py; otherwise the local backend runs instead.
 """
 
 import os
@@ -9,7 +10,7 @@ import os
 from openai import OpenAI
 
 from config import DEEPSEEK_API_KEY, DEEPSEEK_MODEL
-from src.proposer.prompt import SYSTEM_PROMPT
+from src.adapters.llm import clean_output
 
 
 def _get_client() -> OpenAI:
@@ -22,22 +23,10 @@ def _get_client() -> OpenAI:
     return OpenAI(api_key=key, base_url="https://api.deepseek.com")
 
 
-def _clean_output(text: str, candidates: list[str]) -> list[str]:
-    """Keep only lines that exactly match a candidate (case-insensitive)."""
-    candidate_set = {c.lower() for c in candidates}
-    seen: set[str] = set()
-    valid: list[str] = []
-    for line in text.strip().split("\n"):
-        line = line.strip().lower()
-        if line in candidate_set and line not in seen:
-            valid.append(line)
-            seen.add(line)
-    return valid
-
-
 def api_response(
     user_prompt: str,
     candidates: list[str],
+    system_prompt: str,
     model: str = DEEPSEEK_MODEL,
     debug: bool = False,
     return_reasoning: bool = False,
@@ -48,6 +37,9 @@ def api_response(
     Args:
         user_prompt:      The constructed user-turn prompt.
         candidates:       Valid drug names to validate output against.
+        system_prompt:    The system-turn prompt. Passed in rather than
+                          imported so this module stays free of
+                          proposer-specific domain knowledge.
         model:            DeepSeek model string (overrides config default).
         debug:            If True, dump the raw message object so we can see
                           where reasoning/CoT content lands (e.g. a separate
@@ -65,7 +57,7 @@ def api_response(
     response = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
         temperature=0,
@@ -75,15 +67,15 @@ def api_response(
     message = response.choices[0].message
 
     if debug:
-        print("\n[api_llm] --- RAW MESSAGE DUMP ---")
+        print("\n[llm.api] --- RAW MESSAGE DUMP ---")
         try:
             print(message.model_dump_json(indent=2))
         except AttributeError:
             print(repr(message))
-        print("[api_llm] --- END RAW MESSAGE DUMP ---\n")
+        print("[llm.api] --- END RAW MESSAGE DUMP ---\n")
 
     text = message.content or ""
-    proposed = _clean_output(text, candidates)
+    proposed = clean_output(text, candidates)
 
     if return_reasoning:
         reasoning = getattr(message, "reasoning_content", "") or ""

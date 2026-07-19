@@ -1,10 +1,10 @@
 """
 Shared batching / caching machinery for the per-language G2P modules
-(src/eng_g2p.py, src/fil_g2p.py).
+(src/adapters/g2p/eng.py, src/adapters/g2p/fil.py).
 
 Each language module supplies a `batch_fn` that maps a list of names to a list
-of IPA strings, and the pair of output column names it owns. Everything else —
-deduplication, batching, progress, the empty-transcription warning — is the
+of IPA strings, and the pair of output column names it owns. Everything else -
+deduplication, batching, progress, the empty-transcription warning - is the
 same regardless of language and lives here.
 """
 
@@ -47,8 +47,8 @@ def transcribe_dataframe(
 
     names_x1 = df[COL_X1].fillna("").tolist()
     names_x2 = df[COL_X2].fillna("").tolist()
-    # sorted() rather than list(set(...)) so batch composition — and thus the
-    # transcriptions — are reproducible across runs.
+    # sorted() rather than list(set(...)) so batch composition - and thus the
+    # transcriptions - are reproducible across runs.
     unique_names = sorted(set(names_x1 + names_x2))
 
     if verbose:
@@ -83,7 +83,7 @@ def transcribe_dataframe(
     empty_2 = (df[col_2] == "").sum()
     if empty_1 or empty_2:
         print(
-            f"[{tag}] WARNING: empty transcriptions — "
+            f"[{tag}] WARNING: empty transcriptions - "
             f"{col_1}: {empty_1}, {col_2}: {empty_2}"
         )
     return df

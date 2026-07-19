@@ -26,9 +26,9 @@ from config import (
     P_INPUT_COLS,
     USE_API_MODEL,
 )
-from src.proposer.llm import LocalModel, response
-from src.proposer.api_llm import api_response
-from src.proposer.prompt import construct_user_prompt
+from src.adapters.llm.api import api_response
+from src.adapters.llm.local import LocalModel, response
+from src.proposer.prompt import SYSTEM_PROMPT, construct_user_prompt
 
 # Fuzzy candidates pulled per seed drug before the LLM sees them. One extra is
 # requested so the seed drug itself can be dropped without going short.
@@ -87,17 +87,15 @@ def run_inference(
     results = []
     total = len(seed_pairs)
 
-    for i, (anchor, known) in enumerate(
-        zip(seed_pairs[COL_X1], seed_pairs[COL_X2])
-    ):
+    for i, (anchor, known) in enumerate(zip(seed_pairs[COL_X1], seed_pairs[COL_X2])):
         # remove this to allow the entire dataset to be fed to the LLM
         # @hootawsneaks
         top_matches = process.extract(
             anchor, all_drugs, scorer=fuzz.WRatio, limit=_CANDIDATE_LIMIT + 2
         )
-        candidates = [
-            m[0] for m in top_matches if m[0] != anchor and m[0] != known
-        ][:_CANDIDATE_LIMIT]
+        candidates = [m[0] for m in top_matches if m[0] != anchor and m[0] != known][
+            :_CANDIDATE_LIMIT
+        ]
 
         proposed: list[str] = []
         reasoning = ""
@@ -107,13 +105,17 @@ def run_inference(
             )
             if USE_API_MODEL:
                 proposed, reasoning = api_response(
-                    user_prompt, candidates=candidates, return_reasoning=True
+                    user_prompt,
+                    candidates=candidates,
+                    system_prompt=SYSTEM_PROMPT,
+                    return_reasoning=True,
                 )
             else:
                 proposed = response(
                     user_prompt,
                     model=model_choice,
                     candidates=candidates,
+                    system_prompt=SYSTEM_PROMPT,
                     new_toks_len=64,
                 )
 
@@ -129,10 +131,7 @@ def run_inference(
         results.append(entry)
 
         proposed_str = ", ".join(proposed) if proposed else "(none proposed)"
-        print(
-            f"[inference] {i + 1}/{total}: {anchor!r} + {known!r} "
-            f"→ {proposed_str}"
-        )
+        print(f"[inference] {i + 1}/{total}: {anchor!r} + {known!r} → {proposed_str}")
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)

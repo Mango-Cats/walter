@@ -36,6 +36,6 @@ USE_API_MODEL: bool = True
 # DeepSeek API settings (only used when USE_API_MODEL = True)
 DEEPSEEK_MODEL: str = "deepseek-v4-pro"
 
-# Prefer the DEEPSEEK_API_KEY environment variable. src/proposer/api_llm.py
+# Prefer the DEEPSEEK_API_KEY environment variable. src/adapters/llm/api.py
 # falls back to it when this is empty. Leave blank so a key is never committed.
 DEEPSEEK_API_KEY: str = ""

@@ -2,28 +2,16 @@
 Phonetic-feature step: runs the bundled `bin/phoc` Rust CLI over an already
 assembled pair CSV.
 
-phoc reads a CSV with x_1/x_2 (plus optional t_1/t_2, label, and any other
-columns), preserves every input column verbatim, and appends one similarity
-feature column per .toml config in PHOC_CONFIG_DIR — the column name is the
-config file's stem, the algorithm is chosen by that file's `algorithm` key.
-
-Multilingual transcriptions
----------------------------
-Our datasets carry one transcription per language (t_eng_1/t_eng_2,
-t_fil_1/t_fil_2, ...), but the phoc binary hardcodes t_1/t_2 as the columns it
-reads. run_phoc_multilingual() bridges that: it runs phoc once per language
-against a temp CSV in which that language's transcription columns have been
-renamed to t_1/t_2.
+phoc reads a CSV with x_1/x_2, t_1/t_2, label, and any other
+columns, preserves every input column verbatim, and appends one similarity
+feature column per .toml config in PHOC_CONFIG_DIR, the algorithm is
+chosen by that file's `algorithm` key.
 
 Only the algorithms that actually read the transcription need duplicating.
-Those are listed in config.PHONETIC_ALGORITHMS (currently just `aline`), and
-their columns come back suffixed — aline_ph_mc_eng, aline_ph_mc_fil. The
-remaining configs (bisim, editex, levenshtein) score x_1/x_2 alone, so they are
-identical in every run and are emitted once, unsuffixed.
+Those are listed in config.PHONETIC_ALGORITHMS, and their columns come
+back suffixed with the language code (e.g., _fil).
 
-Because walter.py writes D.csv before calling into here, a phoc failure never
-destroys that base dataset: it just aborts the run with a clear error and
-leaves the base CSV on disk.
+This has no side effect on the input file.
 """
 
 import csv
@@ -69,10 +57,9 @@ def run_phoc(
     if not PHOC_BIN.exists():
         raise FileNotFoundError(
             f"phoc binary not found at {PHOC_BIN}. "
-            "It ships in the repo under bin/phoc — check it out or rebuild it."
+            "It ships in the repo under bin/phoc - check it out or rebuild it."
         )
-    # bin/phoc is gitignored (194 MB) and gets copied between machines, which
-    # can strip the execute bit. Restore it rather than fail with Errno 13.
+
     if not os.access(PHOC_BIN, os.X_OK):
         try:
             mode = PHOC_BIN.stat().st_mode
@@ -99,9 +86,7 @@ def run_phoc(
         "--config-dir",
         str(config_dir),
     ]
-    # ETXTBSY (Errno 26) means the binary is still open for writing elsewhere
-    # (e.g. bin/phoc is 194 MB and may still be syncing/copying when the run
-    # starts). It clears on its own, so retry a few times with a short backoff.
+
     for attempt in range(5):
         try:
             result = subprocess.run(cmd, capture_output=True, text=True)
@@ -170,7 +155,7 @@ def run_phoc_multilingual(
     the output). Transcription-dependent features come back as
     ``<config_stem>_<lang>``; transcription-independent ones are taken once.
 
-    Writes the merged frame — every original column, then the features — to
+    Writes the merged frame - every original column, then the features - to
     ``output_csv``. Returns the list of appended feature column names.
     """
     base = pd.read_csv(input_csv)
@@ -185,11 +170,9 @@ def run_phoc_multilingual(
 
     phonetic, orthographic = _classify_configs(config_dir)
 
-    # Re-running over an already-scored CSV: phoc appends its column regardless
-    # of whether one of the same name came in, so the output would carry two
-    # `bisim` columns and pandas would resolve reads to the stale first one.
-    # Drop any prior feature columns up front, so they are always recomputed.
-    stale = [c for c in _feature_names(phonetic, orthographic, langs) if c in base.columns]
+    stale = [
+        c for c in _feature_names(phonetic, orthographic, langs) if c in base.columns
+    ]
     if stale:
         base = base.drop(columns=stale)
 
@@ -199,8 +182,6 @@ def run_phoc_multilingual(
     with tempfile.TemporaryDirectory(prefix="phoc_") as tmpdir:
         tmp = Path(tmpdir)
         for lang, (col_1, col_2) in langs.items():
-            # Present this language as t_1/t_2 and hide every other language's
-            # columns, so phoc's verbatim passthrough can't duplicate them.
             staged = base.drop(columns=lang_cols)
             staged[COL_T1] = base[col_1].fillna("")
             staged[COL_T2] = base[col_2].fillna("")
@@ -215,10 +196,6 @@ def run_phoc_multilingual(
             for stem in phonetic:
                 features[f"{stem}_{lang}"] = scored[stem]
 
-            # Orthographic features ignore t_1/t_2, so every language must
-            # produce the same numbers. If not, a config we classified as
-            # orthographic actually reads the transcription and would be
-            # silently collapsed to one language's value.
             for stem in orthographic:
                 if stem not in orth_reference:
                     orth_reference[stem] = scored[stem]

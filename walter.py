@@ -113,8 +113,6 @@ def cmd_noise(args: argparse.Namespace) -> None:
 
 
 def cmd_assemble(args: argparse.Namespace) -> None:
-    # U first: it is what --input advertises for this stage, so a user who
-    # has not run `walter noise` should hear about that before P.
     U = stages.load_noise(in_file(args.input, U_FILENAME, "walter noise"))
     P_load = stages.load_positives(args.input)
     out = out_file(args.output, D_FILENAME)
@@ -171,8 +169,6 @@ def cmd_all(args: argparse.Namespace) -> None:
         D = stages.assemble(P_load, U, output_csv=d_csv)
     print(f"\n{stages.summarize(D)}")
 
-    # D.csv is already on disk, so a phoc failure aborts the run but leaves
-    # the base dataset intact.
     with Spinner("Adding phonetic features (phoc)"):
         feats = stages.phoc(d_csv, d_pho_csv)
     print(f"\nPhonetic features ({len(feats)}): {', '.join(feats)}")
@@ -211,7 +207,10 @@ def _add_annotate_command(sub) -> None:
     p = sub.add_parser("annotate", help="Export blinded rater sheets for IAA")
     p.add_argument("--round", default="r1", help="Round name (default: r1)")
     p.add_argument(
-        "--input", type=Path, default=RESULTS_DIR, help=f"Directory holding {D_FILENAME}"
+        "--input",
+        type=Path,
+        default=RESULTS_DIR,
+        help=f"Directory holding {D_FILENAME}",
     )
     p.add_argument(
         "--output",
@@ -239,8 +238,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="stage")
 
-    # Every stage but `propose` reads a directory and writes a directory; the
-    # filename inside is fixed per artifact, so only the directory varies.
     def _dirs(p, reads: str | None, writes: str, produced_by: str = "") -> None:
         if reads is not None:
             p.add_argument(
@@ -272,11 +269,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_all.set_defaults(func=cmd_all)
 
-    p_propose = sub.add_parser(
-        "propose", help="Augment predefined LASA pairs into P"
-    )
-    # The one stage taking a file: its input is user-supplied, not produced by
-    # an earlier stage, so there is no canonical filename to look up.
+    p_propose = sub.add_parser("propose", help="Augment predefined LASA pairs into P")
     p_propose.add_argument(
         "--input",
         type=Path,
@@ -315,17 +308,11 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-    # No subcommand keeps the original `python walter.py` behavior. Re-parsing
-    # as `all` rather than just setting func picks up that parser's --input /
-    # --output defaults, which a bare namespace does not carry.
     if getattr(args, "func", None) is None:
         args = parser.parse_args(["all"])
     try:
         args.func(args)
     except FileNotFoundError as exc:
-        # A missing upstream artifact is normal when running one stage, and
-        # the message already names the command to run. A traceback would
-        # bury it.
         raise SystemExit(f"error: {exc}")
 
 

@@ -10,6 +10,10 @@ Functions here take and return DataFrames and never parse arguments. walter.py
 owns the CLI, resolves each stage's directory to the canonical filename inside
 it (see src/artifacts.py), and hands the resulting paths down.
 
+This module is the seam between the layers: it is the only place that composes
+src/pipeline, src/proposer and src/adapters into something runnable, so a stage
+can be reordered or re-pointed here without any of them knowing.
+
 load_positives() is deliberately separate from propose(): loading a previous
 proposal must never trigger a new one by accident.
 """
@@ -35,12 +39,12 @@ from config import (
     TIER_2_SAMPLE_SIZE,
     U_CSV,
 )
+from src.adapters.phoc import run_phoc_multilingual
 from src.artifacts import in_file, require_file
-from src.dataset import assemble_and_save
-from src.feature_engineering import run_engineering
-from src.noise import make_noise
-from src.phoc_runner import run_phoc_multilingual
-from src.preprocessing import run as run_preprocessing
+from src.pipeline.dataset import assemble_and_save
+from src.pipeline.features import run_engineering
+from src.pipeline.noise import make_noise
+from src.pipeline.preprocessing import run as run_preprocessing
 
 
 def preprocess(source: DataSource = DATA_SOURCE) -> pd.DataFrame:
@@ -62,8 +66,8 @@ def propose(
     Imports are local because the LLM extras are optional; a run that only
     touches later stages should not need transformers or openai installed.
     """
+    from src.adapters.llm.local import LocalModel
     from src.proposer.inference import load_seed_pairs, run_inference
-    from src.proposer.llm import LocalModel
 
     seed_pairs = load_seed_pairs(seed_csv)
     print(f"[stages] Seeding proposer from {seed_csv}: {len(seed_pairs):,} pairs")

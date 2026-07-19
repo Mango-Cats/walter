@@ -1,5 +1,5 @@
 """
-How the unlabeled set U is built (src/noise.py): class balance, the Tier 1 /
+How the unlabeled set U is built (src/pipeline/noise.py): class balance, the Tier 1 /
 Tier 2 split, and the caps that keep the pairwise scoring from blowing up
 memory on "hub" clusters.
 
@@ -17,7 +17,7 @@ TIER_2_PROPORTION: float = 1 - TIER_1_PROPORTION
 
 # Total outside-vocabulary names sampled for Tier 2, split evenly across
 # clusters (each cluster only ever scores pairs within its own share --
-# see src/noise.py for why sampling must stay per-cluster)
+# see src/pipeline/noise.py for why sampling must stay per-cluster)
 TIER_2_SAMPLE_SIZE: int = 10_000
 
 # Hard cap on a cluster's combined Tier 1 + Tier 2-extra pool before it's

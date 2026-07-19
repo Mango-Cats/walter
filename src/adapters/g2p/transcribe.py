@@ -1,9 +1,9 @@
 """
 Single dispatch point for per-language IPA transcription.
 
-This lives above src/eng_g2p.py and src/fil_g2p.py rather than inside
-src/g2p_common.py, which those two modules import. Holding the language
-registry in g2p_common would make the import cycle.
+This lives above src/adapters/g2p/eng.py and src/adapters/g2p/fil.py rather than inside
+src/adapters/g2p/client.py, which those two modules import. Holding the language
+registry in g2p.client would make the import cycle.
 
 Four call sites used to keep private copies of this dispatch (dataset
 assembly, augmenter, featurize, g2p), and they had drifted: two always
@@ -14,8 +14,8 @@ stale against the per-language schema entirely.
 import pandas as pd
 
 from config import TRANSCRIPTION_LANGS
-from src.eng_g2p import transcribe_dataframe as _transcribe_eng
-from src.fil_g2p import transcribe_dataframe as _transcribe_fil
+from src.adapters.g2p.eng import transcribe_dataframe as _transcribe_eng
+from src.adapters.g2p.fil import transcribe_dataframe as _transcribe_fil
 
 _TRANSCRIBERS = {
     "eng": _transcribe_eng,
@@ -58,14 +58,11 @@ def transcribe_all(
             f"config.TRANSCRIPTION_LANGS defines {list(TRANSCRIPTION_LANGS)}"
         )
 
-    # A language added to config.TRANSCRIPTION_LANGS fans its feature columns
-    # out automatically, but it still needs a transcriber registered here.
-    # Fail with that explanation rather than a bare KeyError.
     missing = [lang for lang in selected if lang not in _TRANSCRIBERS]
     if missing:
         raise ValueError(
             f"[{tag}] no transcriber registered for {missing}; "
-            f"add one to _TRANSCRIBERS in src/transcribe.py"
+            f"add one to _TRANSCRIBERS in src/adapters/g2p/transcribe.py"
         )
 
     for lang in selected:

@@ -2,29 +2,27 @@
 Feature-engineering step: appends META_FEATURES onto an already-assembled
 (and typically phoc'd) pair CSV.
 
-Every feature is a pure function of the two drug names ``(x_1, x_2)`` — cheap,
+Every feature is a pure function of the two drug names ``(x_1, x_2)`` - cheap,
 O(1) per pair, deterministic. They complement the phonetic-similarity columns
 phoc adds with orthographic / edit-distance signal (lengths, prefixes,
 Levenshtein, Jaro-Winkler, fuzzy ratios, Soundex/Metaphone agreement).
 
 The features here fall into three groups:
 
-* **structural** — length and shared-affix comparisons of the raw strings.
-* **prosodic** — syllable / vowel / consonant-count differences, i.e. how the
+* **structural** - length and shared-affix comparisons of the raw strings.
+* **prosodic** - syllable / vowel / consonant-count differences, i.e. how the
   two names differ in spoken "weight" and length.
-* **phonetic (Filipino nativization)** — indicators describing *structural*
+* **phonetic (Filipino nativization)** - indicators describing *structural*
   properties of the pair the way a Filipino (Tagalog) speaker would hear them,
   so a downstream gate can decide which string-similarity score to trust. They
   are indicators, not similarity scores themselves.
 
 FEATURE_REGISTRY is the single source of truth for which columns get added: an
 ordered ``{column_name: fn(x_1, x_2) -> value}`` map. Add or remove an entry
-here and the pipeline picks it up — column names are taken straight from the
+here and the pipeline picks it up - column names are taken straight from the
 keys. Existing columns are never overwritten (see ``engineer``), so re-running
 over a file that already has some META_FEATURES only fills in the missing ones.
 """
-
-from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
@@ -32,14 +30,12 @@ from pathlib import Path
 import pandas as pd
 
 from config import COL_X1, COL_X2
-from src.tbb_client import nativize as _nativize
+from src.adapters.tbb import nativize as _nativize
 
 _VOWELS: frozenset[str] = frozenset("aeiou")
 
 
-# --------------------------------------------------------------------------- #
 # Structural features (lengths / shared affixes)
-# --------------------------------------------------------------------------- #
 def len_diff(x1: str, x2: str) -> int:
     """Absolute difference in raw string length."""
     return abs(len(x1) - len(x2))
@@ -60,29 +56,12 @@ def common_suffix_len(x1: str, x2: str) -> int:
     return common_prefix_len(x1[::-1], x2[::-1])
 
 
-# --------------------------------------------------------------------------- #
-# Phonetic features — Filipino (Tagalog) nativization
-#
-# Nativization (English/Spanish orthography → Filipino orthography) is delegated
-# to the bundled ``bin/tbb-cli`` TagaBaybay worker via ``src.tbb_client``:
-# ``_nativize`` is that client's ``nativize`` (e.g. "chocolate" → "tsokoleyt",
-# "amoxicillin" → "amoksisilin"). The worker is a proper loanword adapter, so it
-# supersedes the hand-rolled substitution table this module used to carry.
-#
-# ``_vowel_seq`` additionally collapses the 5-vowel orthography onto the native
-# 3-vowel system (e→i, o→u), since /e/~/i/ and /o/~/u/ freely alternate in
-# Filipino and are a common source of sound-alike confusion. Filipino stress is
-# by default penultimate, motivating ``fil_penult_vowel_match``.
-# --------------------------------------------------------------------------- #
-
-
+# Phonetic features - Filipino (Tagalog) nativization
 def _vowel_seq(word: str) -> str:
     """Nativized vowel skeleton with the native 3-vowel collapse (e→i, o→u)."""
     nat = _nativize(word)
     return "".join(
-        "i" if v == "e" else "u" if v == "o" else v
-        for v in nat
-        if v in _VOWELS
+        "i" if v == "e" else "u" if v == "o" else v for v in nat if v in _VOWELS
     )
 
 
@@ -119,9 +98,7 @@ def fil_phonetic_equal(x1: str, x2: str) -> int:
     return int(_nativize(x1) == _nativize(x2))
 
 
-# --------------------------------------------------------------------------- #
-# Prosodic features (syllable / vowel / consonant counts)
-# --------------------------------------------------------------------------- #
+# Prosodic features
 def _count_syllables(s: str) -> int:
     """Count syllable nuclei as maximal runs of vowel letters."""
     count = 0
@@ -157,8 +134,6 @@ def consonant_count_diff(x1: str, x2: str) -> int:
     return abs(_count_consonants(x1) - _count_consonants(x2))
 
 
-# Ordered map of META_FEATURE column name -> pair function. Insertion order is
-# the column order in the output CSV.
 FEATURE_REGISTRY: dict[str, Callable[[str, str], float | int]] = {
     # structural
     "len_diff": len_diff,

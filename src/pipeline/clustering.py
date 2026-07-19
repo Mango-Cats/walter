@@ -8,6 +8,7 @@ is the single place that answers "are these two names already linked,
 directly or transitively?".
 """
 
+
 class UnionFind:
     """Union-find over arbitrary hashable keys (drug names)."""
 

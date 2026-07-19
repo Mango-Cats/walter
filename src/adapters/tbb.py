@@ -12,13 +12,11 @@ each distinct name is only ever adapted once no matter how many pairs it appears
 in. The worker is shut down cleanly at interpreter exit.
 
 ``nativize(word)`` returns the worker's ``adapted`` spelling (e.g. "chocolate"
--> "tsokoleyt") — the Filipino phonemic form that the phonetic feature functions
-in ``feature_engineering.py`` derive onset / coda / vowel-skeleton indicators
+-> "tsokoleyt") - the Filipino phonemic form that the phonetic feature functions
+in ``src/pipeline/features.py`` derive onset / coda / vowel-skeleton indicators
 from. This replaces the hand-rolled orthographic substitution rules that used to
 live in that module.
 """
-
-from __future__ import annotations
 
 import atexit
 import errno
@@ -33,9 +31,6 @@ from pathlib import Path
 
 from config import TBB_BIN
 
-# Fallback sanitizer used only when the worker declines a specific word: keep
-# Latin letters (and ñ) so a single un-adaptable name degrades to a plain
-# lowercased skeleton instead of aborting the whole feature build.
 _NON_LETTER = re.compile(r"[^a-zñ]")
 
 
@@ -50,7 +45,7 @@ class _TbbWorker:
         if not bin_path.exists():
             raise FileNotFoundError(
                 f"tbb-cli binary not found at {bin_path}. It ships in the repo "
-                "under bin/tbb-cli — check it out or rebuild it from the "
+                "under bin/tbb-cli - check it out or rebuild it from the "
                 "tagabaybay crate."
             )
         # Like bin/phoc, the binary is copied between machines, which can strip
@@ -155,7 +150,7 @@ class _TbbWorker:
             if resp.get("type") == "result" and resp.get("adapted"):
                 adapted = resp["adapted"]
             else:
-                adapted = key  # error / empty — degrade to the plain skeleton
+                adapted = key  # error / empty - degrade to the plain skeleton
             self._cache[key] = adapted
             return adapted
 

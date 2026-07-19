@@ -35,42 +35,24 @@ from config import (
     TRANSCRIPTION_LANGS,
     UNLABELED_LABEL,
 )
-from src.dataset import _canonical_key
-from src.noise import is_similar_enough, normalize
+from src.pipeline.dataset import canonical_key
+from src.pipeline.noise import is_similar_enough, normalize
 
 KEY_FILENAME = "_key.csv"
 
 _ID_PREFIX = "p"
 _ID_HEX_LEN = 10
 
-# How many times to try drawing a dissimilar pair before giving up, so a
-# vocabulary too small to yield placebos fails loudly instead of hanging.
 _PLACEBO_ATTEMPT_FACTOR = 200
 
-# Filipino only. Section 4.1 asks raters to judge under Filipino grapheme-driven
-# pronunciation, and showing the English transcription invites exactly the
-# source-language reading the codebook warns against.
 _SHEET_LANG = "fil"
 
-# Columns that must never be carried over from the batch, whatever else changes
-# upstream. Asserted at export. COL_LABEL is D's 0/1 ground truth, which shares
-# its name with the rater's own label field; see the guard in export().
 FORBIDDEN_FROM_BATCH = (COL_LABEL, "similarity", "tier", COL_STRATUM)
-
-
-# --------------------------------------------------------------------------
-# Pair identifiers
-#
-# results/D.csv carries no id column, and a positional index would break the
-# moment a batch is re-drawn or D is rebuilt. Hashing the canonical pair instead
-# means the same two drug names always resolve to the same pair_id, across
-# batches and pipeline re-runs, which is what lets returned sheets be joined.
-# --------------------------------------------------------------------------
 
 
 def pair_id(x_1: str, x_2: str) -> str:
     """Identifier for one pair, order-independent."""
-    a, b = _canonical_key(str(x_1), str(x_2))
+    a, b = canonical_key(str(x_1), str(x_2))
     digest = hashlib.sha1(f"{a}\x00{b}".encode("utf-8")).hexdigest()
     return f"{_ID_PREFIX}_{digest[:_ID_HEX_LEN]}"
 
@@ -84,17 +66,6 @@ def add_pair_ids(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df[COL_PAIR_ID] = [pair_id(a, b) for a, b in zip(df[COL_X1], df[COL_X2])]
     return df[[COL_PAIR_ID] + [c for c in df.columns if c != COL_PAIR_ID]]
-
-
-# --------------------------------------------------------------------------
-# Batch sampling
-#
-# A uniform sample of D would be almost entirely negative at the configured
-# POSITIVE_PREVALENCE, leaving an agreement statistic nothing to estimate, so
-# the batch is drawn in strata whose sizes are caller-supplied. That is a
-# deliberate departure from the true prevalence, so agreement computed on a
-# batch is not an estimate of agreement over D.
-# --------------------------------------------------------------------------
 
 
 def _name_transcriptions(D: pd.DataFrame) -> dict[str, dict[str, str]]:
@@ -190,7 +161,9 @@ def build_batch(
         )
     n_neg = min(round(n_cand * neg_per_positive), len(negatives))
 
-    cand = positives.sample(n=n_cand, random_state=seed) if n_cand else positives.head(0)
+    cand = (
+        positives.sample(n=n_cand, random_state=seed) if n_cand else positives.head(0)
+    )
     neg = negatives.sample(n=n_neg, random_state=seed) if n_neg else negatives.head(0)
 
     cand = cand.assign(**{COL_STRATUM: STRATUM_CANDIDATE})
@@ -210,8 +183,6 @@ def build_batch(
     batch = pd.concat([cand, neg, placebo], ignore_index=True)
     batch = add_pair_ids(batch)
 
-    # One shared order for all three raters, so position cannot be a source of
-    # systematic difference between them.
     batch = batch.sample(frac=1, random_state=seed).reset_index(drop=True)
 
     dupes = batch[COL_PAIR_ID].duplicated().sum()
@@ -224,18 +195,6 @@ def build_batch(
         f"({n_cand:,} candidate, {n_neg:,} negative, {len(placebo):,} placebo)"
     )
     return batch
-
-
-# --------------------------------------------------------------------------
-# Blinded sheet export
-#
-# Section 2 of the codebook requires raters to see neither the model's reasoning
-# nor each other's judgements, and Section 8.2 leaves the fuzzy score off by
-# default. Sheets are therefore assembled by naming the columns that go in.
-# Dropping unwanted columns instead would leak every time an upstream stage adds
-# one, and upstream does add them: phoc contributes 7 feature columns and
-# feature engineering another 11.
-# --------------------------------------------------------------------------
 
 
 def sheet_columns(show_similarity: bool = False) -> list[str]:
@@ -272,9 +231,6 @@ def export(
     if missing:
         raise ValueError(f"Batch cannot fill sheet columns: {missing}")
 
-    # Rater fields are always blank, never sourced from the batch. COL_ANN_LABEL
-    # and COL_LABEL are both "label", so reading these from the batch would fill
-    # the rater's own column with D's ground-truth label.
     sheet = pd.DataFrame({c: ("" if c in RATER_FIELDS else batch[c]) for c in cols})
 
     carried = [c for c in cols if c not in RATER_FIELDS]
@@ -296,9 +252,6 @@ def export(
         paths.append(path)
         print(f"[annotation] sheet -> {path}")
 
-    # The whole batch, deliberately. Filtering out RATER_FIELDS here would drop
-    # COL_LABEL, which shares the name "label" with the rater's own field, and
-    # D's ground-truth label is the main thing the key exists to preserve.
     key_path = out_dir / KEY_FILENAME
     batch.to_csv(key_path, index=False)
     print(f"[annotation] key   -> {key_path}  (do not give this to raters)")

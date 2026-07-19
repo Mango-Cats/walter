@@ -18,14 +18,16 @@ import tempfile
 # "Failed to create secure directory (...)". We never play audio (text
 # -> IPA only), so redirect pulse's runtime dir somewhere writable to
 # silence it. Must be set before phonemizer imports espeak below.
-os.environ.setdefault("PULSE_RUNTIME_PATH", os.path.join(tempfile.gettempdir(), "pulse"))
+os.environ.setdefault(
+    "PULSE_RUNTIME_PATH", os.path.join(tempfile.gettempdir(), "pulse")
+)
 
 import pandas as pd
 from phonemizer import phonemize
 from phonemizer.backend import EspeakBackend
 
 from config import COL_T_ENG_1, COL_T_ENG_2, IPA_BATCH_SIZE
-from src.g2p_common import transcribe_dataframe as _transcribe_dataframe
+from src.adapters.g2p.client import transcribe_dataframe as _transcribe_dataframe
 
 _TAG = "eng_g2p"
 

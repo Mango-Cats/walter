@@ -10,7 +10,7 @@ Requirements:
     the `phonetisaurus` wheel (a project dependency; `uv sync`)
     the trained .fst checked out at config.FIL_G2P_MODEL
 
-Shape mirrors src/eng_g2p.py: same transcribe_dataframe() entrypoint, same
+Shape mirrors src/adapters/g2p/eng.py: same transcribe_dataframe() entrypoint, same
 concatenated-IPA output format. Unlike eSpeak, the decoder is a subprocess and
 works one word at a time, so names are split into runs of model-alphabet
 graphemes and every unique run across the whole batch is decoded in a single
@@ -49,7 +49,7 @@ from config import (
     FIL_G2P_BIN,
     FIL_G2P_MODEL,
 )
-from src.g2p_common import transcribe_dataframe as _transcribe_dataframe
+from src.adapters.g2p.client import transcribe_dataframe as _transcribe_dataframe
 
 _TAG = "fil_g2p"
 
@@ -69,7 +69,7 @@ _DECODABLE = re.compile(r"[a-z]+")
 # one, and keys the velar stop on the ASCII lookalike. Order matters: the
 # affricates must be replaced before any single-character rule could touch them.
 _IPA_FIXUPS = {
-    "d͡ʒ": "ʤ",  # U+0064 U+0361 U+0292 -> U+02A4
+    "d͡ʒ": "ʤ",
     "t͡ʃ": "ʧ",  # U+0074 U+0361 U+0283 -> U+02A7
     "ɡ": "g",  # ɡ (IPA velar stop, U+0261) -> g (U+0067)
 }
@@ -88,8 +88,8 @@ def _resolve_model() -> Path:
     """Confirm the WFST exists on disk and return its path."""
     if not FIL_G2P_MODEL.is_file():
         raise FileNotFoundError(
-            f"Filipino G2P model not found at {FIL_G2P_MODEL}. Copy "
-            "cwik_model.fst (Taglog-G2P: notebook/train/cwik_model.fst) there."
+            f"Filipino G2P model not found at {FIL_G2P_MODEL}. Copy it from "
+            "Taglog-G2P (notebook/train/cwik_model.fst), keeping the filename."
         )
     return FIL_G2P_MODEL
 
@@ -134,7 +134,8 @@ def _resolve_decoder() -> tuple[str, dict[str, str]]:
     env = dict(os.environ)
     if lib_dir.is_dir():
         env["LD_LIBRARY_PATH"] = os.pathsep.join(
-            [str(lib_dir), env["LD_LIBRARY_PATH"]] if env.get("LD_LIBRARY_PATH")
+            [str(lib_dir), env["LD_LIBRARY_PATH"]]
+            if env.get("LD_LIBRARY_PATH")
             else [str(lib_dir)]
         )
     return str(binary), env

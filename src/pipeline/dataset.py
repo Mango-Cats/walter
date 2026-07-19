@@ -1,7 +1,7 @@
 """
 Assembles P and U into the final dataset D and saves it:
 
-D.csv (classification) — x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label.
+D.csv (classification) - x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label.
 One IPA transcription per language per name (see config.TRANSCRIPTION_LANGS).
 
 D is the shuffled union of P and U, deduplicated.
@@ -28,9 +28,8 @@ from config import (
     LASA_RUN_U_CSV,
     SHUFFLE_SEED,
 )
-from src.transcribe import transcribe_all
+from src.adapters.g2p.transcribe import transcribe_all
 
-# x_1's transcriptions, then x_2's, in language order.
 _T1_COLS: list[str] = [COL_T_ENG_1, COL_T_FIL_1]
 _T2_COLS: list[str] = [COL_T_ENG_2, COL_T_FIL_2]
 
@@ -50,7 +49,7 @@ def _clean_name(name: str) -> str:
     return re.sub(r"\s+", " ", name).strip()
 
 
-def _canonical_key(a: str, b: str) -> tuple[str, str]:
+def canonical_key(a: str, b: str) -> tuple[str, str]:
     """Sorted pair so (A, B) and (B, A) are treated as duplicates."""
     return tuple(sorted([a, b]))  # type: ignore[return-value]
 
@@ -70,7 +69,7 @@ def clean_and_deduplicate(df: pd.DataFrame) -> pd.DataFrame:
     if self_pairs:
         print(f"[dataset] Removed {self_pairs:,} self-pairs")
 
-    df["_key"] = df.apply(lambda r: _canonical_key(r[COL_X1], r[COL_X2]), axis=1)
+    df["_key"] = df.apply(lambda r: canonical_key(r[COL_X1], r[COL_X2]), axis=1)
     before = len(df)
     df = df.drop_duplicates(subset=["_key"], keep="first")
     dupes = before - len(df)
@@ -89,7 +88,7 @@ def _normalize_pairs(df: pd.DataFrame, label: int) -> pd.DataFrame:
     df = df.copy()
 
     # Handle noise output column naming (COL_X1 may already be correct,
-    # but noise.py might have used legacy col names — guard here)
+    # but noise.py might have used legacy col names - guard here)
     for old, new in [("Brand Name", COL_X1), ("Confusible", COL_X2)]:
         if old in df.columns and new not in df.columns:
             df = df.rename(columns={old: new})
@@ -176,7 +175,7 @@ def _unselected_candidate_pairs(lasa_data: list[dict]) -> pd.DataFrame:
     in lasa_run.json was shown but did NOT propose (candidates - x_2).
 
     Args:
-        lasa_data: Parsed JSON from LLM_OUTPUT_JSON / LASA_RUN_JSON —
+        lasa_data: Parsed JSON from LLM_OUTPUT_JSON / LASA_RUN_JSON -
                    a list of {"x_1": ..., "candidates": [...], "x_2": [...]}.
 
     Returns:
@@ -214,7 +213,9 @@ def write_lasa_run_unlabeled_csv(
     df.to_csv(output_path, index=False)
 
     if verbose:
-        print(f"[dataset] Saved unselected-candidate pairs → {output_path}  ({len(df):,} rows)")
+        print(
+            f"[dataset] Saved unselected-candidate pairs → {output_path}  ({len(df):,} rows)"
+        )
 
     return df
 
@@ -245,11 +246,9 @@ def add_lasa_run_unlabeled(
     new_pairs = clean_and_deduplicate(new_pairs)
 
     # Drop new pairs that duplicate an existing row in D (either order)
-    existing_keys = {
-        _canonical_key(a, b) for a, b in zip(D[COL_X1], D[COL_X2])
-    }
+    existing_keys = {canonical_key(a, b) for a, b in zip(D[COL_X1], D[COL_X2])}
     new_pairs["_key"] = new_pairs.apply(
-        lambda r: _canonical_key(r[COL_X1], r[COL_X2]), axis=1
+        lambda r: canonical_key(r[COL_X1], r[COL_X2]), axis=1
     )
     before = len(new_pairs)
     new_pairs = new_pairs[~new_pairs["_key"].isin(existing_keys)]

@@ -39,8 +39,7 @@ def load_registry(source: DataSource) -> pd.DataFrame:
             f"Raw data file not found: {path}\nExpected one-column CSV of drug names."
         )
     df = pd.read_csv(path, usecols=[0], header=None, names=[REGISTRY_COL])
-    # The registries ship headerless, so header=0 would consume a real drug
-    # name. Tolerate a header anyway, in case a hand-exported file carries one.
+
     if str(df.iloc[0, 0]).strip().lower() == REGISTRY_COL:
         df = df.iloc[1:].reset_index(drop=True)
     return df
@@ -91,7 +90,7 @@ def clean_registry(df: pd.DataFrame) -> pd.DataFrame:
 def validate_raw(df: pd.DataFrame) -> None:
     """Print warnings for suspicious raw data. Never raises."""
     if len(df) < 500:
-        print(f"[preprocessing] WARNING: only {len(df)} rows — unusually small.")
+        print(f"[preprocessing] WARNING: only {len(df)} rows - unusually small.")
     nulls = df[REGISTRY_COL].isna().sum()
     if nulls:
         print(f"[preprocessing] WARNING: {nulls} null values in raw data.")
@@ -148,7 +147,9 @@ def run(source: DataSource) -> pd.DataFrame:
     if USE_PRECLEANED_REGISTRY:
         print(f"[preprocessing] Source: {source.name} (pre-cleaned cache)")
         clean = load_clean_registry(source)
-        print(f"[preprocessing] Loaded {len(clean):,} pre-cleaned rows from {R_CLEAN[source]}")
+        print(
+            f"[preprocessing] Loaded {len(clean):,} pre-cleaned rows from {R_CLEAN[source]}"
+        )
         return clean
 
     print(f"[preprocessing] Source: {source.name}")
@@ -161,6 +162,6 @@ def run(source: DataSource) -> pd.DataFrame:
 
 
 def get_rand_entries(df: pd.DataFrame, count: int = 10) -> pd.DataFrame:
-    """Random slice of `count` rows — useful for spot-checking."""
+    """Random slice of `count` rows (for spot-checking)."""
     n = randint(0, max(0, len(df) - count))
     return df.iloc[n : n + count]

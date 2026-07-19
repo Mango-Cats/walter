@@ -1,16 +1,21 @@
 """
-Local LLM loader and inference runner for the LASA proposer.
-Models are downloaded by scripts/model_setup.py into config.MODELS_DIR.
+Local LLM loader and inference runner, backing the LASA proposer.
+
+Models are downloaded by scripts/model_setup.py into config.MODELS_DIR. Both
+the model and tokenizer are cached in _MODELS, since loading is slow and the
+proposer calls response() once per seed pair.
 """
 
 import os
 from enum import Enum
 
 from config import MODELS_DIR
+from src.adapters.llm import clean_output
 
 try:
     import torch
     import transformers
+
     _TORCH_AVAILABLE = True
 except ImportError:
     _TORCH_AVAILABLE = False
@@ -70,28 +75,21 @@ def get_model(model_choice: LocalModel) -> tuple:
     return model, tokenizer
 
 
-def _clean_output(text: str, candidates: list[str]) -> list[str]:
-    """Keep only lines that exactly match a candidate (case-insensitive)."""
-    candidate_set = {c.lower() for c in candidates}
-    seen: set[str] = set()
-    valid: list[str] = []
-    for line in text.strip().split("\n"):
-        line = line.strip().lower()
-        if line in candidate_set and line not in seen:
-            valid.append(line)
-            seen.add(line)
-    return valid
-
-
 def response(
     user_prompt: str,
     model: LocalModel,
     candidates: list[str],
+    system_prompt: str,
     new_toks_len: int = 64,
 ) -> list[str]:
-    """Run a single inference call and return cleaned proposed confusibles."""
+    """
+    Run a single inference call and return cleaned proposed confusibles.
+
+    system_prompt is passed in rather than imported so this module stays free
+    of proposer-specific domain knowledge; src/proposer owns the wording.
+    """
     model_obj, tokenizer = get_model(model)
-    prompt = f"{SYSTEM_PROMPT}\n\n{user_prompt}\n\nOutput:"
+    prompt = f"{system_prompt}\n\n{user_prompt}\n\nOutput:"
     inputs = tokenizer(prompt, return_tensors="pt")
     device = next(model_obj.parameters()).device
     inputs = {k: v.to(device) for k, v in inputs.items()}
@@ -104,4 +102,4 @@ def response(
         )
 
     decoded = tokenizer.decode(output[0], skip_special_tokens=True)
-    return _clean_output(decoded, candidates)
+    return clean_output(decoded, candidates)

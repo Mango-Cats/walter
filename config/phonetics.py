@@ -22,8 +22,8 @@ PHONETIC_ALGORITHMS: frozenset[str] = frozenset({"aline"})
 
 # Filipino nativization -- bin/tbb-cli (TagaBaybay Rust worker, see its module
 # docstring). A long-lived JSONL stream worker that adapts loanwords into
-# Filipino orthography; src/feature_engineering.py drives it (via
-# src/tbb_client.py) to build its phonetic (nativization) features.
+# Filipino orthography; src/pipeline/features.py drives it (via
+# src/adapters/tbb.py) to build its phonetic (nativization) features.
 TBB_BIN: Path = Path("bin/tbb-cli")
 
 # Batch size for transcription -- tune down if eSpeak is slow on your machine
@@ -34,13 +34,17 @@ IPA_BATCH_SIZE: int = 256
 #
 # The decoder comes from the `phonetisaurus` PyPI wheel (a project dependency),
 # which bundles both the phonetisaurus-* binaries and the OpenFst shared
-# libraries they link against. The binaries carry no RPATH, so src/fil_g2p.py
+# libraries they link against. The binaries carry no RPATH, so src/adapters/g2p/fil.py
 # locates the bundled lib dir and injects it as LD_LIBRARY_PATH -- nothing needs
 # to be on PATH, and no system OpenFst is required. Set FIL_G2P_BIN to override
 # with an external phonetisaurus-g2pfst (e.g. a system build).
 #
 # The wheel ships x86_64 Linux binaries only.
 FIL_G2P_BIN: str | None = None
+
+# Named for the model it is, not the role it plays, so the provenance of the
+# checked-in .fst stays legible: this is Taglog-G2P's notebook/train/cwik_model.fst
+# copied verbatim. Point this elsewhere to swap in a differently trained WFST.
 FIL_G2P_MODEL: Path = Path("bin/cwik_model.fst")
 
 # Names per phonetisaurus invocation. Phonetisaurus takes a --wordlist file, so

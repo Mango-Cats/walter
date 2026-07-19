@@ -7,7 +7,7 @@ blob.
 Downstream, the LASA classifier splits train/test by connected
 component of the name graph (x_1/x_2 pairs = edges). That only works
 if the graph actually decomposes into many components. P's confirmed
-pairs already do this naturally — each connected component of P is a
+pairs already do this naturally - each connected component of P is a
 LASA confusion group. The risk is entirely in how U is built: if
 negatives are drawn from one shared global pool, the same
 outside-vocabulary name can end up paired with anchors from two
@@ -58,7 +58,7 @@ from config import (
     CANDIDATE_MIN_POOL,
     SEED,
 )
-from src.clustering import build_components
+from src.pipeline.clustering import build_components
 
 
 def normalize(name: str) -> str:
@@ -166,7 +166,7 @@ def _cluster_tier_targets(
     Per-cluster (tier_1_target, tier_2_target), each cluster's share of the
     target |U| scaled by its share of the confirmed positives. Single source
     of truth for both the accumulation caps (below) and the final
-    down-sampling in make_noise — they must agree so the caps never starve
+    down-sampling in make_noise - they must agree so the caps never starve
     the sampler.
     """
     targets: dict[str, tuple[int, int]] = {}
@@ -212,7 +212,7 @@ def _build_tier_1(
     collected its cap of candidates we stop scanning its remaining
     anchors/outside names. Without this cap a single "hub" cluster whose
     anchors Soundex/Metaphone-collide with a large slice of a big registry
-    accumulates millions of rows and OOMs — the cap bounds memory to
+    accumulates millions of rows and OOMs - the cap bounds memory to
     O(|U|). `outside` is expected pre-shuffled so early-stopping doesn't
     bias toward registry insertion order.
     """
@@ -271,7 +271,7 @@ def _build_tier_2(
     collide with a disproportionate slice of the outside vocabulary in
     Tier 1, so their combined pool here can be far larger than
     extra_per_cluster would suggest. combinations(pool, 2) is quadratic
-    in that pool size, so an uncapped pool is what floods memory — cap
+    in that pool size, so an uncapped pool is what floods memory - cap
     and subsample it before scoring pairs.
 
     Emitted rows are additionally capped per cluster (`caps`) so a cluster
@@ -397,7 +397,7 @@ def make_noise(
                               and Tier 2 candidates at this multiple of its
                               tier target before down-sampling. Bounds total
                               memory to O(|U|) instead of O(all qualifying
-                              pairs) — this is what keeps a large registry
+                              pairs) - this is what keeps a large registry
                               from OOM-ing during Tier 1.
         candidate_min_pool:  Floor on that per-cluster cap, so tiny clusters
                               still keep a spread to sample from.
@@ -425,7 +425,7 @@ def make_noise(
 
     num_positives = len(positive_pairs)
     if num_positives == 0:
-        raise ValueError("No positive pairs found — cannot construct U.")
+        raise ValueError("No positive pairs found - cannot construct U.")
 
     all_names_norm = [normalize(n) for n in registry_df[REGISTRY_COL].dropna().tolist()]
     outside = [n for n in all_names_norm if n not in p_vocab]
@@ -438,7 +438,9 @@ def make_noise(
 
     pos_counts = _positives_per_cluster(clusters, positive_pairs)
 
-    target_total = round(num_positives * (1 - positive_prevalence) / positive_prevalence)
+    target_total = round(
+        num_positives * (1 - positive_prevalence) / positive_prevalence
+    )
     extra_per_cluster = max(1, tier_2_sample_size // max(1, len(clusters)))
 
     tier_targets = _cluster_tier_targets(
@@ -534,7 +536,7 @@ def make_noise(
     if empty_clusters:
         print(
             f"[noise] WARNING: {empty_clusters:,} cluster(s) got no negatives at all "
-            "(outside vocab exhausted) — they will be all-positive and likely "
+            "(outside vocab exhausted) - they will be all-positive and likely "
             "dropped by the downstream split."
         )
 

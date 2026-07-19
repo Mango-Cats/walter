@@ -11,8 +11,8 @@ from pathlib import Path
 
 
 class DataSource(Enum):
-    PH = auto()  # Philippine FDA registry  ->  _data/drug_set_ph.csv
-    US = auto()  # US FDA registry          ->  _data/drug_set_us.csv
+    PH = auto()
+    US = auto()
 
 
 # Active data source -- change this to switch registries
@@ -31,7 +31,7 @@ R: dict[DataSource, Path] = {
     DataSource.US: DATA_DIR / "R_us.csv",
 }
 
-# Cleaned registry cache -- written by src/preprocessing.py every time it
+# Cleaned registry cache -- written by src/pipeline/preprocessing.py every time it
 # cleans a raw registry, so a slow clean never has to be repeated. Kept under a
 # distinct _clean suffix: mapping this back onto the raw filename would make
 # USE_PRECLEANED_REGISTRY load uncleaned names and skip cleaning silently.
@@ -83,7 +83,7 @@ D_CSV: Path = RESULTS_DIR / D_FILENAME  # full assembled dataset
 # phoc output -- D with the phonetic-similarity feature columns added
 D_PHO_CSV: Path = RESULTS_DIR / D_PHO_FILENAME
 
-# Feature-engineering step -- src/feature_engineering.py appends META_FEATURES
+# Feature-engineering step -- src/pipeline/features.py appends META_FEATURES
 # (orthographic / edit-distance features) onto the phoc output, so _engi is
 # "engineered and pho'd": every phonetic column plus the META_FEATURES.
 D_ENGI_CSV: Path = RESULTS_DIR / D_ENGI_FILENAME
