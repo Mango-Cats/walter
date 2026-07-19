@@ -11,10 +11,16 @@ from .paths import RESULTS_DIR
 # If False, generate them via the local LLM proposer.
 FROM_FILE: bool = False
 
-# LLM proposer settings (only used when FROM_FILE = False)
-LLM_ITERATIONS: int = 400
+# LLM proposer settings (only used when FROM_FILE = False).
+# There is no iteration count: the proposer augments a predefined pair file
+# and runs exactly once per pair in it, so the seed file sets the workload.
 LLM_N_PROPOSALS: int = 5
-LLM_OUTPUT_JSON: Path = RESULTS_DIR / "lasa_run.json"
+
+# Canonical filename for the proposer's output, kept alongside the other
+# artifact names so `walter propose --output <dir>` and `walter noise
+# --input <dir>` agree on it. See config/paths.py.
+LLM_OUTPUT_FILENAME: str = "lasa_run.json"
+LLM_OUTPUT_JSON: Path = RESULTS_DIR / LLM_OUTPUT_FILENAME
 
 # Same file as LLM_OUTPUT_JSON -- used by Section 7 of the notebook to mine
 # unselected candidates (candidates - x_2) as additional label=0 pairs.

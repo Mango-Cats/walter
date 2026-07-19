@@ -18,7 +18,7 @@ class DataSource(Enum):
 # Active data source -- change this to switch registries
 DATA_SOURCE: DataSource = DataSource.PH
 
-DATA_DIR = Path("_data")
+DATA_DIR = Path("data")
 RESULTS_DIR = Path("results")
 
 # Models are downloaded here by scripts/model_setup.py
@@ -27,15 +27,17 @@ MODELS_DIR = Path("models")
 
 # Raw drug name registries -- one-column CSVs, header ignored, first column used
 R: dict[DataSource, Path] = {
-    DataSource.PH: DATA_DIR / "R_ph_raw.csv",
-    DataSource.US: DATA_DIR / "R_us_raw.csv",
+    DataSource.PH: DATA_DIR / "R_ph.csv",
+    DataSource.US: DATA_DIR / "R_us.csv",
 }
 
 # Cleaned registry cache -- written by src/preprocessing.py every time it
-# cleans a raw registry, so a slow clean never has to be repeated.
+# cleans a raw registry, so a slow clean never has to be repeated. Kept under a
+# distinct _clean suffix: mapping this back onto the raw filename would make
+# USE_PRECLEANED_REGISTRY load uncleaned names and skip cleaning silently.
 R_CLEAN: dict[DataSource, Path] = {
-    DataSource.PH: DATA_DIR / "R_ph.csv",
-    DataSource.US: DATA_DIR / "R_us.csv",
+    DataSource.PH: DATA_DIR / "R_ph_clean.csv",
+    DataSource.US: DATA_DIR / "R_us_clean.csv",
 }
 
 # If True, preprocessing loads R_CLEAN[source] directly instead of
@@ -50,18 +52,38 @@ P: dict[DataSource, Path] = {
     DataSource.US: DATA_DIR / "P_us.csv",
 }
 
+# --------------------------------------------------------------------------
+# Canonical artifact filenames
+#
+# Stages take directories, not files. An artifact keeps the same filename
+# wherever it is written, so the name a stage writes into its output directory
+# is the name the next stage looks for in its input directory. Pointing two
+# stages at one directory is all it takes to chain them; see src/artifacts.py.
+#
+# Changing a name here changes it on both sides of every stage at once, which
+# is the point -- a stage must never write one name and read another.
+# --------------------------------------------------------------------------
+
+U_FILENAME: str = "U.csv"
+D_FILENAME: str = "D.csv"
+D_PHO_FILENAME: str = "D_pho.csv"
+D_ENGI_FILENAME: str = "D_engi.csv"
+
+# Default locations, i.e. those filenames under RESULTS_DIR. Stages accept any
+# directory; these are what the CLI falls back to.
+
 # Sampled unlabeled pairs, written so `walter noise` and `walter assemble`
 # can run as separate invocations. The full run keeps U in memory and writes
 # this as a checkpoint.
-U_CSV: Path = RESULTS_DIR / "U.csv"
+U_CSV: Path = RESULTS_DIR / U_FILENAME
 
 # Final output -- classification: pair + label, schema unchanged
-D_CSV: Path = RESULTS_DIR / "D.csv"  # full assembled dataset
+D_CSV: Path = RESULTS_DIR / D_FILENAME  # full assembled dataset
 
 # phoc output -- D with the phonetic-similarity feature columns added
-D_PHO_CSV: Path = RESULTS_DIR / "D_pho.csv"
+D_PHO_CSV: Path = RESULTS_DIR / D_PHO_FILENAME
 
 # Feature-engineering step -- src/feature_engineering.py appends META_FEATURES
 # (orthographic / edit-distance features) onto the phoc output, so _engi is
 # "engineered and pho'd": every phonetic column plus the META_FEATURES.
-D_ENGI_CSV: Path = RESULTS_DIR / "D_engi.csv"
+D_ENGI_CSV: Path = RESULTS_DIR / D_ENGI_FILENAME

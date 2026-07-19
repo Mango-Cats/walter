@@ -1,7 +1,7 @@
 """
 Loads and cleans a drug name registry for the selected DataSource.
 
-Input:  _data/drug_set_ph.csv  or  _data/drug_set_us.csv
+Input:  the raw registry at R[source] (data/R_ph.csv or data/R_us.csv).
         One-column CSV of raw drug names
         (header optional; first column used).
 
@@ -38,8 +38,11 @@ def load_registry(source: DataSource) -> pd.DataFrame:
         raise FileNotFoundError(
             f"Raw data file not found: {path}\nExpected one-column CSV of drug names."
         )
-    df = pd.read_csv(path, usecols=[0], header=0)
-    df.columns = [REGISTRY_COL]
+    df = pd.read_csv(path, usecols=[0], header=None, names=[REGISTRY_COL])
+    # The registries ship headerless, so header=0 would consume a real drug
+    # name. Tolerate a header anyway, in case a hand-exported file carries one.
+    if str(df.iloc[0, 0]).strip().lower() == REGISTRY_COL:
+        df = df.iloc[1:].reset_index(drop=True)
     return df
 
 

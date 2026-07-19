@@ -7,7 +7,8 @@ is 400 LLM calls and G2P transcribes the whole registry, while sampling U is
 cheap. Retuning a sampling knob should not re-pay for the proposal.
 
 Functions here take and return DataFrames and never parse arguments. walter.py
-owns the CLI and decides which paths to hand them.
+owns the CLI, resolves each stage's directory to the canonical filename inside
+it (see src/artifacts.py), and hands the resulting paths down.
 
 load_positives() is deliberately separate from propose(): loading a previous
 proposal must never trigger a new one by accident.
@@ -25,13 +26,16 @@ from config import (
     DATA_SOURCE,
     DataSource,
     FROM_FILE,
+    LLM_OUTPUT_FILENAME,
     LLM_OUTPUT_JSON,
     P,
     POSITIVE_PREVALENCE,
+    RESULTS_DIR,
     SEED,
     TIER_2_SAMPLE_SIZE,
     U_CSV,
 )
+from src.artifacts import in_file, require_file
 from src.dataset import assemble_and_save
 from src.feature_engineering import run_engineering
 from src.noise import make_noise
@@ -46,26 +50,37 @@ def preprocess(source: DataSource = DATA_SOURCE) -> pd.DataFrame:
 
 def propose(
     registry_df: pd.DataFrame,
+    seed_csv: Path,
     output_path: Path = LLM_OUTPUT_JSON,
 ) -> Path:
     """
-    Generate confirmed LASA pairs with the LLM proposer and write them.
+    Augment the predefined LASA pairs in seed_csv with the LLM proposer.
+
+    seed_csv is a file, not a directory: it is user-supplied input that no
+    other stage produces.
 
     Imports are local because the LLM extras are optional; a run that only
     touches later stages should not need transformers or openai installed.
     """
-    from src.proposer.inference import run_inference
+    from src.proposer.inference import load_seed_pairs, run_inference
     from src.proposer.llm import LocalModel
+
+    seed_pairs = load_seed_pairs(seed_csv)
+    print(f"[stages] Seeding proposer from {seed_csv}: {len(seed_pairs):,} pairs")
 
     run_inference(
         registry_df=registry_df,
         model_choice=LocalModel.QWEN3_1_7B,
+        seed_pairs=seed_pairs,
         output_path=output_path,
     )
     return output_path
 
 
-def load_positives(source: DataSource = DATA_SOURCE) -> pd.DataFrame:
+def load_positives(
+    input_dir: Path = RESULTS_DIR,
+    source: DataSource = DATA_SOURCE,
+) -> pd.DataFrame:
     """
     Load P from wherever config says it lives, without ever generating it.
 
@@ -78,7 +93,7 @@ def load_positives(source: DataSource = DATA_SOURCE) -> pd.DataFrame:
         if not p_file.exists():
             raise FileNotFoundError(
                 f"{p_file} not found. Place your confirmed LASA pairs CSV "
-                f"there, or set FROM_FILE = False in config to generate them "
+                f"there, or set FROM_FILE = False in config to augment them "
                 f"with `walter propose`."
             )
         pairs = pd.read_csv(p_file)
@@ -87,13 +102,9 @@ def load_positives(source: DataSource = DATA_SOURCE) -> pd.DataFrame:
 
     from src.proposer.inference import load_inference
 
-    if not Path(LLM_OUTPUT_JSON).exists():
-        raise FileNotFoundError(
-            f"{LLM_OUTPUT_JSON} not found. Run `walter propose` first, or set "
-            f"FROM_FILE = True in config to read P from a CSV instead."
-        )
-    pairs = load_inference(LLM_OUTPUT_JSON)
-    print(f"[stages] Loaded P from {LLM_OUTPUT_JSON}: {len(pairs):,} pairs")
+    path = in_file(input_dir, LLM_OUTPUT_FILENAME, "walter propose")
+    pairs = load_inference(path)
+    print(f"[stages] Loaded P from {path}: {len(pairs):,} pairs")
     return pairs
 
 
@@ -119,10 +130,7 @@ def noise(
 
 def load_noise(input_path: Path = U_CSV) -> pd.DataFrame:
     """Load a previously sampled U."""
-    if not Path(input_path).exists():
-        raise FileNotFoundError(
-            f"{input_path} not found. Run `walter noise` first."
-        )
+    require_file(input_path, "walter noise")
     U = pd.read_csv(input_path)
     print(f"[stages] Loaded U from {input_path}: {len(U):,} pairs")
     return U
@@ -145,7 +153,7 @@ def phoc(
     output_csv: Path = D_PHO_CSV,
 ) -> list[str]:
     """Append the phonetic-similarity feature columns."""
-    _require(input_csv, "walter assemble")
+    require_file(input_csv, "walter assemble")
     return run_phoc_multilingual(input_csv, output_csv)
 
 
@@ -154,7 +162,7 @@ def engineer(
     output_csv: Path = D_ENGI_CSV,
 ) -> list[str]:
     """Append the orthographic META_FEATURES."""
-    _require(input_csv, "walter phoc")
+    require_file(input_csv, "walter phoc")
     return run_engineering(input_csv, output_csv)
 
 
@@ -164,8 +172,3 @@ def summarize(D: pd.DataFrame) -> str:
     return f"{len(D):,} rows  " + "  ".join(
         f"label={k}: {v:,}" for k, v in sorted(counts.items())
     )
-
-
-def _require(path: Path, produced_by: str) -> None:
-    if not Path(path).exists():
-        raise FileNotFoundError(f"{path} not found. Run `{produced_by}` first.")

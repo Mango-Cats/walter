@@ -5,35 +5,57 @@ walter:
 Usage:
     walter                      full pipeline
     walter all                  same thing, named explicitly
-    walter propose              generate P with the LLM proposer
+    walter propose              augment predefined LASA pairs into P
     walter noise                sample U from the registry
     walter assemble             merge P and U into D, transcribe
     walter phoc                 add phonetic-similarity features
     walter engineer             add the orthographic META_FEATURES
+    walter annotate             export blinded rater sheets for IAA
 
-Every stage reads and writes the paths in config, so stages run in any
-combination. Pass --input / --output to point one at a different file.
+--input and --output are directories, not files. Each artifact has one
+canonical filename (config/paths.py): a stage reads that name out of its
+input directory and writes that name into its output directory, so pointing
+two stages at the same directory is all it takes to chain them, and stages
+run in any combination.
+
+    walter phoc --input results --output results
+        results/D.csv  ->  results/D_pho.csv
+
+`walter propose` is the exception. Its --input is a CSV file of predefined
+LASA pairs, which it augments; no other stage produces that file, so there is
+no directory to take it from.
+
+A stage whose input is missing names the command that produces it.
 """
 
 import argparse
 import time
 from pathlib import Path
 
+import pandas as pd
 from rich.console import Console
 
 from config import (
-    D_CSV,
-    D_ENGI_CSV,
-    D_PHO_CSV,
+    ANNOTATION_DIR,
+    ANNOTATION_SEED,
+    D_ENGI_FILENAME,
+    D_FILENAME,
+    D_PHO_FILENAME,
     DATA_SOURCE,
     FROM_FILE,
-    LLM_OUTPUT_JSON,
+    LLM_OUTPUT_FILENAME,
+    N_CANDIDATES,
+    N_PLACEBO,
+    NEG_PER_POSITIVE,
+    P,
     POSITIVE_PREVALENCE,
+    RESULTS_DIR,
     SEED,
     TIER_2_SAMPLE_SIZE,
-    U_CSV,
+    U_FILENAME,
 )
 from src import stages
+from src.artifacts import in_file, out_file, seed_file
 
 _console = Console()
 
@@ -70,80 +92,144 @@ def _banner() -> None:
 
 
 def cmd_propose(args: argparse.Namespace) -> None:
-    if FROM_FILE:
-        raise SystemExit(
-            "FROM_FILE = True, so P is read from a CSV and there is nothing to "
-            "propose. Set FROM_FILE = False in config to use the LLM proposer."
-        )
+    seed_csv = seed_file(args.input, "predefined LASA pairs CSV")
+    out = out_file(args.output, LLM_OUTPUT_FILENAME)
     with Spinner("Preprocessing registry"):
         R_clean = stages.preprocess()
-    with Spinner("Proposing pairs (LLM)"):
-        out = stages.propose(R_clean, output_path=args.output)
+    with Spinner("Augmenting predefined pairs (LLM)"):
+        stages.propose(R_clean, seed_csv=seed_csv, output_path=out)
     print(f"\nP -> {out}")
 
 
 def cmd_noise(args: argparse.Namespace) -> None:
+    P_load = stages.load_positives(args.input)
+    out = out_file(args.output, U_FILENAME)
     with Spinner("Preprocessing registry"):
         R_clean = stages.preprocess()
-    P_load = stages.load_positives()
     with Spinner("Sampling unlabeled pairs (U)"):
-        U = stages.noise(P_load, R_clean, output_path=args.output)
+        U = stages.noise(P_load, R_clean, output_path=out)
     print(f"\nU: {len(U):,} pairs")
+    print(f"U -> {out}")
 
 
 def cmd_assemble(args: argparse.Namespace) -> None:
-    P_load = stages.load_positives()
-    U = stages.load_noise(args.input)
+    # U first: it is what --input advertises for this stage, so a user who
+    # has not run `walter noise` should hear about that before P.
+    U = stages.load_noise(in_file(args.input, U_FILENAME, "walter noise"))
+    P_load = stages.load_positives(args.input)
+    out = out_file(args.output, D_FILENAME)
     with Spinner("Assembling D"):
-        D = stages.assemble(P_load, U, output_csv=args.output)
-    print(f"\nD -> {args.output}")
+        D = stages.assemble(P_load, U, output_csv=out)
+    print(f"\nD -> {out}")
     print(stages.summarize(D))
 
 
 def cmd_phoc(args: argparse.Namespace) -> None:
+    src = in_file(args.input, D_FILENAME, "walter assemble")
+    out = out_file(args.output, D_PHO_FILENAME)
     with Spinner("Adding phonetic features (phoc)"):
-        feats = stages.phoc(args.input, args.output)
+        feats = stages.phoc(src, out)
     print(f"\nPhonetic features ({len(feats)}): {', '.join(feats)}")
-    print(f"D_pho -> {args.output}")
+    print(f"D_pho -> {out}")
 
 
 def cmd_engineer(args: argparse.Namespace) -> None:
+    src = in_file(args.input, D_PHO_FILENAME, "walter phoc")
+    out = out_file(args.output, D_ENGI_FILENAME)
     with Spinner("Engineering meta-features"):
-        meta = stages.engineer(args.input, args.output)
+        meta = stages.engineer(src, out)
     print(f"\nMeta-features ({len(meta)}): {', '.join(meta)}")
-    print(f"D_engi -> {args.output}")
+    print(f"D_engi -> {out}")
 
 
 def cmd_all(args: argparse.Namespace) -> None:
     _banner()
-    print(f"Output: D -> {D_CSV}")
+
+    d_csv = out_file(args.output, D_FILENAME)
+    d_pho_csv = out_file(args.output, D_PHO_FILENAME)
+    d_engi_csv = out_file(args.output, D_ENGI_FILENAME)
+    print(f"Output: D -> {d_csv}")
 
     with Spinner("Preprocessing registry"):
         R_clean = stages.preprocess()
     print(f"\nCleaned registry: {len(R_clean):,} drug names")
 
     if not FROM_FILE:
-        with Spinner("Proposing pairs (LLM)"):
-            stages.propose(R_clean)
-    P_load = stages.load_positives()
+        seed_csv = seed_file(args.input, "predefined LASA pairs CSV")
+        with Spinner("Augmenting predefined pairs (LLM)"):
+            stages.propose(
+                R_clean,
+                seed_csv=seed_csv,
+                output_path=out_file(args.output, LLM_OUTPUT_FILENAME),
+            )
+    P_load = stages.load_positives(args.output)
 
     with Spinner("Sampling unlabeled pairs (U)"):
-        U = stages.noise(P_load, R_clean)
+        U = stages.noise(P_load, R_clean, output_path=out_file(args.output, U_FILENAME))
 
     with Spinner("Assembling and saving D"):
-        D = stages.assemble(P_load, U)
+        D = stages.assemble(P_load, U, output_csv=d_csv)
     print(f"\n{stages.summarize(D)}")
 
     # D.csv is already on disk, so a phoc failure aborts the run but leaves
     # the base dataset intact.
     with Spinner("Adding phonetic features (phoc)"):
-        feats = stages.phoc(D_CSV, D_PHO_CSV)
+        feats = stages.phoc(d_csv, d_pho_csv)
     print(f"\nPhonetic features ({len(feats)}): {', '.join(feats)}")
 
     with Spinner("Engineering meta-features"):
-        meta = stages.engineer(D_PHO_CSV, D_ENGI_CSV)
+        meta = stages.engineer(d_pho_csv, d_engi_csv)
     print(f"\nMeta-features ({len(meta)}): {', '.join(meta)}")
-    print(f"D_engi -> {D_ENGI_CSV}")
+    print(f"D_engi -> {d_engi_csv}")
+
+
+def cmd_annotate(args: argparse.Namespace) -> None:
+    from src import annotation
+
+    D = pd.read_csv(in_file(args.input, D_FILENAME, "walter assemble"))
+    batch = annotation.build_batch(
+        D,
+        n_candidates=args.n_candidates,
+        neg_per_positive=args.neg_per_positive,
+        n_placebo=args.n_placebo,
+        seed=args.seed,
+    )
+    annotation.export(
+        batch,
+        round_name=args.round,
+        base=args.output,
+        show_similarity=args.show_similarity,
+    )
+    print(
+        "\nThe batch is stratified, not the true class prevalence "
+        f"({POSITIVE_PREVALENCE:.6f}), so agreement computed on it does not "
+        "estimate agreement over D."
+    )
+
+
+def _add_annotate_command(sub) -> None:
+    p = sub.add_parser("annotate", help="Export blinded rater sheets for IAA")
+    p.add_argument("--round", default="r1", help="Round name (default: r1)")
+    p.add_argument(
+        "--input", type=Path, default=RESULTS_DIR, help=f"Directory holding {D_FILENAME}"
+    )
+    p.add_argument(
+        "--output",
+        type=Path,
+        default=ANNOTATION_DIR,
+        help="Directory to write the round's sheets into",
+    )
+    p.add_argument("--n-candidates", type=int, default=N_CANDIDATES)
+    p.add_argument("--neg-per-positive", type=float, default=NEG_PER_POSITIVE)
+    p.add_argument("--n-placebo", type=int, default=N_PLACEBO)
+    p.add_argument("--seed", type=int, default=ANNOTATION_SEED)
+    p.add_argument(
+        "--show-similarity",
+        action="store_true",
+        help="Include the fuzzy score (codebook Section 8.2 leaves this open; "
+        "it may anchor raters toward the orthographic channel)",
+    )
+    p.set_defaults(func=cmd_annotate)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -153,32 +239,75 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="stage")
 
-    sub.add_parser("all", help="Run every stage (default)").set_defaults(
-        func=cmd_all
-    )
+    # Every stage but `propose` reads a directory and writes a directory; the
+    # filename inside is fixed per artifact, so only the directory varies.
+    def _dirs(p, reads: str | None, writes: str, produced_by: str = "") -> None:
+        if reads is not None:
+            p.add_argument(
+                "--input",
+                type=Path,
+                default=RESULTS_DIR,
+                help=f"Directory holding {reads}"
+                + (f" (from `{produced_by}`)" if produced_by else ""),
+            )
+        p.add_argument(
+            "--output",
+            type=Path,
+            default=RESULTS_DIR,
+            help=f"Directory to write {writes} into",
+        )
 
-    p_propose = sub.add_parser("propose", help="Generate P with the LLM proposer")
-    p_propose.add_argument("--output", type=Path, default=LLM_OUTPUT_JSON)
+    p_all = sub.add_parser("all", help="Run every stage (default)")
+    p_all.add_argument(
+        "--input",
+        type=Path,
+        default=P[DATA_SOURCE],
+        help="CSV of predefined LASA pairs to seed the proposer with",
+    )
+    p_all.add_argument(
+        "--output",
+        type=Path,
+        default=RESULTS_DIR,
+        help="Directory to write every artifact into",
+    )
+    p_all.set_defaults(func=cmd_all)
+
+    p_propose = sub.add_parser(
+        "propose", help="Augment predefined LASA pairs into P"
+    )
+    # The one stage taking a file: its input is user-supplied, not produced by
+    # an earlier stage, so there is no canonical filename to look up.
+    p_propose.add_argument(
+        "--input",
+        type=Path,
+        default=P[DATA_SOURCE],
+        help="CSV of predefined LASA pairs to augment",
+    )
+    p_propose.add_argument(
+        "--output",
+        type=Path,
+        default=RESULTS_DIR,
+        help=f"Directory to write {LLM_OUTPUT_FILENAME} into",
+    )
     p_propose.set_defaults(func=cmd_propose)
 
     p_noise = sub.add_parser("noise", help="Sample the unlabeled set U")
-    p_noise.add_argument("--output", type=Path, default=U_CSV)
+    _dirs(p_noise, LLM_OUTPUT_FILENAME, U_FILENAME, "walter propose")
     p_noise.set_defaults(func=cmd_noise)
 
     p_assemble = sub.add_parser("assemble", help="Merge P and U into D")
-    p_assemble.add_argument("--input", type=Path, default=U_CSV, help="U CSV")
-    p_assemble.add_argument("--output", type=Path, default=D_CSV)
+    _dirs(p_assemble, U_FILENAME, D_FILENAME, "walter noise")
     p_assemble.set_defaults(func=cmd_assemble)
 
     p_phoc = sub.add_parser("phoc", help="Add phonetic-similarity features")
-    p_phoc.add_argument("--input", type=Path, default=D_CSV)
-    p_phoc.add_argument("--output", type=Path, default=D_PHO_CSV)
+    _dirs(p_phoc, D_FILENAME, D_PHO_FILENAME, "walter assemble")
     p_phoc.set_defaults(func=cmd_phoc)
 
     p_engineer = sub.add_parser("engineer", help="Add the orthographic META_FEATURES")
-    p_engineer.add_argument("--input", type=Path, default=D_PHO_CSV)
-    p_engineer.add_argument("--output", type=Path, default=D_ENGI_CSV)
+    _dirs(p_engineer, D_PHO_FILENAME, D_ENGI_FILENAME, "walter phoc")
     p_engineer.set_defaults(func=cmd_engineer)
+
+    _add_annotate_command(sub)
 
     return parser
 
@@ -186,9 +315,11 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-    # No subcommand keeps the original `python walter.py` behavior.
+    # No subcommand keeps the original `python walter.py` behavior. Re-parsing
+    # as `all` rather than just setting func picks up that parser's --input /
+    # --output defaults, which a bare namespace does not carry.
     if getattr(args, "func", None) is None:
-        args.func = cmd_all
+        args = parser.parse_args(["all"])
     try:
         args.func(args)
     except FileNotFoundError as exc:
