@@ -24,6 +24,8 @@ import pandas as pd
 
 from config import (
     COL_LABEL,
+    COL_X1,
+    COL_X2,
     D_CSV,
     D_ENGI_CSV,
     D_PHO_CSV,
@@ -39,6 +41,7 @@ from config import (
     TIER_2_SAMPLE_SIZE,
     U_CSV,
 )
+from src.adapters.g2p.transcribe import transcribe_all
 from src.adapters.phoc import run_phoc_multilingual
 from src.artifacts import in_file, require_file
 from src.pipeline.dataset import assemble_and_save
@@ -168,6 +171,74 @@ def engineer(
     """Append the orthographic META_FEATURES."""
     require_file(input_csv, "walter phoc")
     return run_engineering(input_csv, output_csv)
+
+
+def featurize(
+    input_csv: Path,
+    output_csv: Path,
+    retranscribe: bool = False,
+    verbose: bool = True,
+) -> tuple[list[str], list[str]]:
+    """
+    Run the feature half of the pipeline over an already-built pair CSV:
+    G2P, then phoc, then the META_FEATURES.
+
+    This is the tail of `all` with the pair-construction head removed - no LLM
+    proposal, no predefined positive set, no sampled U, no assembly - for a
+    dataset whose pairs already exist. Rows and columns pass through verbatim:
+    a label column is carried along and never rewritten, unlike assemble(),
+    which relabels every row by which of P or U it came from.
+
+    input_csv needs x_1 and x_2. Transcriptions already in it are reused as-is
+    (G2P is the expensive step) unless retranscribe forces them recomputed.
+
+    Each step writes its own CSV next to output_csv, named for the input, so a
+    failure halfway through leaves the work already paid for on disk:
+
+        <stem>_t.csv      transcriptions
+        <stem>_pho.csv    + the phonetic-similarity columns
+        output_csv        + the META_FEATURES
+
+    Returns (phonetic feature columns, META_FEATURES columns added).
+    """
+    input_csv, output_csv = Path(input_csv), Path(output_csv)
+    df = pd.read_csv(input_csv)
+
+    missing = [c for c in (COL_X1, COL_X2) if c not in df.columns]
+    if missing:
+        raise ValueError(f"{input_csv} is missing required columns: {missing}")
+
+    stage_dir = output_csv.parent
+    stage_dir.mkdir(parents=True, exist_ok=True)
+    t_csv = stage_dir / f"{input_csv.stem}_t.csv"
+    pho_csv = stage_dir / f"{input_csv.stem}_pho.csv"
+
+    # phoc reads pho_csv's input and engineer writes output_csv; if a chosen
+    # output collides with an intermediate, one step overwrites another's input.
+    for name, path in (("transcription", t_csv), ("phoc", pho_csv)):
+        if output_csv.resolve() == path.resolve():
+            raise ValueError(
+                f"output {output_csv} collides with the {name} intermediate "
+                f"this stage writes for input {input_csv.name}. Pick another "
+                f"output name or directory."
+            )
+
+    if verbose:
+        print(f"[stages] Featurizing {input_csv}: {len(df):,} rows")
+
+    df = transcribe_all(
+        df, skip_existing=not retranscribe, tag="featurize", verbose=verbose
+    )
+    df.to_csv(t_csv, index=False)
+    if verbose:
+        print(f"[stages] Transcriptions -> {t_csv}")
+
+    feats = run_phoc_multilingual(t_csv, pho_csv)
+    if verbose:
+        print(f"[stages] Phonetic features -> {pho_csv}")
+
+    meta = run_engineering(pho_csv, output_csv)
+    return feats, meta
 
 
 def summarize(D: pd.DataFrame) -> str:

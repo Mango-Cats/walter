@@ -10,6 +10,7 @@ Usage:
     walter assemble             merge P and U into D, transcribe
     walter phoc                 add phonetic-similarity features
     walter engineer             add the orthographic META_FEATURES
+    walter featurize            g2p + phoc + META_FEATURES on an existing CSV
     walter annotate             export blinded rater sheets for IAA
 
 --input and --output are directories, not files. Each artifact has one
@@ -21,9 +22,11 @@ run in any combination.
     walter phoc --input results --output results
         results/D.csv  ->  results/D_pho.csv
 
-`walter propose` is the exception. Its --input is a CSV file of predefined
-LASA pairs, which it augments; no other stage produces that file, so there is
-no directory to take it from.
+`walter propose` and `walter featurize` are the exceptions. Both take a --input
+CSV file rather than a directory, because no stage produces that file: the
+proposer augments a CSV of predefined LASA pairs, and featurize runs the
+feature stages over a dataset whose pairs already exist. featurize names its
+--output too, so it cannot silently overwrite a full run's D_engi.csv.
 
 A stage whose input is missing names the command that produces it.
 """
@@ -138,6 +141,18 @@ def cmd_engineer(args: argparse.Namespace) -> None:
         meta = stages.engineer(src, out)
     print(f"\nMeta-features ({len(meta)}): {', '.join(meta)}")
     print(f"D_engi -> {out}")
+
+
+def cmd_featurize(args: argparse.Namespace) -> None:
+    src = seed_file(args.input, "pair CSV to featurize")
+    out = args.output or src.parent / f"{src.stem}_engi.csv"
+    if out.resolve() == src.resolve():
+        raise SystemExit("error: --output must differ from --input")
+    with Spinner("Featurizing (g2p -> phoc -> META_FEATURES)"):
+        feats, meta = stages.featurize(src, out, retranscribe=args.retranscribe)
+    print(f"\nPhonetic features ({len(feats)}): {', '.join(feats)}")
+    print(f"Meta-features ({len(meta)}): {', '.join(meta)}")
+    print(f"\n{src} -> {out}")
 
 
 def cmd_all(args: argparse.Namespace) -> None:
@@ -300,6 +315,30 @@ def build_parser() -> argparse.ArgumentParser:
     _dirs(p_engineer, D_PHO_FILENAME, D_ENGI_FILENAME, "walter phoc")
     p_engineer.set_defaults(func=cmd_engineer)
 
+    p_featurize = sub.add_parser(
+        "featurize",
+        help="Run g2p, phoc and META_FEATURES over an existing pair CSV",
+    )
+    p_featurize.add_argument(
+        "--input",
+        required=True,
+        type=Path,
+        help="CSV of pairs to featurize; needs x_1 and x_2, and every other "
+        "column (label, ...) is preserved verbatim",
+    )
+    p_featurize.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Output CSV (default: <input>_engi.csv beside the input)",
+    )
+    p_featurize.add_argument(
+        "--retranscribe",
+        action="store_true",
+        help="Re-run G2P even when the input already carries transcriptions",
+    )
+    p_featurize.set_defaults(func=cmd_featurize)
+
     _add_annotate_command(sub)
 
     return parser
@@ -312,7 +351,10 @@ def main() -> None:
         args = parser.parse_args(["all"])
     try:
         args.func(args)
-    except FileNotFoundError as exc:
+    except (FileNotFoundError, ValueError) as exc:
+        # ValueError is how the stages report a bad input schema (a CSV without
+        # x_1/x_2, transcription columns phoc needs); that is the user's to fix,
+        # so it reads as an error line rather than a traceback.
         raise SystemExit(f"error: {exc}")
 
 

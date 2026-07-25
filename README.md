@@ -56,6 +56,9 @@ uv run walter engineer    # META_FEATURES           -> results/D_engi.csv
 uv run walter all         # every stage (same as bare `uv run walter`)
 ```
 
+Plus `featurize`, which runs the three feature stages over pairs you already
+have instead of pairs this pipeline builds (see below).
+
 #### Directories in, directories out
 
 `--input` and `--output` are **directories**, not files. Every artifact has one canonical filename (`config/paths.py`), and a stage always reads that name out of its input directory and writes that name into its output directory:
@@ -67,6 +70,7 @@ uv run walter all         # every stage (same as bare `uv run walter`)
 | `assemble` | `U.csv` + `lasa_run.json` | `D.csv` |
 | `phoc` | `D.csv` | `D_pho.csv` |
 | `engineer` | `D_pho.csv` | `D_engi.csv` |
+| `featurize` | *(any pairs CSV - see below)* | `<input>_engi.csv` |
 | `annotate` | `D.csv` | `<round>/R*.csv`, `<round>/_key.csv` |
 
 Because the name a stage writes is exactly the name the next one looks for,
@@ -121,6 +125,37 @@ in the pipeline at all. Loading P never triggers a proposal as a side effect, so
 a missing `lasa_run.json` is reported rather than silently regenerated at a cost
 of one LLM call per pair.
 
+#### Featurizing a dataset you already have
+
+`walter featurize` runs the three feature stages - G2P, `phoc`, `META_FEATURES` -
+over an existing CSV of pairs, skipping pair construction entirely: no LLM
+proposal, no predefined positive set, no sampled U, no assembly.
+
+```bash
+uv run walter featurize --input pairs.csv                    # -> pairs_engi.csv
+uv run walter featurize --input pairs.csv --output feats.csv
+```
+
+The input needs `x_1` and `x_2`. Every other column, `label` included, is
+preserved verbatim, and so is row order - unlike `assemble`, which sets `label`
+from which of P or U each row came from. Like `propose`, `--input` is a file
+rather than a directory; `--output` is one too, defaulting to
+`<input>_engi.csv` beside the input, so a run cannot overwrite the pipeline's
+own `results/D_engi.csv` by accident.
+
+Each step writes its own CSV next to the output, so a failure partway through
+keeps the work already paid for:
+
+| file | contents |
+| --- | --- |
+| `<input>_t.csv` | + the IPA transcriptions |
+| `<input>_pho.csv` | + the phonetic-similarity columns |
+| `<input>_engi.csv` | + the `META_FEATURES` *(the default `--output`)* |
+
+G2P is the expensive step, so transcription columns already present in the
+input are reused as-is. Point `--input` at a previous `_t.csv` to re-run only
+the cheap stages, or pass `--retranscribe` to force G2P to run again.
+
 ### Annotation sheets
 
 Draws a batch from `D.csv` and writes one blinded CSV per rater, for the human
@@ -167,6 +202,11 @@ Saved to `results/`:
 - `D_pho.csv` - `D` with one phonetic-similarity feature column per `bin/pho_conf/*.toml`.
   Transcription-dependent configs (`aline`) yield one column per language
   (`aline_ph_mc_eng`, `aline_ph_mc_fil`); the rest score `x_1`/`x_2` only and appear once.
+  An aline column reads `aline_<config phonology>_<variant>_<transcription>`, so
+  `aline_eng_kondrak_fil` is the English segment table scored over the Filipino
+  IPA. The `_ph_` and `_eng_` configs share their costs, salience and `[values.*]`
+  scales and differ only in how each segment is described, so a gap between them
+  is attributable to phonology rather than to a re-tuned weighting.
 - `D_engi.csv` - `D_pho` with the META_FEATURES from `src/pipeline/features.py`
   appended (structural / prosodic + the Filipino-nativization features from `bin/tbb-cli`)
 
