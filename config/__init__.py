@@ -51,6 +51,7 @@ from .paths import (
     DATA_SOURCE,
     DataSource,
     MODELS_DIR,
+    N,
     P,
     R,
     R_CLEAN,
@@ -78,6 +79,7 @@ from .proposer import (
     LLM_N_PROPOSALS,
     LLM_OUTPUT_FILENAME,
     LLM_OUTPUT_JSON,
+    SOFT_LABELS,
     USE_API_MODEL,
 )
 from .sampling import (
@@ -102,6 +104,7 @@ from .schema import (
     COL_T2,
     COL_X1,
     COL_X2,
+    NEGATIVE_LABEL,
     P_INPUT_COLS,
     POSITIVE_LABEL,
     REGISTRY_COL,
@@ -120,6 +123,7 @@ __all__ = [
     "R_CLEAN",
     "USE_PRECLEANED_REGISTRY",
     "P",
+    "N",
     "U_CSV",
     "D_CSV",
     "D_PHO_CSV",
@@ -143,6 +147,7 @@ __all__ = [
     "P_INPUT_COLS",
     "POSITIVE_LABEL",
     "UNLABELED_LABEL",
+    "NEGATIVE_LABEL",
     # sampling
     "POSITIVE_PREVALENCE",
     "TIER_1_PROPORTION",
@@ -156,6 +161,7 @@ __all__ = [
     "SHUFFLE_SEED",
     # proposer
     "FROM_FILE",
+    "SOFT_LABELS",
     "LLM_N_PROPOSALS",
     "LLM_OUTPUT_JSON",
     "LLM_OUTPUT_FILENAME",

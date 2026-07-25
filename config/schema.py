@@ -33,11 +33,17 @@ TRANSCRIPTION_LANGS: dict[str, tuple[str, str]] = {
     "fil": (COL_T_FIL_1, COL_T_FIL_2),
 }
 
-COL_LABEL: str = "label"  # 1 = known positive (LASA), 0 = unlabeled
+COL_LABEL: str = "label"  # 1 = known positive (LASA), 0 = unlabeled, -1 = rejected
 
-# P.csv (input) must have exactly these two columns
+# P.csv (input) must have exactly these two columns. N.csv, the predefined
+# rejected pairs read under SOFT_LABELS, has the same two.
 P_INPUT_COLS: list[str] = [COL_X1, COL_X2]
 
 # Labels
 POSITIVE_LABEL: int = 1
 UNLABELED_LABEL: int = 0
+
+# Only ever written under SOFT_LABELS (config/proposer.py). It is a third
+# value, not a renaming of UNLABELED_LABEL: 0 stays "nobody looked at this
+# pair", -1 means "it was judged and rejected".
+NEGATIVE_LABEL: int = -1

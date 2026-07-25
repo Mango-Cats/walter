@@ -18,6 +18,7 @@ load_positives() is deliberately separate from propose(): loading a previous
 proposal must never trigger a new one by accident.
 """
 
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -34,7 +35,10 @@ from config import (
     FROM_FILE,
     LLM_OUTPUT_FILENAME,
     LLM_OUTPUT_JSON,
+    N,
+    NEGATIVE_LABEL,
     P,
+    P_INPUT_COLS,
     POSITIVE_PREVALENCE,
     RESULTS_DIR,
     SEED,
@@ -43,8 +47,8 @@ from config import (
 )
 from src.adapters.g2p.transcribe import transcribe_all
 from src.adapters.phoc import run_phoc_multilingual
-from src.artifacts import in_file, require_file
-from src.pipeline.dataset import assemble_and_save
+from src.artifacts import in_file, require_file, seed_file
+from src.pipeline.dataset import assemble_and_save, unselected_candidate_pairs
 from src.pipeline.features import run_engineering
 from src.pipeline.noise import make_noise
 from src.pipeline.preprocessing import run as run_preprocessing
@@ -115,6 +119,60 @@ def load_positives(
     return pairs
 
 
+def load_rejections(
+    input_dir: Path = RESULTS_DIR,
+    source: DataSource = DATA_SOURCE,
+    rejected_csv: Path | None = None,
+) -> pd.DataFrame:
+    """
+    Load N, the rejected pairs, for a soft-labelled assembly. The mirror of
+    load_positives(), and like it, it never generates anything.
+
+    A rejection has two possible sources and both are read, since either can be
+    absent:
+
+      * the LLM's - every candidate an entry in lasa_run.json was shown and did
+        not propose. Read whenever FROM_FILE is False, from the same file P
+        comes from, so no extra stage or LLM call is involved.
+      * a predefined file - rejected_csv when given, otherwise N[source] if it
+        happens to exist. An explicitly named file that is missing is an error;
+        the configured default simply being absent is not.
+
+    Returns a [COL_X1, COL_X2] DataFrame, empty when neither source yielded
+    anything. Callers only reach here under soft labels, so an empty N means
+    "nothing was rejected", not "rejections were not asked for".
+    """
+    frames: list[pd.DataFrame] = []
+
+    n_file = seed_file(rejected_csv, "rejected pairs CSV") if rejected_csv else N[source]
+    if n_file.exists():
+        pairs = pd.read_csv(n_file)
+        missing = [c for c in P_INPUT_COLS if c not in pairs.columns]
+        if missing:
+            raise ValueError(
+                f"{n_file} is missing column(s) {missing}. Predefined rejected "
+                f"pairs need {list(P_INPUT_COLS)}."
+            )
+        frames.append(pairs[list(P_INPUT_COLS)].dropna())
+        print(f"[stages] Loaded rejections from {n_file}: {len(frames[-1]):,} pairs")
+    else:
+        print(f"[stages] No predefined rejections at {n_file}, skipping")
+
+    if not FROM_FILE:
+        path = in_file(input_dir, LLM_OUTPUT_FILENAME, "walter propose")
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        llm = unselected_candidate_pairs(data, label=NEGATIVE_LABEL)
+        frames.append(llm[[COL_X1, COL_X2]])
+        print(f"[stages] Loaded rejections from {path}: {len(llm):,} unselected pairs")
+
+    if not frames:
+        return pd.DataFrame(columns=list(P_INPUT_COLS))
+
+    N_df = pd.concat(frames, ignore_index=True).drop_duplicates()
+    print(f"[stages] N: {len(N_df):,} rejected pairs")
+    return N_df.reset_index(drop=True)
+
+
 def noise(
     pairs_df: pd.DataFrame,
     registry_df: pd.DataFrame,
@@ -146,12 +204,23 @@ def load_noise(input_path: Path = U_CSV) -> pd.DataFrame:
 def assemble(
     pairs_df: pd.DataFrame,
     U: pd.DataFrame,
+    N_df: pd.DataFrame | None = None,
     output_csv: Path = D_CSV,
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """Merge P and U into D, transcribe, and write it."""
+    """
+    Merge P, U and (under soft labels) N into D, transcribe, and write it.
+
+    N_df is None for the two-value dataset; pass load_rejections() for the
+    three-value one.
+    """
     return assemble_and_save(
-        pairs_df, U, add_phonemes=True, verbose=verbose, output_csv=output_csv
+        pairs_df,
+        U,
+        N=N_df,
+        add_phonemes=True,
+        verbose=verbose,
+        output_csv=output_csv,
     )
 
 

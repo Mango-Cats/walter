@@ -1,10 +1,13 @@
 """
-Assembles P and U into the final dataset D and saves it:
+Assembles P, N and U into the final dataset D and saves it:
 
 D.csv (classification) - x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label.
 One IPA transcription per language per name (see config.TRANSCRIPTION_LANGS).
 
-D is the shuffled union of P and U, deduplicated.
+D is the shuffled union of its inputs, deduplicated. N (rejected pairs, label
+-1) is optional: pass it only under soft labels, otherwise D is the two-value
+P/U dataset. Where a pair appears in more than one input the stronger claim
+wins - a confirmed positive over a rejection, either over an unlabeled pair.
 """
 
 import re
@@ -21,6 +24,7 @@ from config import (
     COL_T_FIL_1,
     COL_T_FIL_2,
     COL_LABEL,
+    NEGATIVE_LABEL,
     POSITIVE_LABEL,
     UNLABELED_LABEL,
     RESULTS_DIR,
@@ -100,6 +104,7 @@ def _normalize_pairs(df: pd.DataFrame, label: int) -> pd.DataFrame:
 def assemble_and_save(
     P: pd.DataFrame,
     U: pd.DataFrame,
+    N: pd.DataFrame | None = None,
     add_phonemes: bool = True,
     verbose: bool = True,
     output_csv: Path = D_CSV,
@@ -108,7 +113,7 @@ def assemble_and_save(
     Clean, deduplicate, transcribe, and save D to output_csv.
 
     Steps:
-      1. Normalize column names and labels for both P and U
+      1. Normalize column names and labels for each input
       2. Clean and deduplicate each independently
       3. Concatenate into D, deduplicate again across the union
       4. Add IPA transcriptions, one pair per language (English + Filipino)
@@ -116,38 +121,62 @@ def assemble_and_save(
       6. Shuffle D
       7. Save D (classification) to output_csv
 
+    N is the soft-label input: rejected pairs, labelled NEGATIVE_LABEL. Leave
+    it None for the two-value P/U dataset. The concatenation order is P, N, U
+    and deduplication keeps the first occurrence, so a pair claimed by two
+    inputs takes the label of the strongest claim rather than the last one read.
+
     Returns the assembled D DataFrame (classification schema).
     """
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    P_norm = _normalize_pairs(P, POSITIVE_LABEL)
-    U_norm = _normalize_pairs(U, UNLABELED_LABEL)
+    P_clean = clean_and_deduplicate(_normalize_pairs(P, POSITIVE_LABEL))
+    U_clean = clean_and_deduplicate(_normalize_pairs(U, UNLABELED_LABEL))
+    N_clean = (
+        clean_and_deduplicate(_normalize_pairs(N, NEGATIVE_LABEL))
+        if N is not None
+        else None
+    )
 
-    P_clean = clean_and_deduplicate(P_norm)
-    U_clean = clean_and_deduplicate(U_norm)
+    parts = [P_clean, U_clean] if N_clean is None else [P_clean, N_clean, U_clean]
 
     if verbose:
         print(f"\n[dataset] P (clean): {len(P_clean):,} pairs")
+        if N_clean is not None:
+            print(f"[dataset] N (clean): {len(N_clean):,} pairs")
         print(f"[dataset] U (clean): {len(U_clean):,} pairs")
 
-    D = pd.concat([P_clean, U_clean], ignore_index=True)
+    # parts is P before N before U, and clean_and_deduplicate keeps the first
+    # occurrence, so the concatenation order is what resolves a contested pair.
+    D = pd.concat(parts, ignore_index=True)
     D = clean_and_deduplicate(D)
 
     if verbose:
         print(f"[dataset] D (union, deduped): {len(D):,} pairs")
-        print(f"[dataset]   label=1 (P): {(D[COL_LABEL] == POSITIVE_LABEL).sum():,}")
-        print(f"[dataset]   label=0 (U): {(D[COL_LABEL] == UNLABELED_LABEL).sum():,}")
+        print(
+            f"[dataset]   label={POSITIVE_LABEL} (P): "
+            f"{(D[COL_LABEL] == POSITIVE_LABEL).sum():,}"
+        )
+        if N_clean is not None:
+            print(
+                f"[dataset]   label={NEGATIVE_LABEL} (N): "
+                f"{(D[COL_LABEL] == NEGATIVE_LABEL).sum():,}"
+            )
+        print(
+            f"[dataset]   label={UNLABELED_LABEL} (U): "
+            f"{(D[COL_LABEL] == UNLABELED_LABEL).sum():,}"
+        )
 
     if add_phonemes:
         D = transcribe_all(D, tag="dataset", verbose=verbose)
 
-        for df_ in [P_clean, U_clean]:
+        for df_ in parts:
             for col in _T1_COLS:
                 df_[col] = df_[COL_X1].map(dict(zip(D[COL_X1], D[col]))).fillna("")
             for col in _T2_COLS:
                 df_[col] = df_[COL_X2].map(dict(zip(D[COL_X2], D[col]))).fillna("")
     else:
-        for df_ in [D, P_clean, U_clean]:
+        for df_ in [D, *parts]:
             for col in _T1_COLS + _T2_COLS:
                 df_[col] = ""
 
@@ -155,6 +184,8 @@ def assemble_and_save(
     D = D[final_cols]
     P_clean = P_clean.reindex(columns=final_cols, fill_value="")
     U_clean = U_clean.reindex(columns=final_cols, fill_value="")
+    if N_clean is not None:
+        N_clean = N_clean.reindex(columns=final_cols, fill_value="")
 
     D = D.sample(frac=1, random_state=SHUFFLE_SEED).reset_index(drop=True)
 
@@ -169,17 +200,23 @@ def assemble_and_save(
     return D
 
 
-def _unselected_candidate_pairs(lasa_data: list[dict]) -> pd.DataFrame:
+def unselected_candidate_pairs(
+    lasa_data: list[dict],
+    label: int = UNLABELED_LABEL,
+) -> pd.DataFrame:
     """
-    Build a (x_1, x_2, label=0) DataFrame from the candidates each entry
-    in lasa_run.json was shown but did NOT propose (candidates - x_2).
+    Build a (x_1, x_2, label) DataFrame from the candidates each entry in
+    lasa_run.json was shown but did NOT propose (candidates - x_2).
 
     Args:
         lasa_data: Parsed JSON from LLM_OUTPUT_JSON / LASA_RUN_JSON -
                    a list of {"x_1": ..., "candidates": [...], "x_2": [...]}.
+        label:     What to label these pairs. UNLABELED_LABEL treats "the LLM
+                   passed over it" as no information; NEGATIVE_LABEL treats it
+                   as the rejection it is, and is what soft labels pass.
 
     Returns:
-        DataFrame with columns [COL_X1, COL_X2, COL_LABEL], label=0.
+        DataFrame with columns [COL_X1, COL_X2, COL_LABEL].
     """
     rows = []
     for entry in lasa_data:
@@ -188,9 +225,14 @@ def _unselected_candidate_pairs(lasa_data: list[dict]) -> pd.DataFrame:
             continue
         candidates = entry.get("candidates", [])
         selected = {c.lower() for c in entry.get(COL_X2, [])}
+        # The seed pair is confirmed input, never a candidate the LLM judged,
+        # but guard anyway: it must never come back out as a rejection.
+        seed = entry.get("seed_x_2")
+        if seed:
+            selected.add(seed.lower())
         for cand in candidates:
             if cand.lower() not in selected:
-                rows.append({COL_X1: x1, COL_X2: cand, COL_LABEL: UNLABELED_LABEL})
+                rows.append({COL_X1: x1, COL_X2: cand, COL_LABEL: label})
 
     return pd.DataFrame(rows, columns=[COL_X1, COL_X2, COL_LABEL])
 
@@ -206,7 +248,7 @@ def write_lasa_run_unlabeled_csv(
 
     Returns the cleaned, deduplicated DataFrame that was written.
     """
-    df = _unselected_candidate_pairs(lasa_data)
+    df = unselected_candidate_pairs(lasa_data)
     df = clean_and_deduplicate(df)
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -242,7 +284,7 @@ def add_lasa_run_unlabeled(
     Returns:
         Extended copy of D, NOT yet saved to disk.
     """
-    new_pairs = _unselected_candidate_pairs(lasa_data)
+    new_pairs = unselected_candidate_pairs(lasa_data)
     new_pairs = clean_and_deduplicate(new_pairs)
 
     # Drop new pairs that duplicate an existing row in D (either order)

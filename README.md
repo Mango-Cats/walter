@@ -125,6 +125,43 @@ in the pipeline at all. Loading P never triggers a proposal as a side effect, so
 a missing `lasa_run.json` is reported rather than silently regenerated at a cost
 of one LLM call per pair.
 
+#### Soft labels
+
+By default `label` is binary: `1` for a pair P asserts, `0` for everything else.
+`--soft-labels` splits that `0` in two, so a pair that was *judged and rejected*
+is no longer indistinguishable from one nobody ever looked at:
+
+| `label` | pairs | source |
+| --- | --- | --- |
+| `1` | proposed by the LLM, or predefined | `lasa_run.json` / `P[DATA_SOURCE]` |
+| `-1` | shown to the LLM and not proposed, or predefined as rejected | `lasa_run.json` candidates minus `x_2` / `N[DATA_SOURCE]` |
+| `0` | combinatorially induced | `U.csv` |
+
+```bash
+uv run walter assemble --soft-labels
+uv run walter assemble --rejected data/N_ph.csv     # implies --soft-labels
+uv run walter all --soft-labels
+```
+
+Both sources of `-1` are read and unioned, and each is optional: the LLM's
+rejections are the candidates it was shown and passed over (free - they are
+already in `lasa_run.json`, no extra call), and the predefined ones come from
+`--rejected`, or from `N[DATA_SOURCE]` (`data/N_ph.csv`, same `x_1, x_2`
+columns as P) when that file happens to exist. A named `--rejected` that is
+missing is an error; the configured default merely being absent is not. With
+`FROM_FILE = True` there is no proposal to mine, so a predefined file is the
+only source.
+
+`SOFT_LABELS` in `config/proposer.py` sets the default for both commands, and
+`--no-soft-labels` overrides it back for one run. Off, nothing is read and `D`
+is byte-for-byte the dataset it was before.
+
+A pair can be claimed by more than one input - the LLM rejects it and the
+sampler happens to draw it - so the union resolves in the order P, N, U and the
+strongest claim wins: confirmed positive over rejection, either over unlabeled.
+The `annotate` stage is unaffected; its negative stratum still draws from the
+sampled `0` pairs only, so rejections never reach a rater sheet.
+
 #### Featurizing a dataset you already have
 
 `walter featurize` runs the three feature stages - G2P, `phoc`, `META_FEATURES` -
@@ -199,6 +236,7 @@ estimate of agreement over `D`.
 Saved to `results/`:
 
 - `D.csv` - classification: `x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label`
+  (`label` is `1`/`0`, or `1`/`-1`/`0` under `--soft-labels`)
 - `D_pho.csv` - `D` with one phonetic-similarity feature column per `bin/pho_conf/*.toml`.
   Transcription-dependent configs (`aline`) yield one column per language
   (`aline_ph_mc_eng`, `aline_ph_mc_fil`); the rest score `x_1`/`x_2` only and appear once.

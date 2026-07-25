@@ -8,6 +8,7 @@ Usage:
     walter propose              augment predefined LASA pairs into P
     walter noise                sample U from the registry
     walter assemble             merge P and U into D, transcribe
+                                (--soft-labels adds the rejected pairs as -1)
     walter phoc                 add phonetic-similarity features
     walter engineer             add the orthographic META_FEATURES
     walter featurize            g2p + phoc + META_FEATURES on an existing CSV
@@ -54,6 +55,7 @@ from config import (
     POSITIVE_PREVALENCE,
     RESULTS_DIR,
     SEED,
+    SOFT_LABELS,
     TIER_2_SAMPLE_SIZE,
     U_FILENAME,
 )
@@ -85,13 +87,52 @@ class Spinner:
             _console.print(f"[bold red]X[/] {self.label} FAILED in {elapsed:.1f}s")
 
 
-def _banner() -> None:
+def _banner(soft_labels: bool) -> None:
     print(f"Data source    : {DATA_SOURCE.name}")
     print(f"Pos. prevalence: {POSITIVE_PREVALENCE:.6f}")
     print(f"Tier 2 sample  : {TIER_2_SAMPLE_SIZE:,}")
     print(f"Seed           : {SEED}")
     print(f"P source       : {'CSV' if FROM_FILE else 'LLM proposer'}")
+    print(f"Labels         : {'soft (1 / -1 / 0)' if soft_labels else 'hard (1 / 0)'}")
     print()
+
+
+def _soft_labels(args: argparse.Namespace) -> bool:
+    """
+    Resolve --soft-labels/--no-soft-labels against config.SOFT_LABELS.
+
+    The flag defaults to None rather than to the config value so that passing
+    --rejected can imply soft labels without silently overriding an explicit
+    --no-soft-labels, which would be a contradiction worth reporting.
+    """
+    rejected = getattr(args, "rejected", None)
+    if args.soft_labels is None:
+        return SOFT_LABELS or rejected is not None
+    if not args.soft_labels and rejected is not None:
+        raise SystemExit(
+            "error: --rejected supplies the label=-1 rows, which only exist "
+            "under soft labels. Drop --no-soft-labels or drop --rejected."
+        )
+    return args.soft_labels
+
+
+def _add_label_flags(p) -> None:
+    """The soft-label switch and its optional predefined rejection file."""
+    p.add_argument(
+        "--soft-labels",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Label rejected pairs -1 (LLM-rejected candidates and --rejected) "
+        "and keep 0 for the combinatorially sampled pairs of U "
+        f"(default: {SOFT_LABELS}, from config/proposer.py)",
+    )
+    p.add_argument(
+        "--rejected",
+        type=Path,
+        default=None,
+        help="CSV of predefined rejected pairs (x_1, x_2) to label -1; implies "
+        "--soft-labels. Defaults to N[DATA_SOURCE], used when it exists",
+    )
 
 
 def cmd_propose(args: argparse.Namespace) -> None:
@@ -116,11 +157,15 @@ def cmd_noise(args: argparse.Namespace) -> None:
 
 
 def cmd_assemble(args: argparse.Namespace) -> None:
+    soft = _soft_labels(args)
     U = stages.load_noise(in_file(args.input, U_FILENAME, "walter noise"))
     P_load = stages.load_positives(args.input)
+    N_load = (
+        stages.load_rejections(args.input, rejected_csv=args.rejected) if soft else None
+    )
     out = out_file(args.output, D_FILENAME)
     with Spinner("Assembling D"):
-        D = stages.assemble(P_load, U, output_csv=out)
+        D = stages.assemble(P_load, U, N_load, output_csv=out)
     print(f"\nD -> {out}")
     print(stages.summarize(D))
 
@@ -156,7 +201,8 @@ def cmd_featurize(args: argparse.Namespace) -> None:
 
 
 def cmd_all(args: argparse.Namespace) -> None:
-    _banner()
+    soft = _soft_labels(args)
+    _banner(soft)
 
     d_csv = out_file(args.output, D_FILENAME)
     d_pho_csv = out_file(args.output, D_PHO_FILENAME)
@@ -180,8 +226,14 @@ def cmd_all(args: argparse.Namespace) -> None:
     with Spinner("Sampling unlabeled pairs (U)"):
         U = stages.noise(P_load, R_clean, output_path=out_file(args.output, U_FILENAME))
 
+    # Read after the proposal has been written: with FROM_FILE False the
+    # rejections come out of the lasa_run.json this run just produced.
+    N_load = (
+        stages.load_rejections(args.output, rejected_csv=args.rejected) if soft else None
+    )
+
     with Spinner("Assembling and saving D"):
-        D = stages.assemble(P_load, U, output_csv=d_csv)
+        D = stages.assemble(P_load, U, N_load, output_csv=d_csv)
     print(f"\n{stages.summarize(D)}")
 
     with Spinner("Adding phonetic features (phoc)"):
@@ -282,6 +334,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=RESULTS_DIR,
         help="Directory to write every artifact into",
     )
+    _add_label_flags(p_all)
     p_all.set_defaults(func=cmd_all)
 
     p_propose = sub.add_parser("propose", help="Augment predefined LASA pairs into P")
@@ -305,6 +358,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_assemble = sub.add_parser("assemble", help="Merge P and U into D")
     _dirs(p_assemble, U_FILENAME, D_FILENAME, "walter noise")
+    _add_label_flags(p_assemble)
     p_assemble.set_defaults(func=cmd_assemble)
 
     p_phoc = sub.add_parser("phoc", help="Add phonetic-similarity features")

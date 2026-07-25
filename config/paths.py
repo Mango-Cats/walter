@@ -52,6 +52,14 @@ P: dict[DataSource, Path] = {
     DataSource.US: DATA_DIR / "P_us.csv",
 }
 
+# Predefined rejected (non-LASA) pairs -- read only under SOFT_LABELS, and
+# optional even then: absent means the LLM's rejections are the only source of
+# NEGATIVE_LABEL rows. Same columns as P (see schema.P_INPUT_COLS).
+N: dict[DataSource, Path] = {
+    DataSource.PH: DATA_DIR / "N_ph.csv",
+    DataSource.US: DATA_DIR / "N_us.csv",
+}
+
 # --------------------------------------------------------------------------
 # Canonical artifact filenames
 #
