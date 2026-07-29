@@ -42,8 +42,6 @@ from .annotation import (
 )
 from .paths import (
     D_CSV,
-    D_ENGI_CSV,
-    D_ENGI_FILENAME,
     D_FILENAME,
     D_PHO_CSV,
     D_PHO_FILENAME,
@@ -127,11 +125,9 @@ __all__ = [
     "U_CSV",
     "D_CSV",
     "D_PHO_CSV",
-    "D_ENGI_CSV",
     "U_FILENAME",
     "D_FILENAME",
     "D_PHO_FILENAME",
-    "D_ENGI_FILENAME",
     # schema
     "REGISTRY_COL",
     "COL_X1",

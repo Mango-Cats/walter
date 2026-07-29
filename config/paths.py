@@ -75,7 +75,6 @@ N: dict[DataSource, Path] = {
 U_FILENAME: str = "U.csv"
 D_FILENAME: str = "D.csv"
 D_PHO_FILENAME: str = "D_pho.csv"
-D_ENGI_FILENAME: str = "D_engi.csv"
 
 # Default locations, i.e. those filenames under RESULTS_DIR. Stages accept any
 # directory; these are what the CLI falls back to.
@@ -90,8 +89,3 @@ D_CSV: Path = RESULTS_DIR / D_FILENAME  # full assembled dataset
 
 # phoc output -- D with the phonetic-similarity feature columns added
 D_PHO_CSV: Path = RESULTS_DIR / D_PHO_FILENAME
-
-# Feature-engineering step -- src/pipeline/features.py appends META_FEATURES
-# (orthographic / edit-distance features) onto the phoc output, so _engi is
-# "engineered and pho'd": every phonetic column plus the META_FEATURES.
-D_ENGI_CSV: Path = RESULTS_DIR / D_ENGI_FILENAME

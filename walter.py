@@ -10,8 +10,7 @@ Usage:
     walter assemble             merge P and U into D, transcribe
                                 (--soft-labels adds the rejected pairs as -1)
     walter phoc                 add phonetic-similarity features
-    walter engineer             add the orthographic META_FEATURES
-    walter featurize            g2p + phoc + META_FEATURES on an existing CSV
+    walter featurize            g2p + phoc on an existing CSV
     walter annotate             export blinded rater sheets for IAA
 
 --input and --output are directories, not files. Each artifact has one
@@ -27,7 +26,7 @@ run in any combination.
 CSV file rather than a directory, because no stage produces that file: the
 proposer augments a CSV of predefined LASA pairs, and featurize runs the
 feature stages over a dataset whose pairs already exist. featurize names its
---output too, so it cannot silently overwrite a full run's D_engi.csv.
+--output too, so it cannot silently overwrite a full run's D_pho.csv.
 
 A stage whose input is missing names the command that produces it.
 """
@@ -42,7 +41,6 @@ from rich.console import Console
 from config import (
     ANNOTATION_DIR,
     ANNOTATION_SEED,
-    D_ENGI_FILENAME,
     D_FILENAME,
     D_PHO_FILENAME,
     DATA_SOURCE,
@@ -179,24 +177,14 @@ def cmd_phoc(args: argparse.Namespace) -> None:
     print(f"D_pho -> {out}")
 
 
-def cmd_engineer(args: argparse.Namespace) -> None:
-    src = in_file(args.input, D_PHO_FILENAME, "walter phoc")
-    out = out_file(args.output, D_ENGI_FILENAME)
-    with Spinner("Engineering meta-features"):
-        meta = stages.engineer(src, out)
-    print(f"\nMeta-features ({len(meta)}): {', '.join(meta)}")
-    print(f"D_engi -> {out}")
-
-
 def cmd_featurize(args: argparse.Namespace) -> None:
     src = seed_file(args.input, "pair CSV to featurize")
-    out = args.output or src.parent / f"{src.stem}_engi.csv"
+    out = args.output or src.parent / f"{src.stem}_pho.csv"
     if out.resolve() == src.resolve():
         raise SystemExit("error: --output must differ from --input")
-    with Spinner("Featurizing (g2p -> phoc -> META_FEATURES)"):
-        feats, meta = stages.featurize(src, out, retranscribe=args.retranscribe)
+    with Spinner("Featurizing (g2p -> phoc)"):
+        feats = stages.featurize(src, out)
     print(f"\nPhonetic features ({len(feats)}): {', '.join(feats)}")
-    print(f"Meta-features ({len(meta)}): {', '.join(meta)}")
     print(f"\n{src} -> {out}")
 
 
@@ -206,7 +194,6 @@ def cmd_all(args: argparse.Namespace) -> None:
 
     d_csv = out_file(args.output, D_FILENAME)
     d_pho_csv = out_file(args.output, D_PHO_FILENAME)
-    d_engi_csv = out_file(args.output, D_ENGI_FILENAME)
     print(f"Output: D -> {d_csv}")
 
     with Spinner("Preprocessing registry"):
@@ -239,11 +226,7 @@ def cmd_all(args: argparse.Namespace) -> None:
     with Spinner("Adding phonetic features (phoc)"):
         feats = stages.phoc(d_csv, d_pho_csv)
     print(f"\nPhonetic features ({len(feats)}): {', '.join(feats)}")
-
-    with Spinner("Engineering meta-features"):
-        meta = stages.engineer(d_pho_csv, d_engi_csv)
-    print(f"\nMeta-features ({len(meta)}): {', '.join(meta)}")
-    print(f"D_engi -> {d_engi_csv}")
+    print(f"D_pho -> {d_pho_csv}")
 
 
 def cmd_annotate(args: argparse.Namespace) -> None:
@@ -365,31 +348,22 @@ def build_parser() -> argparse.ArgumentParser:
     _dirs(p_phoc, D_FILENAME, D_PHO_FILENAME, "walter assemble")
     p_phoc.set_defaults(func=cmd_phoc)
 
-    p_engineer = sub.add_parser("engineer", help="Add the orthographic META_FEATURES")
-    _dirs(p_engineer, D_PHO_FILENAME, D_ENGI_FILENAME, "walter phoc")
-    p_engineer.set_defaults(func=cmd_engineer)
-
     p_featurize = sub.add_parser(
         "featurize",
-        help="Run g2p, phoc and META_FEATURES over an existing pair CSV",
+        help="Run g2p and phoc over an existing pair CSV",
     )
     p_featurize.add_argument(
         "--input",
         required=True,
         type=Path,
-        help="CSV of pairs to featurize; needs x_1 and x_2, and every other "
-        "column (label, ...) is preserved verbatim",
+        help="CSV of pairs to featurize; needs x_1 and x_2. label is "
+        "preserved if present; every other column is dropped and rebuilt",
     )
     p_featurize.add_argument(
         "--output",
         type=Path,
         default=None,
-        help="Output CSV (default: <input>_engi.csv beside the input)",
-    )
-    p_featurize.add_argument(
-        "--retranscribe",
-        action="store_true",
-        help="Re-run G2P even when the input already carries transcriptions",
+        help="Output CSV (default: <input>_pho.csv beside the input)",
     )
     p_featurize.set_defaults(func=cmd_featurize)
 

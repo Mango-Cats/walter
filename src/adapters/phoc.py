@@ -106,38 +106,69 @@ def run_phoc(
     return [c for c in output_cols if c not in input_cols]
 
 
-def _classify_configs(config_dir: Path) -> tuple[list[str], list[str]]:
+_SEPARATE_SUFFIXES = ("_substitutions", "_insertions", "_deletions")
+
+
+def _stem_columns(stem: str, separate: bool) -> list[str]:
+    """
+    The output column(s) phoc emits for one config stem: a single column
+    named after the stem, or - when the config sets `separate = true` - three
+    columns (substitutions/insertions/deletions), per `phoc --help`.
+    """
+    if separate:
+        return [f"{stem}{suffix}" for suffix in _SEPARATE_SUFFIXES]
+    return [stem]
+
+
+def _classify_configs(
+    config_dir: Path,
+) -> tuple[list[str], list[str], dict[str, bool]]:
     """
     Split the config stems into (phonetic, orthographic) by reading each
     .toml's `algorithm` key. Phonetic configs read t_1/t_2 and so must be
     computed once per language; orthographic ones read only x_1/x_2.
+
+    Also returns a stem -> `separate` map, since a `separate = true` config
+    emits three output columns instead of one.
     """
     phonetic: list[str] = []
     orthographic: list[str] = []
+    separate: dict[str, bool] = {}
     for path in sorted(config_dir.glob("*.toml")):
         with path.open("rb") as f:
-            algorithm = str(tomllib.load(f).get("algorithm", "")).lower()
+            conf = tomllib.load(f)
+        algorithm = str(conf.get("algorithm", "")).lower()
         target = phonetic if algorithm in PHONETIC_ALGORITHMS else orthographic
         target.append(path.stem)
+        separate[path.stem] = bool(conf.get("separate", False))
 
     if not phonetic and not orthographic:
         raise FileNotFoundError(f"No .toml configs found in {config_dir}")
-    return phonetic, orthographic
+    return phonetic, orthographic, separate
 
 
 def _feature_names(
     phonetic: list[str],
     orthographic: list[str],
     langs: dict[str, tuple[str, str]],
+    separate: dict[str, bool],
 ) -> list[str]:
     """
     Every feature column a run emits, in output order: the orthographic ones
     (computed once), then each phonetic one with its languages grouped together
-    (aline_ph_mc_eng, aline_ph_mc_fil, ...).
+    (aline_ph_mc_eng, aline_ph_mc_fil, ...). Stems with `separate = true`
+    expand to their three sub-columns.
     """
-    return list(orthographic) + [
-        f"{stem}_{lang}" for stem in phonetic for lang in langs
+    orth_cols = [
+        c for stem in orthographic for c in _stem_columns(stem, separate[stem])
     ]
+    phon_cols = [
+        f"{col}_{lang}"
+        for stem in phonetic
+        for col in _stem_columns(stem, separate[stem])
+        for lang in langs
+    ]
+    return orth_cols + phon_cols
 
 
 def run_phoc_multilingual(
@@ -168,10 +199,12 @@ def run_phoc_multilingual(
             f"Expected one pair per language in TRANSCRIPTION_LANGS: {lang_cols}"
         )
 
-    phonetic, orthographic = _classify_configs(config_dir)
+    phonetic, orthographic, separate = _classify_configs(config_dir)
 
     stale = [
-        c for c in _feature_names(phonetic, orthographic, langs) if c in base.columns
+        c
+        for c in _feature_names(phonetic, orthographic, langs, separate)
+        if c in base.columns
     ]
     if stale:
         base = base.drop(columns=stale)
@@ -194,23 +227,26 @@ def run_phoc_multilingual(
             scored = pd.read_csv(scored_csv)
 
             for stem in phonetic:
-                features[f"{stem}_{lang}"] = scored[stem]
+                for col in _stem_columns(stem, separate[stem]):
+                    features[f"{col}_{lang}"] = scored[col]
 
             for stem in orthographic:
-                if stem not in orth_reference:
-                    orth_reference[stem] = scored[stem]
-                elif not orth_reference[stem].equals(scored[stem]):
-                    raise RuntimeError(
-                        f"phoc config '{stem}' was treated as transcription-"
-                        f"independent but its values changed for lang '{lang}'. "
-                        f"Add its `algorithm` to config.PHONETIC_ALGORITHMS."
-                    )
+                for col in _stem_columns(stem, separate[stem]):
+                    if col not in orth_reference:
+                        orth_reference[col] = scored[col]
+                    elif not orth_reference[col].equals(scored[col]):
+                        raise RuntimeError(
+                            f"phoc config '{stem}' was treated as transcription-"
+                            f"independent but its values changed for lang "
+                            f"'{lang}'. Add its `algorithm` to "
+                            "config.PHONETIC_ALGORITHMS."
+                        )
 
-    ordered = _feature_names(phonetic, orthographic, langs)
+    ordered = _feature_names(phonetic, orthographic, langs, separate)
 
     merged = base.copy()
-    for stem in orthographic:
-        merged[stem] = orth_reference[stem]
+    for col, values in orth_reference.items():
+        merged[col] = values
     for name in ordered:
         if name in features:
             merged[name] = features[name]

@@ -31,7 +31,7 @@ will add all dependencies for the Decoder-only transformers (GPTs; see how it's 
 **Pho (phoc)**. Similarity features are computed by [`phoc`](https://github.com/Mango-Cats/pho),
 a Rust CLI. This project expects the `phoc` executable at `bin/` and the other prerequisites expected by `phoc`.
 
-**TagaBaybay (tbb-cli)** The Filipino-nativization features in [`src.pipeline.features`](/src/pipeline/features.py) are computed by [`tbb-cli`](https://github.com/Mango-Cats/tagabaybay/), the TagaBaybay loanword-adaptation worker. This project expects the `tbb-cli` executable at `bin/` and the other prerequisites expected by `tbb-cli`.
+**TagaBaybay (tbb-cli)** [`tbb-cli`](https://github.com/Mango-Cats/tagabaybay/), the TagaBaybay loanword-adaptation worker, is used for Filipino nativization. This project expects the `tbb-cli` executable at `bin/` and the other prerequisites expected by `tbb-cli`.
 
 ## Running
 
@@ -52,11 +52,10 @@ uv run walter propose     # augment predefined P    -> results/lasa_run.json
 uv run walter noise       # sample U                -> results/U.csv
 uv run walter assemble    # merge P + U, transcribe -> results/D.csv
 uv run walter phoc        # phonetic features       -> results/D_pho.csv
-uv run walter engineer    # META_FEATURES           -> results/D_engi.csv
 uv run walter all         # every stage (same as bare `uv run walter`)
 ```
 
-Plus `featurize`, which runs the three feature stages over pairs you already
+Plus `featurize`, which runs the feature stages over pairs you already
 have instead of pairs this pipeline builds (see below).
 
 #### Directories in, directories out
@@ -69,8 +68,7 @@ have instead of pairs this pipeline builds (see below).
 | `noise` | `lasa_run.json` | `U.csv` |
 | `assemble` | `U.csv` + `lasa_run.json` | `D.csv` |
 | `phoc` | `D.csv` | `D_pho.csv` |
-| `engineer` | `D_pho.csv` | `D_engi.csv` |
-| `featurize` | *(any pairs CSV - see below)* | `<input>_engi.csv` |
+| `featurize` | *(any pairs CSV - see below)* | `<input>_pho.csv` |
 | `annotate` | `D.csv` | `<round>/R*.csv`, `<round>/_key.csv` |
 
 Because the name a stage writes is exactly the name the next one looks for,
@@ -164,21 +162,24 @@ sampled `0` pairs only, so rejections never reach a rater sheet.
 
 #### Featurizing a dataset you already have
 
-`walter featurize` runs the three feature stages - G2P, `phoc`, `META_FEATURES` -
-over an existing CSV of pairs, skipping pair construction entirely: no LLM
-proposal, no predefined positive set, no sampled U, no assembly.
+`walter featurize` runs the feature stages - G2P, then `phoc` - over an
+existing CSV of pairs, skipping pair construction entirely: no LLM proposal,
+no predefined positive set, no sampled U, no assembly.
 
 ```bash
-uv run walter featurize --input pairs.csv                    # -> pairs_engi.csv
+uv run walter featurize --input pairs.csv                    # -> pairs_pho.csv
 uv run walter featurize --input pairs.csv --output feats.csv
 ```
 
-The input needs `x_1` and `x_2`. Every other column, `label` included, is
-preserved verbatim, and so is row order - unlike `assemble`, which sets `label`
-from which of P or U each row came from. Like `propose`, `--input` is a file
-rather than a directory; `--output` is one too, defaulting to
-`<input>_engi.csv` beside the input, so a run cannot overwrite the pipeline's
-own `results/D_engi.csv` by accident.
+The input needs `x_1` and `x_2`. `label` is preserved if present (unlike
+`assemble`, which sets `label` from which of P or U each row came from), and
+so is row order - but every other column is dropped and rebuilt from scratch,
+whatever it's named: stale transcriptions, phoc features, old META_FEATURES,
+unrelated metadata, all of it. `featurize` always recomputes; it never trusts
+columns already in the input. Like `propose`, `--input` is a file rather than
+a directory; `--output` is one too, defaulting to `<input>_pho.csv` beside the
+input, so a run cannot overwrite the pipeline's own `results/D_pho.csv` by
+accident.
 
 Each step writes its own CSV next to the output, so a failure partway through
 keeps the work already paid for:
@@ -186,12 +187,7 @@ keeps the work already paid for:
 | file | contents |
 | --- | --- |
 | `<input>_t.csv` | + the IPA transcriptions |
-| `<input>_pho.csv` | + the phonetic-similarity columns |
-| `<input>_engi.csv` | + the `META_FEATURES` *(the default `--output`)* |
-
-G2P is the expensive step, so transcription columns already present in the
-input are reused as-is. Point `--input` at a previous `_t.csv` to re-run only
-the cheap stages, or pass `--retranscribe` to force G2P to run again.
+| `<input>_pho.csv` | + the phonetic-similarity columns *(the default `--output`)* |
 
 ### Annotation sheets
 
@@ -245,7 +241,5 @@ Saved to `results/`:
   IPA. The `_ph_` and `_eng_` configs share their costs, salience and `[values.*]`
   scales and differ only in how each segment is described, so a gap between them
   is attributable to phonology rather than to a re-tuned weighting.
-- `D_engi.csv` - `D_pho` with the META_FEATURES from `src/pipeline/features.py`
-  appended (structural / prosodic + the Filipino-nativization features from `bin/tbb-cli`)
 
 `D.csv` is always written before `phoc` runs, so a `phoc` failure leaves it intact.

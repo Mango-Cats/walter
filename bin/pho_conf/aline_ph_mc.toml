@@ -31,6 +31,9 @@ round      = 2
 phonation  = 10
 airstream  = 10
 secondary  = 10
+# Nonzero so the MangoCats stress term actually differs from Kondrak
+# (stress defaults to 0, which makes MangoCats behave identically).
+stress     = 5
 
 # Point of articulation (Schater & Otanes, 1972)
 [values.place]

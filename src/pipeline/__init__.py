@@ -6,7 +6,6 @@ The data transformations, in the order the pipeline runs them.
                           pairs, constrained per cluster
     clustering         -- union-find backing noise's cluster bookkeeping
     dataset         D  -- merge P and U, transcribe, deduplicate
-    features           -- append the orthographic META_FEATURES onto D
 
 Every module here takes and returns DataFrames. Reading and writing the
 canonical artifact files is stages.py's job, not theirs.

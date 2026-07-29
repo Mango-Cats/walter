@@ -1,4 +1,6 @@
 algorithm = "editex"
+separate = true
+
 [costs]
 same = 1.0
 diff = 2.0
