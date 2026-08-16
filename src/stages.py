@@ -48,6 +48,7 @@ from src.adapters.g2p.transcribe import transcribe_all
 from src.adapters.phoc import run_phoc_multilingual
 from src.artifacts import in_file, require_file, seed_file
 from src.pipeline.dataset import assemble_and_save, unselected_candidate_pairs
+from src.pipeline.features import run_engineering
 from src.pipeline.noise import make_noise
 from src.pipeline.preprocessing import run as run_preprocessing
 
@@ -226,9 +227,12 @@ def phoc(
     input_csv: Path = D_CSV,
     output_csv: Path = D_PHO_CSV,
 ) -> list[str]:
-    """Append the phonetic-similarity feature columns."""
+    """Append the phonetic-similarity columns (phoc), then the engineered
+    structural/prosodic/Filipino-nativization columns (features.py) on top."""
     require_file(input_csv, "walter assemble")
-    return run_phoc_multilingual(input_csv, output_csv)
+    feats = run_phoc_multilingual(input_csv, output_csv)
+    engineered = run_engineering(output_csv, output_csv)
+    return feats + engineered
 
 
 def featurize(
@@ -238,7 +242,7 @@ def featurize(
 ) -> list[str]:
     """
     Run the feature half of the pipeline over an already-built pair CSV:
-    G2P, then phoc.
+    G2P, then phoc, then the engineered (features.py) columns.
 
     This is the tail of `all` with the pair-construction head removed - no LLM
     proposal, no predefined positive set, no sampled U, no assembly - for a
@@ -248,16 +252,17 @@ def featurize(
 
     Every column other than x_1, x_2 and label is dropped up front and
     rebuilt from scratch, whatever it's named - transcriptions, phoc
-    features, old META_FEATURES, unrelated metadata, all of it. featurize is
-    for (re)computing features, not for carrying passengers.
+    features, old engineered features, unrelated metadata, all of it.
+    featurize is for (re)computing features, not for carrying passengers.
 
     Each step writes its own CSV next to output_csv, named for the input, so a
     failure halfway through leaves the work already paid for on disk:
 
         <stem>_t.csv      transcriptions
-        output_csv        + the phonetic-similarity columns
+        output_csv        + the phonetic-similarity columns, then the
+                            engineered columns on top
 
-    Returns the phonetic feature columns added.
+    Returns the phonetic and engineered feature columns added, in that order.
     """
     input_csv, output_csv = Path(input_csv), Path(output_csv)
     df = pd.read_csv(input_csv)
@@ -298,7 +303,11 @@ def featurize(
     if verbose:
         print(f"[stages] Phonetic features -> {output_csv}")
 
-    return feats
+    engineered = run_engineering(output_csv, output_csv)
+    if verbose:
+        print(f"[stages] Engineered features -> {output_csv}")
+
+    return feats + engineered
 
 
 def summarize(D: pd.DataFrame) -> str:

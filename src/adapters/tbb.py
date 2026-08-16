@@ -11,11 +11,38 @@ per-word cost is a single request/response round trip. Results are memoized, so
 each distinct name is only ever adapted once no matter how many pairs it appears
 in. The worker is shut down cleanly at interpreter exit.
 
-``nativize(word)`` returns the worker's ``adapted`` spelling (e.g. "chocolate"
--> "tsokoleyt") - the Filipino phonemic form that the phonetic feature functions
-in ``src/pipeline/features.py`` derive onset / coda / vowel-skeleton indicators
-from. This replaces the hand-rolled orthographic substitution rules that used to
-live in that module.
+``adapt(word)`` returns an ``Adaptation`` with all four spellings the worker
+can produce for a word:
+
+- ``nativized``            - plain adapted spelling, e.g. "tsokoleyt"
+- ``syllabified``          - hyphenated by syllable, e.g. "tso-ko-leyt"
+- ``stressed``             - ``nativized`` with the prominent syllable's vowel
+                              capitalized in place, not syllabified, e.g.
+                              "tsokOleyt"
+- ``stressed_syllabified`` - both: hyphenated and stress-capitalized, e.g.
+                              "tso-kO-leyt"
+- ``english_stress_on_penult`` - ``bool | None``; whether the source word's
+                              English primary stress falls on the penult (or,
+                              for a monosyllable, its only syllable). ``None``
+                              when the source word's English stress couldn't be
+                              looked up at all. This is the worker's
+                              ``english_stress_on_penult`` field, passed through
+                              unchanged - it describes the *English* word, not
+                              the Filipino adaptation, so it's the same
+                              regardless of whether the Filipino penult ends up
+                              marked.
+
+``nativize(word)`` is a convenience wrapper returning just ``stressed`` - the
+Filipino phonemic form that the phonetic feature functions in
+``src/pipeline/features.py`` derive onset / coda / vowel-skeleton indicators
+from. This replaces the hand-rolled orthographic substitution rules that used
+to live in that module.
+
+Stress marking is enabled on the worker at startup via a ``config`` command
+(``assign_prominence: true``). When the source word's English stress can't be
+found, the worker omits ``with_stress``/``with_stress_and_syllabified`` from
+the result and we fall back to the unmarked ``nativized``/``syllabified``
+spelling for those fields.
 """
 
 import atexit
@@ -27,6 +54,7 @@ import stat
 import subprocess
 import threading
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 from config import TBB_BIN
@@ -36,6 +64,18 @@ _NON_LETTER = re.compile(r"[^a-zñ]")
 
 def _sanitize(word: str) -> str:
     return _NON_LETTER.sub("", word.lower())
+
+
+@dataclass(frozen=True, slots=True)
+class Adaptation:
+    """The four spellings tbb-cli can produce for one word, plus the English
+    stress fact the marking rule was gated on."""
+
+    nativized: str
+    syllabified: str
+    stressed: str
+    stressed_syllabified: str
+    english_stress_on_penult: bool | None
 
 
 class _TbbWorker:
@@ -87,9 +127,18 @@ class _TbbWorker:
 
         self._lock = threading.Lock()
         self._next_id = 0
-        self._cache: dict[str, str] = {}
+        self._cache: dict[str, Adaptation] = {}
 
         # Drain the startup "ready" event before the first request.
+        self._read_json()
+
+        # Stress marking is off by default (extra English-stress lookup cost);
+        # turn it on so results carry the capitalized `with_stress` spelling.
+        assert self._proc.stdin is not None
+        self._proc.stdin.write(
+            json.dumps({"cmd": "config", "assign_prominence": True}) + "\n"
+        )
+        self._proc.stdin.flush()
         self._read_json()
 
     def _read_json(self, want_id: int | None = None) -> dict:
@@ -118,16 +167,20 @@ class _TbbWorker:
                 continue
             return obj
 
-    def nativize(self, word: str) -> str:
-        """Return the Filipino ``adapted`` spelling for ``word`` (cached).
+    def adapt(self, word: str) -> Adaptation:
+        """Return all four Filipino spellings for ``word`` (cached).
 
-        Falls back to a sanitized (letters-only, lowercased) skeleton if the
-        worker reports it cannot adapt the word, so one odd name never aborts
-        the whole run.
+        Falls back to a sanitized (letters-only, lowercased) skeleton for all
+        four spelling fields if the worker reports it cannot adapt the word at
+        all, so one odd name never aborts the whole run. When the word adapts
+        but its English stress can't be looked up, the stress-marked fields
+        fall back to their unmarked counterparts (``stressed`` ->
+        ``nativized``, ``stressed_syllabified`` -> ``syllabified``) and
+        ``english_stress_on_penult`` is ``None``.
         """
         key = _sanitize(word)
         if not key:
-            return ""
+            return Adaptation("", "", "", "", None)
         cached = self._cache.get(key)
         if cached is not None:
             return cached
@@ -148,11 +201,25 @@ class _TbbWorker:
 
             resp = self._read_json(want_id=req_id)
             if resp.get("type") == "result" and resp.get("adapted"):
-                adapted = resp["adapted"]
+                nativized = resp["adapted"]
+                syllabified = resp.get("syllables") or nativized
+                stressed = resp.get("with_stress") or nativized
+                stressed_syllabified = (
+                    resp.get("with_stress_and_syllabified") or syllabified
+                )
+                english_stress_on_penult = resp.get("english_stress_on_penult")
+                result = Adaptation(
+                    nativized,
+                    syllabified,
+                    stressed,
+                    stressed_syllabified,
+                    english_stress_on_penult,
+                )
             else:
-                adapted = key  # error / empty - degrade to the plain skeleton
-            self._cache[key] = adapted
-            return adapted
+                # error / empty - degrade to the plain skeleton everywhere
+                result = Adaptation(key, key, key, key, None)
+            self._cache[key] = result
+            return result
 
     def close(self) -> None:
         proc = self._proc
@@ -186,6 +253,11 @@ def _get_worker() -> _TbbWorker:
     return _worker
 
 
+def adapt(word: str) -> Adaptation:
+    """Adapt ``word`` into all four Filipino spellings via bin/tbb-cli."""
+    return _get_worker().adapt(word)
+
+
 def nativize(word: str) -> str:
-    """Adapt ``word`` into its Filipino orthographic form via bin/tbb-cli."""
-    return _get_worker().nativize(word)
+    """Adapt ``word`` into its stress-marked, non-syllabified spelling."""
+    return _get_worker().adapt(word).stressed
