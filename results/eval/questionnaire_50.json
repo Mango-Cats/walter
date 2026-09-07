@@ -1,0 +1,2928 @@
+[
+  {
+    "run": 1,
+    "c_c": "rituximab",
+    "p_c": [
+      "rituxan",
+      "oxycontin",
+      "idarucizumab",
+      "rituxan hycela",
+      "infliximab",
+      "pemetrexed",
+      "primaquine",
+      "isolyte p in dextrose 5 in plastic container",
+      "ethosuximide",
+      "hyzaar",
+      "tauvid",
+      "carbamazepine",
+      "reminyl",
+      "lorazepam",
+      "humulin r u 500",
+      "asacol",
+      "norpramin",
+      "hyrnuo",
+      "trastuzumab",
+      "zerit",
+      "belimumab"
+    ],
+    "answer": [
+      "infliximab"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "idarucizumab",
+        "rituxan",
+        "rituxan hycela",
+        "trastuzumab",
+        "zerit"
+      ],
+      "random": [
+        "asacol",
+        "belimumab",
+        "carbamazepine",
+        "ethosuximide",
+        "humulin r u 500",
+        "lorazepam",
+        "norpramin",
+        "oxycontin",
+        "pemetrexed",
+        "reminyl"
+      ],
+      "easy": [
+        "hyrnuo",
+        "hyzaar",
+        "isolyte p in dextrose 5 in plastic container",
+        "primaquine",
+        "tauvid"
+      ]
+    }
+  },
+  {
+    "run": 2,
+    "c_c": "metformin",
+    "p_c": [
+      "potassium acetate",
+      "mpi stannous diphosphonate",
+      "iodine",
+      "metyrosine",
+      "ropinirole",
+      "aldoril 25",
+      "metronidazole",
+      "metyrapone",
+      "rocuronium",
+      "constulose",
+      "orgaran",
+      "buprenorphine",
+      "aloprim",
+      "brevital",
+      "mefloquine",
+      "methergine",
+      "skyrizi",
+      "motrin",
+      "mitomycin",
+      "neulasta",
+      "asacol"
+    ],
+    "answer": [
+      "metronidazole"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "mefloquine",
+        "methergine",
+        "metyrosine",
+        "mitomycin",
+        "motrin"
+      ],
+      "random": [
+        "asacol",
+        "brevital",
+        "buprenorphine",
+        "iodine",
+        "metyrapone",
+        "neulasta",
+        "orgaran",
+        "potassium acetate",
+        "rocuronium",
+        "ropinirole"
+      ],
+      "easy": [
+        "aldoril 25",
+        "aloprim",
+        "constulose",
+        "mpi stannous diphosphonate",
+        "skyrizi"
+      ]
+    }
+  },
+  {
+    "run": 3,
+    "c_c": "belimumab",
+    "p_c": [
+      "infliximab",
+      "avandamet",
+      "ranitidine",
+      "nexium",
+      "tuxarin er",
+      "gentamicin",
+      "lynavoy",
+      "rituximab",
+      "alfentanil",
+      "bamlanivimab",
+      "ilumya",
+      "isopto cetamide",
+      "januvia",
+      "byqlovi",
+      "kuric",
+      "lantrisul",
+      "varivax",
+      "procanbid",
+      "percocet",
+      "amphotericin b liposomal",
+      "enbrel"
+    ],
+    "answer": [
+      "bamlanivimab"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "enbrel",
+        "ilumya",
+        "infliximab",
+        "nexium",
+        "rituximab"
+      ],
+      "random": [
+        "alfentanil",
+        "amphotericin b liposomal",
+        "avandamet",
+        "gentamicin",
+        "januvia",
+        "kuric",
+        "percocet",
+        "procanbid",
+        "ranitidine",
+        "varivax"
+      ],
+      "easy": [
+        "byqlovi",
+        "isopto cetamide",
+        "lantrisul",
+        "lynavoy",
+        "tuxarin er"
+      ]
+    }
+  },
+  {
+    "run": 4,
+    "c_c": "memantine",
+    "p_c": [
+      "bupropion",
+      "norcuron",
+      "levocarnitine",
+      "ado trastuzumab emtansine",
+      "hydrocodone bitartrate chlorpheniramine maleate and pseudoephedrine hydrochloride",
+      "amlodipine",
+      "pitocin",
+      "carvedilol",
+      "microzide",
+      "methergine",
+      "rimantadine",
+      "bayrho d",
+      "sustaire",
+      "evamist",
+      "kaletra",
+      "amantadine",
+      "daunorubicin liposomal",
+      "pristiq",
+      "prosom",
+      "dexacort",
+      "methadone"
+    ],
+    "answer": [
+      "methadone"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "ado trastuzumab emtansine",
+        "amantadine",
+        "levocarnitine",
+        "methergine",
+        "rimantadine"
+      ],
+      "random": [
+        "amlodipine",
+        "bayrho d",
+        "bupropion",
+        "carvedilol",
+        "daunorubicin liposomal",
+        "kaletra",
+        "microzide",
+        "norcuron",
+        "pitocin",
+        "pristiq"
+      ],
+      "easy": [
+        "dexacort",
+        "evamist",
+        "hydrocodone bitartrate chlorpheniramine maleate and pseudoephedrine hydrochloride",
+        "prosom",
+        "sustaire"
+      ]
+    }
+  },
+  {
+    "run": 5,
+    "c_c": "atomoxetine",
+    "p_c": [
+      "betaine",
+      "zarontin",
+      "ritalin",
+      "tromethamine",
+      "atorvastatin",
+      "novolog mix 70 30 flexpen",
+      "lasix",
+      "actos",
+      "anacin",
+      "paroxetine",
+      "amphotericin b",
+      "humalog mix 75 25 kwikpen",
+      "avtozma",
+      "azulfidine",
+      "diazepam",
+      "blisovi 24 fe",
+      "duloxetine",
+      "potassium chloride 0037 in dextrose 5 in plastic container",
+      "cozaar",
+      "influenza virus vaccine",
+      "zerit"
+    ],
+    "answer": [
+      "atorvastatin"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "actos",
+        "betaine",
+        "duloxetine",
+        "paroxetine",
+        "tromethamine"
+      ],
+      "random": [
+        "amphotericin b",
+        "anacin",
+        "blisovi 24 fe",
+        "cozaar",
+        "diazepam",
+        "influenza virus vaccine",
+        "lasix",
+        "novolog mix 70 30 flexpen",
+        "ritalin",
+        "zerit"
+      ],
+      "easy": [
+        "avtozma",
+        "azulfidine",
+        "humalog mix 75 25 kwikpen",
+        "potassium chloride 0037 in dextrose 5 in plastic container",
+        "zarontin"
+      ]
+    }
+  },
+  {
+    "run": 6,
+    "c_c": "bayrab",
+    "p_c": [
+      "phenobarbital",
+      "fluonid",
+      "pentobarbital",
+      "midrin",
+      "fortical",
+      "toradol",
+      "duragesic 50",
+      "yaz",
+      "buprenorphine",
+      "bayrho d",
+      "clozaril",
+      "intermezzo",
+      "bayhep b",
+      "pralidoxime",
+      "rabeprazole",
+      "babybig",
+      "carboplatin",
+      "lithium carbonate",
+      "effexor",
+      "hydralazine hydrochloride w hydrochlorothiazide 100 50",
+      "os cal",
+      "aloxi"
+    ],
+    "answer": [
+      "bayhep b",
+      "bayrho d"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "babybig",
+        "pentobarbital",
+        "phenobarbital",
+        "rabeprazole",
+        "yaz"
+      ],
+      "random": [
+        "buprenorphine",
+        "carboplatin",
+        "clozaril",
+        "effexor",
+        "fortical",
+        "lithium carbonate",
+        "midrin",
+        "os cal",
+        "pralidoxime",
+        "toradol"
+      ],
+      "easy": [
+        "aloxi",
+        "duragesic 50",
+        "fluonid",
+        "hydralazine hydrochloride w hydrochlorothiazide 100 50",
+        "intermezzo"
+      ]
+    }
+  },
+  {
+    "run": 7,
+    "c_c": "etravirine",
+    "p_c": [
+      "zyrtec d",
+      "bextra",
+      "enjuvia",
+      "triavil 4 10",
+      "betaine",
+      "cathflo activase",
+      "cetirizine",
+      "trogarzo",
+      "tetracyn",
+      "aciphex",
+      "inderal",
+      "regranex",
+      "vesicare",
+      "xanax",
+      "sertraline",
+      "ribavirin",
+      "ethaverine",
+      "tovalt odt",
+      "pneumococcal polyvalent vaccine",
+      "dexmethylphenidate",
+      "miochol"
+    ],
+    "answer": [
+      "ethaverine"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "betaine",
+        "bextra",
+        "cetirizine",
+        "ribavirin",
+        "sertraline"
+      ],
+      "random": [
+        "aciphex",
+        "cathflo activase",
+        "dexmethylphenidate",
+        "enjuvia",
+        "inderal",
+        "pneumococcal polyvalent vaccine",
+        "regranex",
+        "vesicare",
+        "xanax",
+        "zyrtec d"
+      ],
+      "easy": [
+        "miochol",
+        "tetracyn",
+        "tovalt odt",
+        "triavil 4 10",
+        "trogarzo"
+      ]
+    }
+  },
+  {
+    "run": 8,
+    "c_c": "purinethol",
+    "p_c": [
+      "durezol",
+      "nifedipine",
+      "brethine",
+      "zemuron",
+      "kisqali",
+      "microzide",
+      "depakote er",
+      "nebivolol hydrochloride",
+      "quetiapine",
+      "propylthiouracil",
+      "kuric",
+      "restoril",
+      "menomune",
+      "methyltestosterone",
+      "jetrea",
+      "lamisil",
+      "potassium chloride 011 in dextrose 5 in plastic container",
+      "platinol",
+      "taxol",
+      "levoleucovorin calcium",
+      "invega"
+    ],
+    "answer": [
+      "propylthiouracil"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "durezol",
+        "kuric",
+        "platinol",
+        "restoril",
+        "taxol"
+      ],
+      "random": [
+        "brethine",
+        "depakote er",
+        "invega",
+        "lamisil",
+        "menomune",
+        "methyltestosterone",
+        "microzide",
+        "nifedipine",
+        "quetiapine",
+        "zemuron"
+      ],
+      "easy": [
+        "jetrea",
+        "kisqali",
+        "levoleucovorin calcium",
+        "nebivolol hydrochloride",
+        "potassium chloride 011 in dextrose 5 in plastic container"
+      ]
+    }
+  },
+  {
+    "run": 9,
+    "c_c": "influenza virus vaccine",
+    "p_c": [
+      "doxil",
+      "vinblastine",
+      "clinimix e 425 25 sulfite free w elect in dextrose 25 w calcium in plastic container",
+      "paclitaxel protein bound particles",
+      "isolyte p in dextrose 5 in plastic container",
+      "nystatin",
+      "advair",
+      "dilaudid 5",
+      "xanax",
+      "trogarzo",
+      "mucinex",
+      "denavir",
+      "tuberculin purified protein derivative",
+      "anacin",
+      "antacid",
+      "prozac",
+      "codeine",
+      "isolyte s w dextrose 5 in plastic container",
+      "perflutren lipid microspheres",
+      "zyprexa",
+      "flumazenil",
+      "mirabegron",
+      "linaclotide"
+    ],
+    "answer": [
+      "flumazenil",
+      "perflutren lipid microspheres",
+      "tuberculin purified protein derivative"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "advair",
+        "anacin",
+        "codeine",
+        "denavir",
+        "mucinex"
+      ],
+      "random": [
+        "antacid",
+        "dilaudid 5",
+        "doxil",
+        "linaclotide",
+        "nystatin",
+        "paclitaxel protein bound particles",
+        "prozac",
+        "vinblastine",
+        "xanax",
+        "zyprexa"
+      ],
+      "easy": [
+        "clinimix e 425 25 sulfite free w elect in dextrose 25 w calcium in plastic container",
+        "isolyte p in dextrose 5 in plastic container",
+        "isolyte s w dextrose 5 in plastic container",
+        "mirabegron",
+        "trogarzo"
+      ]
+    }
+  },
+  {
+    "run": 10,
+    "c_c": "elvitegravir cobicistat emtricitabine and tenofovir disoproxil fumarate",
+    "p_c": [
+      "luxzyla",
+      "bupivacaine",
+      "ritonavir",
+      "enablex",
+      "protamine",
+      "k phos neutral",
+      "oretic",
+      "buspirone",
+      "cabotegravir",
+      "tiotropium bromide",
+      "rimantadine",
+      "ritalin la",
+      "zetia",
+      "estratest",
+      "lupron depot ped",
+      "elvitegravir cobicistat emtricitabine and tenofovir alafenamide",
+      "neomycin sulfate",
+      "brevital",
+      "orgovyx",
+      "cyclosporine modified",
+      "rifabutin"
+    ],
+    "answer": [
+      "elvitegravir cobicistat emtricitabine and tenofovir alafenamide"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "cabotegravir",
+        "estratest",
+        "rifabutin",
+        "ritalin la",
+        "ritonavir"
+      ],
+      "random": [
+        "brevital",
+        "bupivacaine",
+        "buspirone",
+        "cyclosporine modified",
+        "enablex",
+        "k phos neutral",
+        "lupron depot ped",
+        "protamine",
+        "rimantadine",
+        "zetia"
+      ],
+      "easy": [
+        "luxzyla",
+        "neomycin sulfate",
+        "oretic",
+        "orgovyx",
+        "tiotropium bromide"
+      ]
+    }
+  },
+  {
+    "run": 11,
+    "c_c": "ethambutol",
+    "p_c": [
+      "nicardipine",
+      "effexor",
+      "humalog mix 75 25",
+      "taxol",
+      "dilaudid",
+      "zetia",
+      "farxiga",
+      "methenamine hippurate",
+      "procet",
+      "tambocor",
+      "aloprim",
+      "methimazole",
+      "renamin w o electrolytes",
+      "ethosuximide",
+      "tramadol",
+      "ethmozine",
+      "cefoxitin and dextrose in duplex container",
+      "lithium carbonate",
+      "combivent respimat",
+      "granulex",
+      "vesanoid"
+    ],
+    "answer": [
+      "ethmozine"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "methimazole",
+        "tambocor",
+        "taxol",
+        "tramadol",
+        "zetia"
+      ],
+      "random": [
+        "dilaudid",
+        "effexor",
+        "ethosuximide",
+        "farxiga",
+        "granulex",
+        "humalog mix 75 25",
+        "lithium carbonate",
+        "nicardipine",
+        "procet",
+        "vesanoid"
+      ],
+      "easy": [
+        "aloprim",
+        "cefoxitin and dextrose in duplex container",
+        "combivent respimat",
+        "methenamine hippurate",
+        "renamin w o electrolytes"
+      ]
+    }
+  },
+  {
+    "run": 12,
+    "c_c": "motrin",
+    "p_c": [
+      "neurontin",
+      "levoleucovorin",
+      "diabeta",
+      "humulin",
+      "glyburide",
+      "levemir",
+      "vigabatrin",
+      "deoxycholic acid",
+      "cardizem",
+      "morphine",
+      "azacitidine",
+      "tolbutamide",
+      "thiamine",
+      "tiotropium bromide",
+      "isolyte s w dextrose 5 in plastic container",
+      "ortho tri cyclen 21",
+      "leucovorin calcium",
+      "vicodin",
+      "lamotrigine",
+      "fosfomycin tromethamine",
+      "trexall"
+    ],
+    "answer": [
+      "neurontin"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "lamotrigine",
+        "leucovorin calcium",
+        "levoleucovorin",
+        "morphine",
+        "vigabatrin"
+      ],
+      "random": [
+        "azacitidine",
+        "cardizem",
+        "diabeta",
+        "glyburide",
+        "humulin",
+        "levemir",
+        "thiamine",
+        "tolbutamide",
+        "trexall",
+        "vicodin"
+      ],
+      "easy": [
+        "deoxycholic acid",
+        "fosfomycin tromethamine",
+        "isolyte s w dextrose 5 in plastic container",
+        "ortho tri cyclen 21",
+        "tiotropium bromide"
+      ]
+    }
+  },
+  {
+    "run": 13,
+    "c_c": "cymbalta",
+    "p_c": [
+      "t pa",
+      "amiodarone",
+      "nexavar",
+      "migalastat",
+      "estratest",
+      "yaz",
+      "atacand",
+      "alora",
+      "hyzaar",
+      "aloxi",
+      "bamlanivimab",
+      "haloperidol decanoate",
+      "kuric",
+      "oxymorphone",
+      "tetanus diptheria toxoid",
+      "symbyax",
+      "concentraid",
+      "bacteriostatic sodium chloride 09 in plastic container",
+      "roxicet",
+      "accupril",
+      "zyban"
+    ],
+    "answer": [
+      "symbyax"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "alora",
+        "bamlanivimab",
+        "migalastat",
+        "t pa",
+        "zyban"
+      ],
+      "random": [
+        "accupril",
+        "amiodarone",
+        "atacand",
+        "estratest",
+        "kuric",
+        "nexavar",
+        "oxymorphone",
+        "roxicet",
+        "tetanus diptheria toxoid",
+        "yaz"
+      ],
+      "easy": [
+        "aloxi",
+        "bacteriostatic sodium chloride 09 in plastic container",
+        "concentraid",
+        "haloperidol decanoate",
+        "hyzaar"
+      ]
+    }
+  },
+  {
+    "run": 14,
+    "c_c": "kaletra",
+    "p_c": [
+      "keppra",
+      "linagliptin metformin hydrochloride",
+      "allegra anti itch cream",
+      "quinidine",
+      "cyclophosphamide",
+      "ortho tri cyclen 21",
+      "fomepizole",
+      "zarontin",
+      "alora",
+      "lamisil",
+      "fiorinal",
+      "alkeran",
+      "apixaban",
+      "tamsulosin",
+      "clonazepam",
+      "talquetamab tgvs",
+      "zerit",
+      "oxtriphylline",
+      "dianeal low calcium w dextrose 35 in plastic container",
+      "claritin",
+      "allegra"
+    ],
+    "answer": [
+      "keppra"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "alkeran",
+        "allegra",
+        "allegra anti itch cream",
+        "alora",
+        "talquetamab tgvs"
+      ],
+      "random": [
+        "apixaban",
+        "claritin",
+        "clonazepam",
+        "cyclophosphamide",
+        "fiorinal",
+        "fomepizole",
+        "lamisil",
+        "quinidine",
+        "tamsulosin",
+        "zerit"
+      ],
+      "easy": [
+        "dianeal low calcium w dextrose 35 in plastic container",
+        "linagliptin metformin hydrochloride",
+        "ortho tri cyclen 21",
+        "oxtriphylline",
+        "zarontin"
+      ]
+    }
+  },
+  {
+    "run": 15,
+    "c_c": "menactra",
+    "p_c": [
+      "zyprexa",
+      "valcyte",
+      "mevacor",
+      "morphine non concentrated oral liquid",
+      "prednisone",
+      "menomune",
+      "topamax",
+      "materna",
+      "vioxx",
+      "dextrose 5 sodium chloride 045 and potassium chloride 022 in plastic container",
+      "pentam",
+      "butalbital acetaminophen and caffeine",
+      "metronidazole",
+      "morphine oral liquid concentrate",
+      "prograf",
+      "carac",
+      "pralidoxime",
+      "supprelin la",
+      "benadryl",
+      "percocet",
+      "midamor"
+    ],
+    "answer": [
+      "menomune"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "carac",
+        "materna",
+        "metronidazole",
+        "mevacor",
+        "morphine oral liquid concentrate"
+      ],
+      "random": [
+        "benadryl",
+        "morphine non concentrated oral liquid",
+        "percocet",
+        "pralidoxime",
+        "prednisone",
+        "prograf",
+        "topamax",
+        "valcyte",
+        "vioxx",
+        "zyprexa"
+      ],
+      "easy": [
+        "butalbital acetaminophen and caffeine",
+        "dextrose 5 sodium chloride 045 and potassium chloride 022 in plastic container",
+        "midamor",
+        "pentam",
+        "supprelin la"
+      ]
+    }
+  },
+  {
+    "run": 16,
+    "c_c": "humulin 70 30",
+    "p_c": [
+      "fioricet",
+      "humulin r u 500",
+      "humulin",
+      "penicillin",
+      "ensacove",
+      "allegra anti itch cream",
+      "zerit",
+      "engerix b adult",
+      "humalog mix 75 25",
+      "novolin 70 30",
+      "sudafed pe",
+      "humulin r u 100",
+      "thiamine",
+      "solu medrol",
+      "candesartan cilexetil hydrochlorothiazide",
+      "luxzyla",
+      "novolog mix 70 30 flexpen",
+      "nesina",
+      "mitosol",
+      "apresoline",
+      "zolmitriptan"
+    ],
+    "answer": [
+      "humalog mix 75 25"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "humulin",
+        "humulin r u 100",
+        "humulin r u 500",
+        "novolin 70 30",
+        "novolog mix 70 30 flexpen"
+      ],
+      "random": [
+        "allegra anti itch cream",
+        "apresoline",
+        "engerix b adult",
+        "fioricet",
+        "penicillin",
+        "solu medrol",
+        "sudafed pe",
+        "thiamine",
+        "zerit",
+        "zolmitriptan"
+      ],
+      "easy": [
+        "candesartan cilexetil hydrochlorothiazide",
+        "ensacove",
+        "luxzyla",
+        "mitosol",
+        "nesina"
+      ]
+    }
+  },
+  {
+    "run": 17,
+    "c_c": "lithium",
+    "p_c": [
+      "quinidine",
+      "accupril",
+      "lithium carbonate",
+      "liothyronine",
+      "carboplatin",
+      "lariam",
+      "evista",
+      "doxorubicin liposomal",
+      "rimantadine",
+      "anzemet",
+      "linagliptin",
+      "allegra",
+      "hydralazine and hydrochlorothiazide",
+      "propylthiouracil",
+      "halaven",
+      "abelcet",
+      "leucovorin calcium",
+      "dilantin",
+      "ensacove",
+      "sustaire",
+      "ultram"
+    ],
+    "answer": [
+      "ultram"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "leucovorin calcium",
+        "linagliptin",
+        "liothyronine",
+        "lithium carbonate",
+        "propylthiouracil"
+      ],
+      "random": [
+        "abelcet",
+        "accupril",
+        "allegra",
+        "anzemet",
+        "carboplatin",
+        "doxorubicin liposomal",
+        "evista",
+        "lariam",
+        "quinidine",
+        "rimantadine"
+      ],
+      "easy": [
+        "dilantin",
+        "ensacove",
+        "halaven",
+        "hydralazine and hydrochlorothiazide",
+        "sustaire"
+      ]
+    }
+  },
+  {
+    "run": 18,
+    "c_c": "rapaflo",
+    "p_c": [
+      "qwell",
+      "sulfadiazine sodium",
+      "oxcarbazepine",
+      "syeda",
+      "cymbalta",
+      "maalox total stomach relief",
+      "pamelor",
+      "prilosec",
+      "hyrnuo",
+      "rapamune",
+      "zegerid",
+      "omacor",
+      "pavulon",
+      "durasal",
+      "quinine",
+      "mucinex allergy",
+      "linagliptin metformin hydrochloride",
+      "maalox",
+      "femstat 3",
+      "prenexa",
+      "tigan"
+    ],
+    "answer": [
+      "rapamune"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "durasal",
+        "maalox",
+        "maalox total stomach relief",
+        "pamelor",
+        "pavulon"
+      ],
+      "random": [
+        "cymbalta",
+        "mucinex allergy",
+        "omacor",
+        "oxcarbazepine",
+        "prenexa",
+        "prilosec",
+        "quinine",
+        "qwell",
+        "syeda",
+        "zegerid"
+      ],
+      "easy": [
+        "femstat 3",
+        "hyrnuo",
+        "linagliptin metformin hydrochloride",
+        "sulfadiazine sodium",
+        "tigan"
+      ]
+    }
+  },
+  {
+    "run": 19,
+    "c_c": "renvela",
+    "p_c": [
+      "enbrel",
+      "dobutamine hydrochloride in dextrose 5",
+      "thiamine",
+      "dextrose 5 sodium chloride 045 and potassium chloride 022 in plastic container",
+      "cefoxitin and dextrose in duplex container",
+      "renagel",
+      "serzone",
+      "engerix b adult",
+      "prenexa",
+      "amphotericin b liposomal",
+      "saxagliptin",
+      "dynacin",
+      "yaz",
+      "myleran",
+      "cidex",
+      "tovalt odt",
+      "ranexa",
+      "ure na",
+      "nifedipine",
+      "xermelo",
+      "invega"
+    ],
+    "answer": [
+      "renagel"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "enbrel",
+        "invega",
+        "prenexa",
+        "ranexa",
+        "ure na"
+      ],
+      "random": [
+        "amphotericin b liposomal",
+        "cidex",
+        "dynacin",
+        "engerix b adult",
+        "myleran",
+        "nifedipine",
+        "saxagliptin",
+        "serzone",
+        "thiamine",
+        "yaz"
+      ],
+      "easy": [
+        "cefoxitin and dextrose in duplex container",
+        "dextrose 5 sodium chloride 045 and potassium chloride 022 in plastic container",
+        "dobutamine hydrochloride in dextrose 5",
+        "tovalt odt",
+        "xermelo"
+      ]
+    }
+  },
+  {
+    "run": 20,
+    "c_c": "amlodipine",
+    "p_c": [
+      "triclos",
+      "nicardipine",
+      "oxymorphone",
+      "solu medrol",
+      "thrombin topical",
+      "taxotere",
+      "amiloride",
+      "nimodipine",
+      "lamotrigine",
+      "mevacor",
+      "clindets",
+      "tavalisse",
+      "metro iv",
+      "morphine",
+      "sulfadiazine sodium",
+      "sunitinib",
+      "potassium chloride 40meq in dextrose 5 and lactated ringer s in plastic container",
+      "covaryx hs",
+      "lodine",
+      "neumega",
+      "lupron depot 3 month"
+    ],
+    "answer": [
+      "amiloride"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "lamotrigine",
+        "lodine",
+        "morphine",
+        "nicardipine",
+        "nimodipine"
+      ],
+      "random": [
+        "clindets",
+        "covaryx hs",
+        "lupron depot 3 month",
+        "mevacor",
+        "neumega",
+        "oxymorphone",
+        "solu medrol",
+        "sunitinib",
+        "taxotere",
+        "thrombin topical"
+      ],
+      "easy": [
+        "metro iv",
+        "potassium chloride 40meq in dextrose 5 and lactated ringer s in plastic container",
+        "sulfadiazine sodium",
+        "tavalisse",
+        "triclos"
+      ]
+    }
+  },
+  {
+    "run": 21,
+    "c_c": "avandamet",
+    "p_c": [
+      "escitalopram",
+      "janumet",
+      "levetiracetam",
+      "avandia",
+      "intuniv",
+      "solu medrol",
+      "doxorubicin",
+      "advair",
+      "brevital",
+      "norepinephrine bitartrate in 09 sodium chloride",
+      "edaravone",
+      "blisovi 24 fe",
+      "concentraid",
+      "miglitol",
+      "anzemet",
+      "apresoline",
+      "eribulin",
+      "paregoric",
+      "valrelease",
+      "adacel",
+      "navane"
+    ],
+    "answer": [
+      "anzemet"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "adacel",
+        "advair",
+        "avandia",
+        "janumet",
+        "navane"
+      ],
+      "random": [
+        "apresoline",
+        "blisovi 24 fe",
+        "brevital",
+        "doxorubicin",
+        "eribulin",
+        "escitalopram",
+        "intuniv",
+        "levetiracetam",
+        "paregoric",
+        "solu medrol"
+      ],
+      "easy": [
+        "concentraid",
+        "edaravone",
+        "miglitol",
+        "norepinephrine bitartrate in 09 sodium chloride",
+        "valrelease"
+      ]
+    }
+  },
+  {
+    "run": 22,
+    "c_c": "sudafed 12 hour",
+    "p_c": [
+      "vfend",
+      "sudafed pe",
+      "tenex",
+      "ilumya",
+      "zolmitriptan",
+      "silodosin",
+      "lodine",
+      "dynacin",
+      "syeda",
+      "duragesic 25",
+      "sudafed",
+      "thiothixene",
+      "tigan",
+      "oretic",
+      "iquix",
+      "bayrab",
+      "thiamine",
+      "daunorubicin liposomal",
+      "sudafed 12 hour pressure pain",
+      "b o",
+      "peptavlon"
+    ],
+    "answer": [
+      "sudafed 12 hour pressure pain"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "b o",
+        "sudafed",
+        "sudafed pe",
+        "syeda",
+        "vfend"
+      ],
+      "random": [
+        "bayrab",
+        "daunorubicin liposomal",
+        "dynacin",
+        "ilumya",
+        "lodine",
+        "peptavlon",
+        "silodosin",
+        "tenex",
+        "thiamine",
+        "zolmitriptan"
+      ],
+      "easy": [
+        "duragesic 25",
+        "iquix",
+        "oretic",
+        "thiothixene",
+        "tigan"
+      ]
+    }
+  },
+  {
+    "run": 23,
+    "c_c": "hydrea",
+    "p_c": [
+      "zelapar",
+      "hydrocodone",
+      "tylenol pm",
+      "fluvoxamine",
+      "lyrica",
+      "k phos neutral",
+      "hyrnuo",
+      "intermezzo",
+      "rifamate",
+      "diphenhydramine",
+      "cyclosporine modified",
+      "iquix",
+      "stelara",
+      "somophyllin crt",
+      "hydrochlorothiazide",
+      "midodrine",
+      "klonopin",
+      "hydrogesic",
+      "aggrastat",
+      "hydralazine",
+      "oxcarbazepine"
+    ],
+    "answer": [
+      "lyrica"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "diphenhydramine",
+        "hydralazine",
+        "hydrochlorothiazide",
+        "hydrocodone",
+        "hydrogesic"
+      ],
+      "random": [
+        "aggrastat",
+        "cyclosporine modified",
+        "fluvoxamine",
+        "k phos neutral",
+        "klonopin",
+        "midodrine",
+        "oxcarbazepine",
+        "rifamate",
+        "tylenol pm",
+        "zelapar"
+      ],
+      "easy": [
+        "hyrnuo",
+        "intermezzo",
+        "iquix",
+        "somophyllin crt",
+        "stelara"
+      ]
+    }
+  },
+  {
+    "run": 24,
+    "c_c": "paroxetine",
+    "p_c": [
+      "clonidine",
+      "maalox",
+      "rimantadine",
+      "midrin",
+      "hyzaar",
+      "atomoxetine",
+      "rocuronium",
+      "diphenhydramine",
+      "invega",
+      "fluoxetine",
+      "pyridoxine",
+      "cozaar",
+      "duloxetine",
+      "cefotan in plastic container",
+      "acetazolamide",
+      "brethine",
+      "piroxicam",
+      "tromethamine",
+      "nor qd",
+      "protamine",
+      "habitrol",
+      "tiazac",
+      "gallium citrate ga 67"
+    ],
+    "answer": [
+      "duloxetine",
+      "fluoxetine",
+      "piroxicam"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "atomoxetine",
+        "brethine",
+        "protamine",
+        "pyridoxine",
+        "tromethamine"
+      ],
+      "random": [
+        "acetazolamide",
+        "clonidine",
+        "cozaar",
+        "diphenhydramine",
+        "invega",
+        "maalox",
+        "midrin",
+        "rimantadine",
+        "rocuronium",
+        "tiazac"
+      ],
+      "easy": [
+        "cefotan in plastic container",
+        "gallium citrate ga 67",
+        "habitrol",
+        "hyzaar",
+        "nor qd"
+      ]
+    }
+  },
+  {
+    "run": 25,
+    "c_c": "daunorubicin",
+    "p_c": [
+      "tolbutamide",
+      "cubicin",
+      "brevital",
+      "daunorubicin liposomal",
+      "vicodin",
+      "kisqali",
+      "omacor",
+      "ceftazidime",
+      "prenexa",
+      "idarubicin",
+      "antivert",
+      "epirubicin",
+      "doxorubicin",
+      "darvocet",
+      "yutopar",
+      "pitocin",
+      "doxorubicin liposomal",
+      "cortrosyn",
+      "duragesic 25",
+      "rapamune",
+      "tuxarin er",
+      "humalog mix 75 25 kwikpen",
+      "miglustat"
+    ],
+    "answer": [
+      "daunorubicin liposomal",
+      "doxorubicin",
+      "idarubicin"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "cubicin",
+        "doxorubicin liposomal",
+        "epirubicin",
+        "pitocin",
+        "vicodin"
+      ],
+      "random": [
+        "antivert",
+        "brevital",
+        "ceftazidime",
+        "cortrosyn",
+        "darvocet",
+        "miglustat",
+        "omacor",
+        "prenexa",
+        "rapamune",
+        "tolbutamide"
+      ],
+      "easy": [
+        "duragesic 25",
+        "humalog mix 75 25 kwikpen",
+        "kisqali",
+        "tuxarin er",
+        "yutopar"
+      ]
+    }
+  },
+  {
+    "run": 26,
+    "c_c": "solu cortef",
+    "p_c": [
+      "asacol",
+      "solu medrol",
+      "ropinirole",
+      "hydralazine and hydrochlorothiazide",
+      "opium tincture",
+      "zyrtec d",
+      "zocor",
+      "viramune",
+      "cozaar",
+      "b o",
+      "sufentanil",
+      "deoxycholic acid",
+      "prosom",
+      "ortho tri cyclen lo",
+      "lariam",
+      "vosol",
+      "retrovir",
+      "alprazolam",
+      "ceftazidime",
+      "thiothixene",
+      "halaven"
+    ],
+    "answer": [
+      "solu medrol"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "asacol",
+        "b o",
+        "cozaar",
+        "vosol",
+        "zocor"
+      ],
+      "random": [
+        "alprazolam",
+        "ceftazidime",
+        "lariam",
+        "opium tincture",
+        "ortho tri cyclen lo",
+        "retrovir",
+        "ropinirole",
+        "sufentanil",
+        "viramune",
+        "zyrtec d"
+      ],
+      "easy": [
+        "deoxycholic acid",
+        "halaven",
+        "hydralazine and hydrochlorothiazide",
+        "prosom",
+        "thiothixene"
+      ]
+    }
+  },
+  {
+    "run": 27,
+    "c_c": "bupropion",
+    "p_c": [
+      "pitocin",
+      "buprenorphine",
+      "lupron depot ped",
+      "primaquine",
+      "mevacor",
+      "fluzone quadrivalent",
+      "tymtran",
+      "levemir",
+      "diovan",
+      "lupron depot 3 month",
+      "oxaprozin",
+      "penicillamine",
+      "capex",
+      "potassium chloride 15meq in dextrose 5 and lactated ringer s in plastic container",
+      "lexapro",
+      "belimumab",
+      "buspirone",
+      "taytulla",
+      "ponstel",
+      "claritin d 24",
+      "iodine"
+    ],
+    "answer": [
+      "buspirone"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "buprenorphine",
+        "diovan",
+        "iodine",
+        "lupron depot 3 month",
+        "lupron depot ped"
+      ],
+      "random": [
+        "belimumab",
+        "capex",
+        "claritin d 24",
+        "fluzone quadrivalent",
+        "levemir",
+        "lexapro",
+        "mevacor",
+        "oxaprozin",
+        "penicillamine",
+        "pitocin"
+      ],
+      "easy": [
+        "ponstel",
+        "potassium chloride 15meq in dextrose 5 and lactated ringer s in plastic container",
+        "primaquine",
+        "taytulla",
+        "tymtran"
+      ]
+    }
+  },
+  {
+    "run": 28,
+    "c_c": "zyloprim",
+    "p_c": [
+      "fluoxetine",
+      "zyprexa zydis",
+      "escitalopram",
+      "fluphenazine",
+      "zyvox",
+      "levofloxacin",
+      "romidepsin",
+      "cyclosporine",
+      "paxil",
+      "vessel care",
+      "cefotan in plastic container",
+      "coenzyme q10",
+      "pyridostigmine",
+      "lariam",
+      "rimso 50",
+      "turgex",
+      "zolpidem",
+      "adacel",
+      "midamor",
+      "primaquine",
+      "seroquel"
+    ],
+    "answer": [
+      "zolpidem"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "cyclosporine",
+        "escitalopram",
+        "lariam",
+        "zyprexa zydis",
+        "zyvox"
+      ],
+      "random": [
+        "adacel",
+        "coenzyme q10",
+        "fluoxetine",
+        "fluphenazine",
+        "levofloxacin",
+        "paxil",
+        "pyridostigmine",
+        "romidepsin",
+        "seroquel",
+        "vessel care"
+      ],
+      "easy": [
+        "cefotan in plastic container",
+        "midamor",
+        "primaquine",
+        "rimso 50",
+        "turgex"
+      ]
+    }
+  },
+  {
+    "run": 29,
+    "c_c": "cometriq",
+    "p_c": [
+      "restoril",
+      "pamelor",
+      "coenzyme q10",
+      "depo medrol",
+      "motrin",
+      "rituximab",
+      "norepinephrine bitartrate in 09 sodium chloride",
+      "zyprexa zydis",
+      "skyrizi",
+      "ritalin",
+      "cerebyx",
+      "anjeso",
+      "fluonid",
+      "metronidazole",
+      "constulose",
+      "morphine non concentrated oral liquid",
+      "metformin",
+      "docetaxel",
+      "florinef",
+      "dexmethylphenidate",
+      "morphine oral liquid concentrate"
+    ],
+    "answer": [
+      "coenzyme q10"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "metformin",
+        "metronidazole",
+        "morphine non concentrated oral liquid",
+        "morphine oral liquid concentrate",
+        "motrin"
+      ],
+      "random": [
+        "cerebyx",
+        "depo medrol",
+        "dexmethylphenidate",
+        "docetaxel",
+        "florinef",
+        "pamelor",
+        "restoril",
+        "ritalin",
+        "rituximab",
+        "zyprexa zydis"
+      ],
+      "easy": [
+        "anjeso",
+        "constulose",
+        "fluonid",
+        "norepinephrine bitartrate in 09 sodium chloride",
+        "skyrizi"
+      ]
+    }
+  },
+  {
+    "run": 30,
+    "c_c": "humulin r u 100",
+    "p_c": [
+      "dronabinol",
+      "humulin",
+      "lupron depot 3 month",
+      "metyrosine",
+      "norvasc",
+      "ethaverine",
+      "lithium",
+      "humulin 70 30",
+      "carvedilol",
+      "propylthiouracil",
+      "efidac 24 chlorpheniramine maleate",
+      "humulin r u 500",
+      "humalog",
+      "nystatin",
+      "humira pen",
+      "aponvie",
+      "kwell",
+      "sinemet",
+      "neomycin sulfate",
+      "azulfidine",
+      "fluonid"
+    ],
+    "answer": [
+      "humulin r u 500"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "humalog",
+        "humira pen",
+        "humulin",
+        "humulin 70 30",
+        "lithium"
+      ],
+      "random": [
+        "carvedilol",
+        "dronabinol",
+        "ethaverine",
+        "kwell",
+        "lupron depot 3 month",
+        "metyrosine",
+        "norvasc",
+        "nystatin",
+        "propylthiouracil",
+        "sinemet"
+      ],
+      "easy": [
+        "aponvie",
+        "azulfidine",
+        "efidac 24 chlorpheniramine maleate",
+        "fluonid",
+        "neomycin sulfate"
+      ]
+    }
+  },
+  {
+    "run": 31,
+    "c_c": "vfend",
+    "p_c": [
+      "aripiprazole",
+      "thiamine",
+      "vimpat",
+      "previfem",
+      "codeine",
+      "tuxarin er",
+      "sudafed 12 hour pressure pain",
+      "belimumab",
+      "ebanga",
+      "estradiol and norethindrone acetate",
+      "hydroxyzine",
+      "hydrochlorothiazide",
+      "jantoven",
+      "rifabutin",
+      "methyltestosterone",
+      "pentam",
+      "sudafed 12 hour",
+      "sudafed pe",
+      "depo medrol",
+      "zyban",
+      "venofer",
+      "fentanyl"
+    ],
+    "answer": [
+      "venofer",
+      "vimpat"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "fentanyl",
+        "jantoven",
+        "sudafed 12 hour",
+        "sudafed 12 hour pressure pain",
+        "sudafed pe"
+      ],
+      "random": [
+        "aripiprazole",
+        "belimumab",
+        "codeine",
+        "depo medrol",
+        "hydrochlorothiazide",
+        "hydroxyzine",
+        "methyltestosterone",
+        "rifabutin",
+        "thiamine",
+        "zyban"
+      ],
+      "easy": [
+        "ebanga",
+        "estradiol and norethindrone acetate",
+        "pentam",
+        "previfem",
+        "tuxarin er"
+      ]
+    }
+  },
+  {
+    "run": 32,
+    "c_c": "apixaban",
+    "p_c": [
+      "pitressin",
+      "quetiapine",
+      "visicol",
+      "clobazam",
+      "lynavoy",
+      "axitinib",
+      "semglee",
+      "claritin d",
+      "flavoxate",
+      "tavalisse",
+      "zyban",
+      "lasix",
+      "reglan",
+      "pavulon",
+      "tresiba",
+      "beano",
+      "mefloquine",
+      "capex",
+      "sustaire",
+      "wakix",
+      "alprazolam"
+    ],
+    "answer": [
+      "axitinib"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "beano",
+        "capex",
+        "lasix",
+        "wakix",
+        "zyban"
+      ],
+      "random": [
+        "alprazolam",
+        "claritin d",
+        "clobazam",
+        "flavoxate",
+        "mefloquine",
+        "pavulon",
+        "pitressin",
+        "quetiapine",
+        "tresiba",
+        "visicol"
+      ],
+      "easy": [
+        "lynavoy",
+        "reglan",
+        "semglee",
+        "sustaire",
+        "tavalisse"
+      ]
+    }
+  },
+  {
+    "run": 33,
+    "c_c": "platinol",
+    "p_c": [
+      "t pa",
+      "rifamate",
+      "primaquine",
+      "pemetrexed",
+      "nicardipine",
+      "flyrcado",
+      "paxil",
+      "beano",
+      "eletriptan hydrobromide",
+      "rapamune",
+      "peptavlon",
+      "depo medrol",
+      "cisplatin",
+      "urocit k",
+      "keflex",
+      "naropin",
+      "ambien",
+      "probenecid",
+      "carboplatin",
+      "claritin",
+      "patanol"
+    ],
+    "answer": [
+      "patanol"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "carboplatin",
+        "cisplatin",
+        "claritin",
+        "paxil",
+        "t pa"
+      ],
+      "random": [
+        "ambien",
+        "beano",
+        "depo medrol",
+        "keflex",
+        "nicardipine",
+        "pemetrexed",
+        "peptavlon",
+        "probenecid",
+        "rapamune",
+        "rifamate"
+      ],
+      "easy": [
+        "eletriptan hydrobromide",
+        "flyrcado",
+        "naropin",
+        "primaquine",
+        "urocit k"
+      ]
+    }
+  },
+  {
+    "run": 34,
+    "c_c": "ketalar",
+    "p_c": [
+      "acetazolamide",
+      "sarafem",
+      "pazopanib",
+      "paclitaxel",
+      "coagulation factor ix",
+      "oxycodone and aspirin",
+      "desloratadine",
+      "orgovyx",
+      "macrodantin",
+      "kaletra",
+      "doxil liposomal",
+      "kayexalate",
+      "letaris",
+      "ketorolac",
+      "wellbutrin xl",
+      "aldara",
+      "prandin",
+      "prograf",
+      "pyridium",
+      "salagen",
+      "provera"
+    ],
+    "answer": [
+      "ketorolac"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "acetazolamide",
+        "aldara",
+        "kaletra",
+        "kayexalate",
+        "letaris"
+      ],
+      "random": [
+        "coagulation factor ix",
+        "paclitaxel",
+        "pazopanib",
+        "prandin",
+        "prograf",
+        "provera",
+        "pyridium",
+        "salagen",
+        "sarafem",
+        "wellbutrin xl"
+      ],
+      "easy": [
+        "desloratadine",
+        "doxil liposomal",
+        "macrodantin",
+        "orgovyx",
+        "oxycodone and aspirin"
+      ]
+    }
+  },
+  {
+    "run": 35,
+    "c_c": "recombivax hb",
+    "p_c": [
+      "lamotrigine",
+      "tanzeum",
+      "sinemet",
+      "amlodipine",
+      "varivax",
+      "remodulin",
+      "bayhep b",
+      "pyridium",
+      "covaryx hs",
+      "desyrel",
+      "aranelle",
+      "zyrtec",
+      "anacin",
+      "mitosol",
+      "thiothixene",
+      "mevacor",
+      "comvax",
+      "hbig",
+      "precose",
+      "cobicistat",
+      "latuda"
+    ],
+    "answer": [
+      "comvax"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "covaryx hs",
+        "hbig",
+        "precose",
+        "varivax",
+        "zyrtec"
+      ],
+      "random": [
+        "amlodipine",
+        "anacin",
+        "bayhep b",
+        "desyrel",
+        "lamotrigine",
+        "latuda",
+        "mevacor",
+        "pyridium",
+        "sinemet",
+        "tanzeum"
+      ],
+      "easy": [
+        "aranelle",
+        "cobicistat",
+        "mitosol",
+        "remodulin",
+        "thiothixene"
+      ]
+    }
+  },
+  {
+    "run": 36,
+    "c_c": "ethaverine",
+    "p_c": [
+      "methergine",
+      "aloxi",
+      "carvedilol",
+      "intermezzo",
+      "pentam",
+      "etravirine",
+      "ephedrine",
+      "brethine",
+      "duragesic 50",
+      "pexeva",
+      "clobazam",
+      "bamlanivimab",
+      "ketamine",
+      "orencia",
+      "avinza",
+      "ritodrine",
+      "betaine",
+      "varivax",
+      "tylenol",
+      "sustaire",
+      "maalox"
+    ],
+    "answer": [
+      "etravirine"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "betaine",
+        "brethine",
+        "ephedrine",
+        "ketamine",
+        "methergine"
+      ],
+      "random": [
+        "avinza",
+        "bamlanivimab",
+        "carvedilol",
+        "clobazam",
+        "maalox",
+        "orencia",
+        "pexeva",
+        "ritodrine",
+        "tylenol",
+        "varivax"
+      ],
+      "easy": [
+        "aloxi",
+        "duragesic 50",
+        "intermezzo",
+        "pentam",
+        "sustaire"
+      ]
+    }
+  },
+  {
+    "run": 37,
+    "c_c": "covera hs",
+    "p_c": [
+      "comvax",
+      "taxol",
+      "flovent",
+      "amantadine",
+      "letairis",
+      "depo subq provera 104",
+      "covaryx hs",
+      "wellbutrin sr",
+      "multiple electrolytes injection type 1 usp ph 55",
+      "diprivan",
+      "allegra anti itch cream",
+      "chemet",
+      "provera",
+      "anzemet",
+      "estratest hs",
+      "hmg coa reductase inhibitors",
+      "glucotrol",
+      "simulect",
+      "pneumococcal 7 valent vaccine",
+      "vykoura",
+      "isolyte s w dextrose 5 in plastic container"
+    ],
+    "answer": [
+      "covaryx hs"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "comvax",
+        "depo subq provera 104",
+        "estratest hs",
+        "hmg coa reductase inhibitors",
+        "provera"
+      ],
+      "random": [
+        "allegra anti itch cream",
+        "amantadine",
+        "anzemet",
+        "diprivan",
+        "flovent",
+        "glucotrol",
+        "letairis",
+        "pneumococcal 7 valent vaccine",
+        "taxol",
+        "wellbutrin sr"
+      ],
+      "easy": [
+        "chemet",
+        "isolyte s w dextrose 5 in plastic container",
+        "multiple electrolytes injection type 1 usp ph 55",
+        "simulect",
+        "vykoura"
+      ]
+    }
+  },
+  {
+    "run": 38,
+    "c_c": "effexor xr",
+    "p_c": [
+      "hydrocodone",
+      "humapen memoir",
+      "dextrose 5 sodium chloride 045 and potassium chloride 022 in plastic container",
+      "tegretol xr",
+      "potassium chloride 0037 in dextrose 5 in plastic container",
+      "folex",
+      "amaryl",
+      "gallium citrate ga 67",
+      "vytorin",
+      "rapaflo",
+      "medroxyprogesterone",
+      "cerebyx",
+      "renagel",
+      "tenex",
+      "tavalisse",
+      "spiriva",
+      "vexol",
+      "sudafed",
+      "enablex",
+      "soriatane",
+      "keflex",
+      "effexor"
+    ],
+    "answer": [
+      "effexor",
+      "enablex"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "folex",
+        "keflex",
+        "tegretol xr",
+        "tenex",
+        "vexol"
+      ],
+      "random": [
+        "amaryl",
+        "cerebyx",
+        "humapen memoir",
+        "hydrocodone",
+        "medroxyprogesterone",
+        "rapaflo",
+        "renagel",
+        "soriatane",
+        "spiriva",
+        "sudafed"
+      ],
+      "easy": [
+        "dextrose 5 sodium chloride 045 and potassium chloride 022 in plastic container",
+        "gallium citrate ga 67",
+        "potassium chloride 0037 in dextrose 5 in plastic container",
+        "tavalisse",
+        "vytorin"
+      ]
+    }
+  },
+  {
+    "run": 39,
+    "c_c": "edetate calcium disodium",
+    "p_c": [
+      "kisqali",
+      "minoxidin",
+      "isolyte p in dextrose 5 in plastic container",
+      "miochol",
+      "acetaminophen",
+      "duloxetine",
+      "fanapt",
+      "aciphex",
+      "edetate disodium",
+      "noroxin",
+      "tecvayli",
+      "iodine",
+      "isordil",
+      "amphotericin b",
+      "zebeta",
+      "nuedexta",
+      "lanthanum carbonate",
+      "metadate",
+      "allegra anti itch cream",
+      "fosfomycin tromethamine",
+      "estradiol and norethindrone acetate"
+    ],
+    "answer": [
+      "edetate disodium"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "isordil",
+        "metadate",
+        "nuedexta",
+        "tecvayli",
+        "zebeta"
+      ],
+      "random": [
+        "acetaminophen",
+        "aciphex",
+        "allegra anti itch cream",
+        "amphotericin b",
+        "duloxetine",
+        "fanapt",
+        "iodine",
+        "lanthanum carbonate",
+        "minoxidin",
+        "noroxin"
+      ],
+      "easy": [
+        "estradiol and norethindrone acetate",
+        "fosfomycin tromethamine",
+        "isolyte p in dextrose 5 in plastic container",
+        "kisqali",
+        "miochol"
+      ]
+    }
+  },
+  {
+    "run": 40,
+    "c_c": "metyrapone",
+    "p_c": [
+      "prosom",
+      "lithium",
+      "vosol",
+      "oxycodone and aspirin",
+      "dexamethasone",
+      "metyrosine",
+      "metolazone",
+      "metadate er",
+      "zovia 1 50e 21",
+      "amaryl",
+      "ceftriaxone",
+      "mucinex dm",
+      "ethambutol",
+      "methadone",
+      "dextrose 20 in plastic container",
+      "trazodone",
+      "vincristine",
+      "fosfomycin tromethamine",
+      "fomepizole",
+      "clindets",
+      "kayexalate"
+    ],
+    "answer": [
+      "metyrosine"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "ceftriaxone",
+        "dexamethasone",
+        "methadone",
+        "metolazone",
+        "trazodone"
+      ],
+      "random": [
+        "amaryl",
+        "clindets",
+        "ethambutol",
+        "fomepizole",
+        "kayexalate",
+        "lithium",
+        "metadate er",
+        "mucinex dm",
+        "vincristine",
+        "vosol"
+      ],
+      "easy": [
+        "dextrose 20 in plastic container",
+        "fosfomycin tromethamine",
+        "oxycodone and aspirin",
+        "prosom",
+        "zovia 1 50e 21"
+      ]
+    }
+  },
+  {
+    "run": 41,
+    "c_c": "bamlanivimab",
+    "p_c": [
+      "gallium citrate ga 67",
+      "cymbalta",
+      "prosom",
+      "kainair",
+      "rifaximin",
+      "vimpat",
+      "hydralazine hydrochloride w hydrochlorothiazide 100 50",
+      "belimumab",
+      "januvia",
+      "cefazolin",
+      "b o",
+      "lyrica",
+      "lamotrigine",
+      "claritin d 24",
+      "plavix",
+      "lopressor",
+      "toradol",
+      "metyrapone",
+      "striverdi respimat",
+      "alkeran",
+      "escitalopram"
+    ],
+    "answer": [
+      "belimumab"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "alkeran",
+        "cymbalta",
+        "januvia",
+        "plavix",
+        "vimpat"
+      ],
+      "random": [
+        "b o",
+        "cefazolin",
+        "claritin d 24",
+        "escitalopram",
+        "lamotrigine",
+        "lopressor",
+        "lyrica",
+        "metyrapone",
+        "rifaximin",
+        "toradol"
+      ],
+      "easy": [
+        "gallium citrate ga 67",
+        "hydralazine hydrochloride w hydrochlorothiazide 100 50",
+        "kainair",
+        "prosom",
+        "striverdi respimat"
+      ]
+    }
+  },
+  {
+    "run": 42,
+    "c_c": "carbamazepine",
+    "p_c": [
+      "estratest",
+      "claritin d",
+      "cardura",
+      "tymtran",
+      "cobicistat",
+      "haloperidol decanoate",
+      "sulfadiazine sodium",
+      "rasageline",
+      "betaine",
+      "restoril",
+      "midodrine",
+      "oxcarbazepine",
+      "amicar",
+      "carac",
+      "folex",
+      "oxtriphylline",
+      "tramadol",
+      "phenobarbital",
+      "lantus",
+      "levoleucovorin",
+      "seroquel"
+    ],
+    "answer": [
+      "oxcarbazepine"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "amicar",
+        "betaine",
+        "carac",
+        "cardura",
+        "rasageline"
+      ],
+      "random": [
+        "claritin d",
+        "estratest",
+        "folex",
+        "lantus",
+        "levoleucovorin",
+        "midodrine",
+        "phenobarbital",
+        "restoril",
+        "seroquel",
+        "tramadol"
+      ],
+      "easy": [
+        "cobicistat",
+        "haloperidol decanoate",
+        "oxtriphylline",
+        "sulfadiazine sodium",
+        "tymtran"
+      ]
+    }
+  },
+  {
+    "run": 43,
+    "c_c": "sitagliptin",
+    "p_c": [
+      "viracept",
+      "hespan",
+      "stelara",
+      "nystatin",
+      "terbinafine",
+      "tambocor",
+      "xifaxan",
+      "motrin",
+      "sumatriptan",
+      "jetrea",
+      "cabenuva",
+      "saxagliptin",
+      "ritalin",
+      "docetaxel",
+      "misoprostol",
+      "aldoril 25",
+      "pitocin",
+      "linagliptin",
+      "subsys",
+      "bicillin l a",
+      "januvia",
+      "sulfadiazine"
+    ],
+    "answer": [
+      "saxagliptin",
+      "sumatriptan"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "linagliptin",
+        "motrin",
+        "nystatin",
+        "pitocin",
+        "ritalin"
+      ],
+      "random": [
+        "bicillin l a",
+        "cabenuva",
+        "docetaxel",
+        "hespan",
+        "januvia",
+        "misoprostol",
+        "sulfadiazine",
+        "tambocor",
+        "terbinafine",
+        "viracept"
+      ],
+      "easy": [
+        "aldoril 25",
+        "jetrea",
+        "stelara",
+        "subsys",
+        "xifaxan"
+      ]
+    }
+  },
+  {
+    "run": 44,
+    "c_c": "intuniv",
+    "p_c": [
+      "roxicodone intensol",
+      "embeline",
+      "rituxan",
+      "idarubicin",
+      "evamist",
+      "antivert",
+      "sinequan",
+      "florinef",
+      "niraparib",
+      "atenolol and chlorthalidone",
+      "invega",
+      "axitinib",
+      "clomiphene",
+      "ultram",
+      "bayrab",
+      "labetalol",
+      "effexor xr",
+      "naloxone",
+      "aldoril 25",
+      "imbruvica",
+      "novolin"
+    ],
+    "answer": [
+      "invega"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "antivert",
+        "axitinib",
+        "rituxan",
+        "roxicodone intensol",
+        "sinequan"
+      ],
+      "random": [
+        "bayrab",
+        "clomiphene",
+        "effexor xr",
+        "florinef",
+        "idarubicin",
+        "labetalol",
+        "naloxone",
+        "niraparib",
+        "novolin",
+        "ultram"
+      ],
+      "easy": [
+        "aldoril 25",
+        "atenolol and chlorthalidone",
+        "embeline",
+        "evamist",
+        "imbruvica"
+      ]
+    }
+  },
+  {
+    "run": 45,
+    "c_c": "malarone",
+    "p_c": [
+      "humulin r u 100",
+      "enjuvia",
+      "cardura",
+      "omacor",
+      "metolazone",
+      "naloxone",
+      "ovide",
+      "razadyne",
+      "mefloquine",
+      "frovatriptan succinate",
+      "amiodarone",
+      "tavalisse",
+      "tauvid",
+      "byqlovi",
+      "b o",
+      "lotronex",
+      "varivax",
+      "matulane",
+      "acetaminophen",
+      "ranexa",
+      "sudafed pe"
+    ],
+    "answer": [
+      "mefloquine"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "amiodarone",
+        "lotronex",
+        "matulane",
+        "metolazone",
+        "naloxone"
+      ],
+      "random": [
+        "acetaminophen",
+        "b o",
+        "cardura",
+        "enjuvia",
+        "humulin r u 100",
+        "omacor",
+        "ranexa",
+        "razadyne",
+        "sudafed pe",
+        "varivax"
+      ],
+      "easy": [
+        "byqlovi",
+        "frovatriptan succinate",
+        "ovide",
+        "tauvid",
+        "tavalisse"
+      ]
+    }
+  },
+  {
+    "run": 46,
+    "c_c": "ropivacaine",
+    "p_c": [
+      "cozaar",
+      "ambisome",
+      "methylphenidate",
+      "pamelor",
+      "rimantadine",
+      "nuedexta",
+      "trophamine",
+      "leucovorin calcium",
+      "dopamine",
+      "betaine",
+      "ziac",
+      "desyrel",
+      "hydroflumethiazide",
+      "sulfadiazine sodium",
+      "seroquel",
+      "zyvox",
+      "procalamine",
+      "dilantin",
+      "bicitra",
+      "amlexanox",
+      "bupivacaine"
+    ],
+    "answer": [
+      "bupivacaine"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "betaine",
+        "dopamine",
+        "rimantadine",
+        "trophamine",
+        "ziac"
+      ],
+      "random": [
+        "ambisome",
+        "bicitra",
+        "cozaar",
+        "desyrel",
+        "leucovorin calcium",
+        "methylphenidate",
+        "nuedexta",
+        "pamelor",
+        "seroquel",
+        "zyvox"
+      ],
+      "easy": [
+        "amlexanox",
+        "dilantin",
+        "hydroflumethiazide",
+        "procalamine",
+        "sulfadiazine sodium"
+      ]
+    }
+  },
+  {
+    "run": 47,
+    "c_c": "amphotericin b",
+    "p_c": [
+      "bayhep b",
+      "ambisome",
+      "tuxarin er",
+      "amphotericin b liposomal",
+      "engerix b pediatric adolescent",
+      "normodyne",
+      "delflex w dextrose 15 low magnesium in plastic container",
+      "hydrocodone bitartrate chlorpheniramine maleate and pseudoephedrine hydrochloride",
+      "phenobarbital",
+      "motrin",
+      "abelcet",
+      "focalin",
+      "antivert",
+      "oxytocin",
+      "nifedipine",
+      "mezofy",
+      "flovent",
+      "cisplatin",
+      "benadryl",
+      "b o",
+      "mirabegron",
+      "dobutamine",
+      "lamotrigine"
+    ],
+    "answer": [
+      "abelcet",
+      "ambisome",
+      "amphotericin b liposomal"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "b o",
+        "bayhep b",
+        "engerix b pediatric adolescent",
+        "lamotrigine",
+        "motrin"
+      ],
+      "random": [
+        "antivert",
+        "benadryl",
+        "cisplatin",
+        "dobutamine",
+        "flovent",
+        "focalin",
+        "nifedipine",
+        "normodyne",
+        "oxytocin",
+        "phenobarbital"
+      ],
+      "easy": [
+        "delflex w dextrose 15 low magnesium in plastic container",
+        "hydrocodone bitartrate chlorpheniramine maleate and pseudoephedrine hydrochloride",
+        "mezofy",
+        "mirabegron",
+        "tuxarin er"
+      ]
+    }
+  },
+  {
+    "run": 48,
+    "c_c": "methotrexate",
+    "p_c": [
+      "amlexanox",
+      "acetazolamide",
+      "tobrex",
+      "lodine",
+      "aldoril 25",
+      "zelapar",
+      "iqirvo",
+      "trexall",
+      "methimazole",
+      "humalog mix 75 25",
+      "mtx patch",
+      "mitosol",
+      "pemetrexed",
+      "methylphenidate",
+      "metolazone",
+      "acetic acid for irrigation",
+      "fortical",
+      "ranexa",
+      "oracea",
+      "toprol xl",
+      "metformin",
+      "tiotropium bromide"
+    ],
+    "answer": [
+      "metolazone",
+      "mtx patch"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "oracea",
+        "pemetrexed",
+        "ranexa",
+        "tobrex",
+        "trexall"
+      ],
+      "random": [
+        "acetazolamide",
+        "acetic acid for irrigation",
+        "fortical",
+        "humalog mix 75 25",
+        "lodine",
+        "metformin",
+        "methimazole",
+        "methylphenidate",
+        "toprol xl",
+        "zelapar"
+      ],
+      "easy": [
+        "aldoril 25",
+        "amlexanox",
+        "iqirvo",
+        "mitosol",
+        "tiotropium bromide"
+      ]
+    }
+  },
+  {
+    "run": 49,
+    "c_c": "ortho tri cyclen lo",
+    "p_c": [
+      "advicor",
+      "axert",
+      "motrin",
+      "spectracef",
+      "cycloserine",
+      "aponvie",
+      "tricor",
+      "penicillamine",
+      "tenex",
+      "fentanyl",
+      "dexacort",
+      "cozaar",
+      "isopto cetamide",
+      "quetiapine",
+      "tylenol",
+      "ortho tri cyclen",
+      "stelara",
+      "opium tincture",
+      "jantoven",
+      "malarone",
+      "b o"
+    ],
+    "answer": [
+      "ortho tri cyclen"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "b o",
+        "cycloserine",
+        "motrin",
+        "tricor",
+        "tylenol"
+      ],
+      "random": [
+        "advicor",
+        "axert",
+        "cozaar",
+        "fentanyl",
+        "jantoven",
+        "malarone",
+        "opium tincture",
+        "penicillamine",
+        "quetiapine",
+        "tenex"
+      ],
+      "easy": [
+        "aponvie",
+        "dexacort",
+        "isopto cetamide",
+        "spectracef",
+        "stelara"
+      ]
+    }
+  },
+  {
+    "run": 50,
+    "c_c": "atrovent",
+    "p_c": [
+      "lente",
+      "aggrastat",
+      "arista ah",
+      "ponstel",
+      "abelcet",
+      "natru vent",
+      "trental",
+      "dobutamine hydrochloride in dextrose 5",
+      "eribulin",
+      "hydroxyprogesterone",
+      "jantoven",
+      "tromethamine",
+      "edaravone",
+      "flovent",
+      "ilumya",
+      "hydroflumethiazide",
+      "focalin",
+      "prednisolone",
+      "potassium acetate",
+      "buprenorphine",
+      "megace"
+    ],
+    "answer": [
+      "natru vent"
+    ],
+    "tiers": {
+      "fuzzy": [
+        "flovent",
+        "jantoven",
+        "lente",
+        "trental",
+        "tromethamine"
+      ],
+      "random": [
+        "abelcet",
+        "aggrastat",
+        "arista ah",
+        "buprenorphine",
+        "eribulin",
+        "focalin",
+        "hydroxyprogesterone",
+        "ilumya",
+        "potassium acetate",
+        "prednisolone"
+      ],
+      "easy": [
+        "dobutamine hydrochloride in dextrose 5",
+        "edaravone",
+        "hydroflumethiazide",
+        "megace",
+        "ponstel"
+      ]
+    }
+  }
+]

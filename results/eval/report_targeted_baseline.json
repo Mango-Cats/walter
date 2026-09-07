@@ -1,0 +1,453 @@
+{
+  "n_items": 26,
+  "micro": {
+    "precision": 0.4918032786885246,
+    "recall": 0.8823529411764706,
+    "f1": 0.631578947368421
+  },
+  "macro": {
+    "precision": 0.558,
+    "recall": 0.875,
+    "f1": 0.6814375436147942
+  },
+  "per_target": [
+    {
+      "c_c": "oxycodone",
+      "precision": 0.8,
+      "recall": 1.0
+    },
+    {
+      "c_c": "wakix",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "tamsulosin",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "kapidex",
+      "precision": 1.0,
+      "recall": 0.75
+    },
+    {
+      "c_c": "zonegran",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "romazicon",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "diamox",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "cubicin rf",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "benadryl",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "avandia",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "atrovent",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "lupron depot ped",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "ortho tri cyclen",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "metadate er",
+      "precision": 0.6666666666666666,
+      "recall": 1.0
+    },
+    {
+      "c_c": "metadate cd",
+      "precision": 0.25,
+      "recall": 1.0
+    },
+    {
+      "c_c": "blisovi 24 fe",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "blisovi fe 1 20",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "lupron depot 3 month",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "coenzyme q10",
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "c_c": "dilaudid 5",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "anacin 3",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "claritin d 24",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "humulin r u 100",
+      "precision": 0.2,
+      "recall": 1.0
+    },
+    {
+      "c_c": "humulin r u 500",
+      "precision": 0.2,
+      "recall": 1.0
+    },
+    {
+      "c_c": "sudafed 12 hour",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "sudafed 12 hour pressure pain",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    }
+  ],
+  "disagreements": [
+    {
+      "c_c": "oxycodone",
+      "answer": [
+        "hydrocodone",
+        "oxybutynin",
+        "oxycontin",
+        "oxymorphone"
+      ],
+      "over_proposed": [
+        "roxicodone intensol"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "roxicodone intensol": "fuzzy"
+      }
+    },
+    {
+      "c_c": "wakix",
+      "answer": [
+        "lasix"
+      ],
+      "over_proposed": [
+        "plavix"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "plavix": "fuzzy"
+      }
+    },
+    {
+      "c_c": "tamsulosin",
+      "answer": [
+        "tacrolimus"
+      ],
+      "over_proposed": [
+        "silodosin"
+      ],
+      "missed": [
+        "tacrolimus"
+      ],
+      "over_proposed_tiers": {
+        "silodosin": "fuzzy"
+      }
+    },
+    {
+      "c_c": "kapidex",
+      "answer": [
+        "capadex",
+        "capex",
+        "casodex",
+        "kadian"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "capex"
+      ],
+      "over_proposed_tiers": {}
+    },
+    {
+      "c_c": "zonegran",
+      "answer": [
+        "sinequan"
+      ],
+      "over_proposed": [
+        "regranex"
+      ],
+      "missed": [
+        "sinequan"
+      ],
+      "over_proposed_tiers": {
+        "regranex": "fuzzy"
+      }
+    },
+    {
+      "c_c": "romazicon",
+      "answer": [
+        "rocuronium"
+      ],
+      "over_proposed": [
+        "roxicodone intensol"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "roxicodone intensol": "fuzzy"
+      }
+    },
+    {
+      "c_c": "cubicin rf",
+      "answer": [
+        "cubicin"
+      ],
+      "over_proposed": [
+        "bicillin c r"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "bicillin c r": "fuzzy"
+      }
+    },
+    {
+      "c_c": "benadryl",
+      "answer": [
+        "benazepril"
+      ],
+      "over_proposed": [
+        "benicar"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "benicar": "fuzzy"
+      }
+    },
+    {
+      "c_c": "avandia",
+      "answer": [
+        "coumadin",
+        "prandin"
+      ],
+      "over_proposed": [
+        "avandamet",
+        "avinza"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "avandamet": "fuzzy",
+        "avinza": "fuzzy"
+      }
+    },
+    {
+      "c_c": "atrovent",
+      "answer": [
+        "natru vent"
+      ],
+      "over_proposed": [
+        "flovent"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "flovent": "fuzzy"
+      }
+    },
+    {
+      "c_c": "lupron depot ped",
+      "answer": [
+        "lupron depot 3 month"
+      ],
+      "over_proposed": [
+        "depo provera"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "depo provera": "fuzzy"
+      }
+    },
+    {
+      "c_c": "metadate er",
+      "answer": [
+        "metadate cd",
+        "methadone"
+      ],
+      "over_proposed": [
+        "metadate"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "metadate": "fuzzy"
+      }
+    },
+    {
+      "c_c": "metadate cd",
+      "answer": [
+        "metadate er"
+      ],
+      "over_proposed": [
+        "edetate calcium disodium",
+        "metadate",
+        "methadone"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "edetate calcium disodium": "fuzzy",
+        "metadate": "fuzzy",
+        "methadone": "fuzzy"
+      }
+    },
+    {
+      "c_c": "coenzyme q10",
+      "answer": [
+        "cometriq"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "cometriq"
+      ],
+      "over_proposed_tiers": {}
+    },
+    {
+      "c_c": "anacin 3",
+      "answer": [
+        "anacin"
+      ],
+      "over_proposed": [
+        "antacid",
+        "xanax"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "antacid": "fuzzy",
+        "xanax": "fuzzy"
+      }
+    },
+    {
+      "c_c": "claritin d 24",
+      "answer": [
+        "claritin d"
+      ],
+      "over_proposed": [
+        "claritin",
+        "claritin eye"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "claritin": "fuzzy",
+        "claritin eye": "fuzzy"
+      }
+    },
+    {
+      "c_c": "humulin r u 100",
+      "answer": [
+        "humulin r u 500"
+      ],
+      "over_proposed": [
+        "humalog",
+        "humira pen",
+        "humulin",
+        "humulin 70 30"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "humalog": "fuzzy",
+        "humira pen": "fuzzy",
+        "humulin": "fuzzy",
+        "humulin 70 30": "fuzzy"
+      }
+    },
+    {
+      "c_c": "humulin r u 500",
+      "answer": [
+        "humulin r u 100"
+      ],
+      "over_proposed": [
+        "humalog",
+        "humira pen",
+        "humulin",
+        "humulin 70 30"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "humalog": "fuzzy",
+        "humira pen": "fuzzy",
+        "humulin": "fuzzy",
+        "humulin 70 30": "fuzzy"
+      }
+    },
+    {
+      "c_c": "sudafed 12 hour",
+      "answer": [
+        "sudafed 12 hour pressure pain"
+      ],
+      "over_proposed": [
+        "sudafed",
+        "sudafed pe"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "sudafed": "fuzzy",
+        "sudafed pe": "fuzzy"
+      }
+    },
+    {
+      "c_c": "sudafed 12 hour pressure pain",
+      "answer": [
+        "sudafed 12 hour"
+      ],
+      "over_proposed": [
+        "sudafed",
+        "sudafed pe"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "sudafed": "fuzzy",
+        "sudafed pe": "fuzzy"
+      }
+    }
+  ],
+  "production_proxy": {
+    "micro": {
+      "precision": 0.4918032786885246,
+      "recall": 0.8823529411764706,
+      "f1": 0.631578947368421
+    },
+    "macro": {
+      "precision": 0.558,
+      "recall": 0.875,
+      "f1": 0.6814375436147942
+    }
+  }
+}

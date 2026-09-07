@@ -1,0 +1,43 @@
+# Targeted regression set: known weak spots from the flash + few_shot_v1
+# comparison runs (Sept 4). Use with eval_sample.py --targets for a cheap
+# check before spending on a full random run. Answers still come straight
+# from data/P_us.csv -- this file only picks which names to test.
+
+# normal LASA misses (genuine judgment failures, not numeric)
+oxycodone
+wakix
+tamsulosin
+kapidex
+zonegran
+romazicon
+diamox
+cubicin rf
+benadryl
+avandia
+atrovent
+lupron depot ped
+ortho tri cyclen
+
+# release-profile / formulation suffix misses (letters, not numbers -- ER/CD/XL)
+metadate er
+metadate cd
+
+# numeric decoy risk: true answer does NOT share the number, but the wider
+# pool has other names sharing the exact digit pattern with a different
+# stem -- tests whether a shared number alone pulls a wrong pick
+blisovi 24 fe
+blisovi fe 1 20
+lupron depot 3 month
+coenzyme q10
+
+# caution -- numbers are NOT always safe to reject: these are real confirmed
+# gold pairs where the shared/added number IS part of a genuine confusable
+# risk, not a decoy. If a prompt starts missing these, it's over-rejecting
+# numbers the same way the release-profile rule over-rejected formulations.
+dilaudid 5
+anacin 3
+claritin d 24
+humulin r u 100
+humulin r u 500
+sudafed 12 hour
+sudafed 12 hour pressure pain

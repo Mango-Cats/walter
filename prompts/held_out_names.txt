@@ -1,0 +1,31 @@
+# Names used in few-shot examples inside prompts/few_shot_v1.txt and
+# prompts/minimal_instruction_v1.txt. Pass this to eval_sample.py via
+# --exclude so these names (and their confirmed partners) can never be
+# sampled as eval targets -- otherwise the prompt hands the model the
+# literal answer to a question the eval later asks it.
+hydralazine
+hydroxyzine
+hydralazine hcl
+methotrexate
+memantine
+methadone
+amantadine
+memantine er
+humulin 70 30
+humalog mix 75 25
+novolin 70 30
+novolog mix 70 30 flexpen
+sufentanil
+alfentanil
+fentanyl
+sertraline
+oxcarbazepine
+meloxicam
+seroquel
+seroquel xr
+seroquel 25mg
+quetiapine
+metformin
+metformin 500mg
+lisinopril
+atorvastatin

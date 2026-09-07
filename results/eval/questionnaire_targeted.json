@@ -1,0 +1,798 @@
+[
+  {
+    "run": 1,
+    "c_c": "oxycodone",
+    "p_c": [
+      "oxycontin",
+      "oxymorphone",
+      "intuniv",
+      "hipputope",
+      "fentanyl",
+      "roxicodone intensol",
+      "cisplatin",
+      "oxybutynin",
+      "voluven",
+      "nandrolone phenpropionate",
+      "modrastane",
+      "hydrocodone",
+      "mevacor",
+      "kadian",
+      "hydroxychloroquine",
+      "norlestrin fe 1 50",
+      "trastuzumab",
+      "trazodone",
+      "flector",
+      "ethionamide",
+      "codeine",
+      "lodine",
+      "iodine",
+      "vioxx"
+    ],
+    "answer": [
+      "hydrocodone",
+      "oxybutynin",
+      "oxycontin",
+      "oxymorphone"
+    ]
+  },
+  {
+    "run": 2,
+    "c_c": "wakix",
+    "p_c": [
+      "zingo",
+      "plavix",
+      "ambien",
+      "protonix",
+      "nitrolingual",
+      "tequin",
+      "apixaban",
+      "epitol",
+      "celexa",
+      "engerix b pediatric adolescent",
+      "peptavlon",
+      "ocuflox",
+      "carbaglu",
+      "dabigatran",
+      "protain xl",
+      "tacrolimus",
+      "amikin",
+      "pherazine w codeine",
+      "lasix",
+      "mitoxantrone",
+      "brilinta"
+    ],
+    "answer": [
+      "lasix"
+    ]
+  },
+  {
+    "run": 3,
+    "c_c": "tamsulosin",
+    "p_c": [
+      "humulin 70 30",
+      "delatestryl",
+      "novolin",
+      "atenolol",
+      "metformin",
+      "tacrolimus",
+      "riboflavin",
+      "flumazenil",
+      "neostigmine",
+      "ultram",
+      "presamine",
+      "letairis",
+      "yasmin",
+      "t pa",
+      "silodosin",
+      "prozac",
+      "lodine",
+      "tambocor",
+      "limbitrol",
+      "mucomyst",
+      "her style"
+    ],
+    "answer": [
+      "tacrolimus"
+    ]
+  },
+  {
+    "run": 4,
+    "c_c": "kapidex",
+    "p_c": [
+      "morphine",
+      "florinef",
+      "apidra",
+      "edetate calcium disodium",
+      "trazodone",
+      "capadex",
+      "casodex",
+      "amiloride",
+      "nubain",
+      "videx",
+      "sincalide",
+      "bicillin c r",
+      "tolbutamide",
+      "cidex",
+      "perseris kit",
+      "vesanoid",
+      "cefuroxime",
+      "altocor",
+      "capex",
+      "bidex",
+      "sandimmune",
+      "nucynta er",
+      "ceftazidime sodium in plastic container",
+      "kadian"
+    ],
+    "answer": [
+      "capadex",
+      "capex",
+      "casodex",
+      "kadian"
+    ]
+  },
+  {
+    "run": 5,
+    "c_c": "zonegran",
+    "p_c": [
+      "orgaran",
+      "narcan",
+      "chlorpromazine",
+      "quinidine gluconate",
+      "paregoric",
+      "dobutamine",
+      "regranex",
+      "sinequan",
+      "tri lo mili",
+      "riboflavin",
+      "neratinib",
+      "dexilant",
+      "pataday twice daily relief",
+      "neo medrol",
+      "influenza virus vaccine",
+      "hydrogesic",
+      "mounjaro kwikpen",
+      "tenex",
+      "invega",
+      "kaletra",
+      "ultracet"
+    ],
+    "answer": [
+      "sinequan"
+    ]
+  },
+  {
+    "run": 6,
+    "c_c": "romazicon",
+    "p_c": [
+      "ziac",
+      "sylevia",
+      "chlorpromazine",
+      "folic acid",
+      "esclim",
+      "roxicodone intensol",
+      "alora",
+      "jantoven",
+      "rocuronium",
+      "omacor",
+      "claritin d",
+      "kayexalate",
+      "yaz",
+      "midodrine",
+      "testoderm with adhesive",
+      "butapap",
+      "vfend",
+      "anexsia 75 650",
+      "isordil",
+      "meropenem",
+      "capex"
+    ],
+    "answer": [
+      "rocuronium"
+    ]
+  },
+  {
+    "run": 7,
+    "c_c": "diamox",
+    "p_c": [
+      "kay ciel",
+      "diabenese",
+      "ethaverine",
+      "aloprim",
+      "procardia xl",
+      "dilaudid 5",
+      "belimumab",
+      "dexamethasone",
+      "cozaar",
+      "ascor",
+      "gamene",
+      "influenza virus vaccine",
+      "tetanus diptheria toxoid",
+      "azathioprine",
+      "anktiva",
+      "nexium",
+      "doxorubicin",
+      "dilacor xr",
+      "soma",
+      "doribax",
+      "gemfibrozil"
+    ],
+    "answer": [
+      "diabenese"
+    ]
+  },
+  {
+    "run": 8,
+    "c_c": "cubicin rf",
+    "p_c": [
+      "neumega",
+      "t gel",
+      "epirubicin",
+      "alyacen 777",
+      "dioval",
+      "oxycodone",
+      "renvela",
+      "cortrosyn",
+      "bicillin c r",
+      "daunorubicin liposomal",
+      "tolbutamide",
+      "pulmolite",
+      "helidac",
+      "doxorubicin liposomal",
+      "idarubicin",
+      "atrovent",
+      "colazal",
+      "flavoxate",
+      "cubicin",
+      "topicort lp",
+      "leustatin"
+    ],
+    "answer": [
+      "cubicin"
+    ]
+  },
+  {
+    "run": 9,
+    "c_c": "benadryl",
+    "p_c": [
+      "enbrel",
+      "benazepril",
+      "orgaran",
+      "rozerem",
+      "tizanidine",
+      "fentanyl",
+      "hydroxyprogesterone",
+      "dexmethylphenidate",
+      "benicar",
+      "amaryl",
+      "flector",
+      "zyvox",
+      "vitravene preservative free",
+      "veltassa",
+      "rapaflo",
+      "lithium carbonate",
+      "kytril",
+      "beano",
+      "zyrtec itchy eye drops",
+      "luvox",
+      "soma"
+    ],
+    "answer": [
+      "benazepril"
+    ]
+  },
+  {
+    "run": 10,
+    "c_c": "avandia",
+    "p_c": [
+      "ropivacaine hydrochloride",
+      "advair",
+      "singulair",
+      "vapo iso",
+      "memantine",
+      "hbig",
+      "kadian",
+      "avinza",
+      "roxicodone intensol",
+      "myrbetriq",
+      "gemfibrozil",
+      "gabapentin",
+      "delatestryl",
+      "avagard",
+      "guaifenesin",
+      "avandamet",
+      "navane",
+      "trophamine",
+      "prandin",
+      "coumadin",
+      "azathioprine",
+      "zerit"
+    ],
+    "answer": [
+      "coumadin",
+      "prandin"
+    ]
+  },
+  {
+    "run": 11,
+    "c_c": "atrovent",
+    "p_c": [
+      "jantoven",
+      "lente",
+      "valacyclovir",
+      "dhe 45",
+      "keflex",
+      "lodine",
+      "trental",
+      "invokamet xr",
+      "tromethamine",
+      "robitet",
+      "metadate",
+      "testoderm",
+      "alyacen 777",
+      "droperidol",
+      "elzonris",
+      "flovent",
+      "rapamune",
+      "pavulon",
+      "vfend",
+      "natru vent",
+      "aggrastat"
+    ],
+    "answer": [
+      "natru vent"
+    ]
+  },
+  {
+    "run": 12,
+    "c_c": "lupron depot ped",
+    "p_c": [
+      "iv persantine",
+      "neutra phos k",
+      "t pa",
+      "enjuvia",
+      "lupron depot 3 month",
+      "lexapro",
+      "zolmitriptan",
+      "brevibloc",
+      "minoxidil",
+      "neomycin and polymyxin b sulfate",
+      "zavesca",
+      "dhe 45",
+      "depakote",
+      "pralatrexate",
+      "depo provera",
+      "cerebyx",
+      "gris peg",
+      "buspirone",
+      "claritin d 24",
+      "depo subq provera 104",
+      "pristiq"
+    ],
+    "answer": [
+      "lupron depot 3 month"
+    ]
+  },
+  {
+    "run": 13,
+    "c_c": "ortho tri cyclen",
+    "p_c": [
+      "nitrolingual",
+      "ortho tri cyclen lo",
+      "protamine",
+      "depakote er",
+      "ethosuximide",
+      "tecvayli",
+      "levofloxacin dextrose",
+      "hydrocortisone in absorbase",
+      "dilaudid 5",
+      "tolbutamide",
+      "relgaabi",
+      "myleran",
+      "lente",
+      "dynacin",
+      "brynovin",
+      "engerix b adult",
+      "chlordiazepoxide",
+      "tricor",
+      "codeine",
+      "tylenol",
+      "motrin"
+    ],
+    "answer": [
+      "ortho tri cyclen lo"
+    ]
+  },
+  {
+    "run": 14,
+    "c_c": "metadate er",
+    "p_c": [
+      "oxtellar xr",
+      "metadate cd",
+      "tramadol",
+      "protonix",
+      "albuterol",
+      "depakote er",
+      "zetia",
+      "malarone",
+      "testoderm tts",
+      "adacel",
+      "potassium chloride 03 in dextrose 5 and sodium chloride 02 in plastic container",
+      "tropicacyl",
+      "methadone",
+      "novolog mix 70 30 flexpen",
+      "metadate",
+      "amphotericin b",
+      "ontralfy",
+      "ms contin",
+      "morphine non concentrated oral liquid",
+      "zolpidem",
+      "ethambutol",
+      "depo medrol"
+    ],
+    "answer": [
+      "metadate cd",
+      "methadone"
+    ]
+  },
+  {
+    "run": 15,
+    "c_c": "metadate cd",
+    "p_c": [
+      "metolazone",
+      "sitagliptin",
+      "tlando",
+      "citalopram",
+      "tri lo mili",
+      "metadate er",
+      "novolin",
+      "covaryx hs",
+      "spiriva",
+      "metadate",
+      "beta 2",
+      "actoplus met",
+      "pramine",
+      "idarubicin",
+      "clozaril",
+      "zetia",
+      "paclitaxel",
+      "edetate calcium disodium",
+      "mitoxantrone",
+      "adacel",
+      "methadone"
+    ],
+    "answer": [
+      "metadate er"
+    ]
+  },
+  {
+    "run": 16,
+    "c_c": "blisovi 24 fe",
+    "p_c": [
+      "methoxsalen",
+      "gris peg",
+      "procet",
+      "miralax",
+      "blisovi fe 1 20",
+      "methamphetamine hydrochloride",
+      "hbig",
+      "ilaris",
+      "mefloquine",
+      "zovirax",
+      "cyclosporine modified",
+      "ambisome",
+      "nedocromil sodium",
+      "ropivacaine",
+      "rocuronium",
+      "bio t gel",
+      "lamisil",
+      "trulicity",
+      "sulfonamides duplex",
+      "ditropan",
+      "isotretinoin"
+    ],
+    "answer": [
+      "blisovi fe 1 20"
+    ]
+  },
+  {
+    "run": 17,
+    "c_c": "blisovi fe 1 20",
+    "p_c": [
+      "accupril",
+      "ticlid",
+      "fosrenol",
+      "atorvastatin",
+      "ilaris",
+      "zyrtec",
+      "zelapar",
+      "vfend",
+      "droperidol",
+      "butapap",
+      "potassium chloride 0037 in dextrose 5 in plastic container",
+      "pulmolite",
+      "capadex",
+      "pneumococcal 7 valent vaccine",
+      "videx",
+      "cyclosporine",
+      "lamisil",
+      "ketorolac",
+      "dexycu kit",
+      "ambisome",
+      "blisovi 24 fe"
+    ],
+    "answer": [
+      "blisovi 24 fe"
+    ]
+  },
+  {
+    "run": 18,
+    "c_c": "lupron depot 3 month",
+    "p_c": [
+      "linagliptin",
+      "levemir",
+      "b o",
+      "unithroid",
+      "lexapro",
+      "fentanyl 25",
+      "humulin 70 30",
+      "zegerid",
+      "lupron depot ped",
+      "sulfacel 15",
+      "dilaudid 5",
+      "propylene glycol",
+      "buspirone",
+      "tri legest 21",
+      "methylprednisolone",
+      "rituxan",
+      "lopressor hct",
+      "neutra phos k",
+      "toujeo",
+      "anacin 3",
+      "bupropion"
+    ],
+    "answer": [
+      "lupron depot ped"
+    ]
+  },
+  {
+    "run": 19,
+    "c_c": "coenzyme q10",
+    "p_c": [
+      "ethmozine",
+      "cymbalta",
+      "dopamine",
+      "bayrho d",
+      "cartrol",
+      "lente",
+      "enablex",
+      "guaifenesin",
+      "codeine",
+      "mepriam",
+      "miglustat",
+      "potassium chloride 03 in dextrose 5 and sodium chloride 02 in plastic container",
+      "casodex",
+      "elzonris",
+      "precose",
+      "jantoven",
+      "actoplus met",
+      "azathioprine",
+      "cometriq",
+      "colace",
+      "actonel"
+    ],
+    "answer": [
+      "cometriq"
+    ]
+  },
+  {
+    "run": 20,
+    "c_c": "dilaudid 5",
+    "p_c": [
+      "peptavlon",
+      "ilumya",
+      "ilaris",
+      "helidac",
+      "tobradex st",
+      "focalgin b",
+      "precare",
+      "oxycodone and aspirin",
+      "butapap",
+      "inspra",
+      "tuberculin purified protein derivative",
+      "doxil",
+      "kadian",
+      "latuda",
+      "dilaudid",
+      "dioval",
+      "tracleer",
+      "ceftazidime sodium in plastic container",
+      "hydrea",
+      "taxotere",
+      "foradil"
+    ],
+    "answer": [
+      "dilaudid"
+    ]
+  },
+  {
+    "run": 21,
+    "c_c": "anacin 3",
+    "p_c": [
+      "roxicodone intensol",
+      "vfend",
+      "lupron depot 3 month",
+      "methimazole",
+      "zeniquin",
+      "pylori chek breath test",
+      "oxtellar xr",
+      "potassium chloride 03 in dextrose 5 and sodium chloride 02 in plastic container",
+      "guanfacine",
+      "recombivax hb",
+      "zantac 360",
+      "takhzyro",
+      "keppra",
+      "anacin",
+      "natru vent",
+      "repaglinide",
+      "tamsulosin",
+      "cardizem",
+      "antacid",
+      "xanax",
+      "ontralfy"
+    ],
+    "answer": [
+      "anacin"
+    ]
+  },
+  {
+    "run": 22,
+    "c_c": "claritin d 24",
+    "p_c": [
+      "metolazone",
+      "compazine",
+      "levofloxacin",
+      "darvocet",
+      "claritin eye",
+      "folic acid",
+      "bayrho d",
+      "clozaril",
+      "cefazolin",
+      "vessel care",
+      "glipizide",
+      "pentam",
+      "claritin d",
+      "ethmozine",
+      "testoderm with adhesive",
+      "zyrtec d",
+      "norcuron",
+      "tobradex st",
+      "claritin",
+      "sarenin",
+      "brynovin"
+    ],
+    "answer": [
+      "claritin d"
+    ]
+  },
+  {
+    "run": 23,
+    "c_c": "humulin r u 100",
+    "p_c": [
+      "zantac",
+      "robinul forte",
+      "depakote",
+      "zolpidem",
+      "minoxidil",
+      "altocor",
+      "methoxsalen",
+      "humulin",
+      "sitavig",
+      "humulin 70 30",
+      "humulin r u 500",
+      "humalog",
+      "asacol",
+      "tretinoin",
+      "cidex",
+      "tamsulosin",
+      "lithium",
+      "humira pen",
+      "e base",
+      "perseris kit",
+      "propylene glycol"
+    ],
+    "answer": [
+      "humulin r u 500"
+    ]
+  },
+  {
+    "run": 24,
+    "c_c": "humulin r u 500",
+    "p_c": [
+      "humulin",
+      "humulin r u 100",
+      "darvon",
+      "talwin compound",
+      "humira pen",
+      "humalog",
+      "keflet",
+      "diabeta",
+      "pristiq",
+      "prismasol bgk 2 0 in plastic container",
+      "humulin 70 30",
+      "lithium",
+      "fortical",
+      "viagra",
+      "comvax",
+      "depakote er",
+      "precose",
+      "ranitidine",
+      "romidepsin",
+      "lopressor hct",
+      "sincalide"
+    ],
+    "answer": [
+      "humulin r u 100"
+    ]
+  },
+  {
+    "run": 25,
+    "c_c": "sudafed 12 hour",
+    "p_c": [
+      "amiloride",
+      "acetazolamide",
+      "adacel",
+      "prempro premarincycrin",
+      "lantus",
+      "latuda",
+      "vfend",
+      "methazolamide",
+      "quinidine gluconate",
+      "valacyclovir",
+      "erypar",
+      "syeda",
+      "sudafed",
+      "b o",
+      "plendil",
+      "sudafed 12 hour pressure pain",
+      "sudafed pe",
+      "atropine and demerol",
+      "diprivan",
+      "dexmethylphenidate mixed salts",
+      "gabitril"
+    ],
+    "answer": [
+      "sudafed 12 hour pressure pain"
+    ]
+  },
+  {
+    "run": 26,
+    "c_c": "sudafed 12 hour pressure pain",
+    "p_c": [
+      "procanbid",
+      "helidac",
+      "spiriva respimat",
+      "heparin",
+      "chlordiazepoxide",
+      "sudafed 12 hour",
+      "reprexain",
+      "ultram",
+      "ure na",
+      "lamisil",
+      "takhzyro",
+      "hydrea",
+      "ortho tri cyclen",
+      "topicort lp",
+      "penicillamine",
+      "ritodrine",
+      "posfrea",
+      "sudafed",
+      "januvia",
+      "sudafed pe",
+      "probenecid"
+    ],
+    "answer": [
+      "sudafed 12 hour"
+    ]
+  }
+]

@@ -1,0 +1,2864 @@
+{
+  "seed": 0,
+  "gold_source": "data/P_us.csv",
+  "targets": [
+    "rituximab",
+    "metformin",
+    "belimumab",
+    "memantine",
+    "atomoxetine",
+    "bayrab",
+    "etravirine",
+    "purinethol",
+    "influenza virus vaccine",
+    "elvitegravir cobicistat emtricitabine and tenofovir disoproxil fumarate",
+    "ethambutol",
+    "motrin",
+    "cymbalta",
+    "kaletra",
+    "menactra",
+    "humulin 70 30",
+    "lithium",
+    "rapaflo",
+    "renvela",
+    "amlodipine",
+    "avandamet",
+    "sudafed 12 hour",
+    "hydrea",
+    "paroxetine",
+    "daunorubicin",
+    "solu cortef",
+    "bupropion",
+    "zyloprim",
+    "cometriq",
+    "humulin r u 100",
+    "vfend",
+    "apixaban",
+    "platinol",
+    "ketalar",
+    "recombivax hb",
+    "ethaverine",
+    "covera hs",
+    "effexor xr",
+    "edetate calcium disodium",
+    "metyrapone",
+    "bamlanivimab",
+    "carbamazepine",
+    "sitagliptin",
+    "intuniv",
+    "malarone",
+    "ropivacaine",
+    "amphotericin b",
+    "methotrexate",
+    "ortho tri cyclen lo",
+    "atrovent"
+  ],
+  "adjacency": {
+    "reminyl": [
+      "amaryl",
+      "robinul"
+    ],
+    "avandamet": [
+      "anzemet"
+    ],
+    "carac": [
+      "kuric"
+    ],
+    "lanoxin": [
+      "levothyroxine",
+      "naloxone"
+    ],
+    "methadone": [
+      "dexmethylphenidate",
+      "ketorolac",
+      "memantine",
+      "mephyton",
+      "metadate",
+      "metadate er",
+      "methylphenidate",
+      "metolazone"
+    ],
+    "remeron": [
+      "rozerem"
+    ],
+    "luvox": [
+      "lasix"
+    ],
+    "capadex": [
+      "kapidex"
+    ],
+    "maalox total stomach relief": [
+      "maalox"
+    ],
+    "anacin 3": [
+      "anacin"
+    ],
+    "steglatro": [
+      "spravato"
+    ],
+    "clonazepam": [
+      "alprazolam",
+      "clobazam",
+      "clonidine",
+      "clozapine",
+      "lorazepam"
+    ],
+    "dexmethylphenidate mixed salts": [
+      "dexmethylphenidate"
+    ],
+    "femara": [
+      "femhrt"
+    ],
+    "saxagliptin": [
+      "sitagliptin"
+    ],
+    "midrin": [
+      "midodrine"
+    ],
+    "glycotrol": [
+      "glucotrol"
+    ],
+    "sumatriptan": [
+      "sitagliptin",
+      "zolmitriptan"
+    ],
+    "oxycodone": [
+      "hydrocodone",
+      "oxybutynin",
+      "oxycontin",
+      "oxymorphone"
+    ],
+    "lithium": [
+      "ultram"
+    ],
+    "gentamicin": [
+      "gentian violet"
+    ],
+    "sulfadiazine": [
+      "sulfasalazine",
+      "sulfisoxazole"
+    ],
+    "ocuflox": [
+      "occlusal hp"
+    ],
+    "tenex": [
+      "xanax"
+    ],
+    "lodine": [
+      "codeine",
+      "iodine"
+    ],
+    "paclitaxel protein bound particles": [
+      "paclitaxel"
+    ],
+    "stavudine": [
+      "cetirizine"
+    ],
+    "viracept": [
+      "viramune"
+    ],
+    "metolazone": [
+      "methadone",
+      "methazolamide",
+      "methimazole",
+      "methotrexate"
+    ],
+    "polycitra": [
+      "bicitra"
+    ],
+    "belimumab": [
+      "bamlanivimab"
+    ],
+    "depakote": [
+      "depakote er"
+    ],
+    "medroxyprogesterone": [
+      "hydroxyprogesterone",
+      "methylprednisolone",
+      "methyltestosterone"
+    ],
+    "metadate er": [
+      "metadate cd",
+      "methadone"
+    ],
+    "focalgin b": [
+      "focalin"
+    ],
+    "romidepsin": [
+      "romiplostim"
+    ],
+    "nizatidine": [
+      "tizanidine"
+    ],
+    "cedax": [
+      "cidex"
+    ],
+    "healon": [
+      "hyalgan"
+    ],
+    "levocarnitine": [
+      "levetiracetam"
+    ],
+    "methimazole": [
+      "methazolamide",
+      "metolazone"
+    ],
+    "hbig": [
+      "babybig"
+    ],
+    "gabapentin": [
+      "gemfibrozil"
+    ],
+    "vinblastine": [
+      "vincristine"
+    ],
+    "zyloprim": [
+      "zolpidem"
+    ],
+    "amphotericin b": [
+      "abelcet",
+      "ambisome",
+      "amphotericin b liposomal"
+    ],
+    "levemir": [
+      "lovenox"
+    ],
+    "casodex": [
+      "kapidex"
+    ],
+    "vincristine": [
+      "vinblastine"
+    ],
+    "ultracet": [
+      "duricef"
+    ],
+    "novolin": [
+      "humulin",
+      "novolog"
+    ],
+    "focalin": [
+      "focalgin b"
+    ],
+    "terbinafine": [
+      "terbutaline"
+    ],
+    "letairis": [
+      "letaris"
+    ],
+    "rapaflo": [
+      "rapamune"
+    ],
+    "lunesta": [
+      "neulasta"
+    ],
+    "zocor": [
+      "cozaar",
+      "zyrtec"
+    ],
+    "oxybutynin": [
+      "oxycodone",
+      "oxycontin",
+      "oxymorphone"
+    ],
+    "trazodone": [
+      "tramadol"
+    ],
+    "tacrolimus": [
+      "tamsulosin"
+    ],
+    "depakote er": [
+      "depakote"
+    ],
+    "topamax": [
+      "toprol xl"
+    ],
+    "carbamazepine": [
+      "oxcarbazepine"
+    ],
+    "rifapentine": [
+      "rifabutin"
+    ],
+    "vfend": [
+      "venofer",
+      "vimpat"
+    ],
+    "indinavir": [
+      "denavir"
+    ],
+    "prandin": [
+      "avandia"
+    ],
+    "heparin": [
+      "hespan"
+    ],
+    "sirolimus": [
+      "silodosin"
+    ],
+    "neratinib": [
+      "nilotinib",
+      "niraparib"
+    ],
+    "infliximab": [
+      "rituximab"
+    ],
+    "oxycontin": [
+      "ms contin",
+      "oxybutynin",
+      "oxycodone",
+      "oxymorphone",
+      "oxytocin"
+    ],
+    "intuniv": [
+      "invega"
+    ],
+    "allegra anti itch cream": [
+      "allegra"
+    ],
+    "ponatinib": [
+      "pazopanib"
+    ],
+    "trental": [
+      "tegretol"
+    ],
+    "allegra": [
+      "allegra anti itch cream",
+      "viagra"
+    ],
+    "plendil": [
+      "isordil"
+    ],
+    "buspirone": [
+      "bupropion"
+    ],
+    "oxymorphone": [
+      "hydromorphone",
+      "oxybutynin",
+      "oxycodone",
+      "oxycontin"
+    ],
+    "neupogen": [
+      "neumega"
+    ],
+    "procan sr": [
+      "procanbid"
+    ],
+    "idarubicin": [
+      "daunorubicin",
+      "doxorubicin",
+      "idarucizumab"
+    ],
+    "slynd": [
+      "syeda"
+    ],
+    "valcyte": [
+      "valtrex"
+    ],
+    "valacyclovir": [
+      "valganciclovir"
+    ],
+    "glipizide": [
+      "glyburide"
+    ],
+    "ketalar": [
+      "ketorolac"
+    ],
+    "methyltestosterone": [
+      "medroxyprogesterone",
+      "methylprednisolone"
+    ],
+    "zolpidem": [
+      "zyloprim"
+    ],
+    "volumen": [
+      "voluven"
+    ],
+    "viokase": [
+      "viokase 8"
+    ],
+    "morphine non concentrated oral liquid": [
+      "morphine oral liquid concentrate"
+    ],
+    "activase": [
+      "cathflo activase",
+      "tnkase"
+    ],
+    "alkeran": [
+      "leukeran",
+      "myleran"
+    ],
+    "loxitane": [
+      "fluoxetine",
+      "lexapro",
+      "soriatane"
+    ],
+    "dronabinol": [
+      "droperidol"
+    ],
+    "neutra phos k": [
+      "k phos neutral"
+    ],
+    "visionblue": [
+      "methylene blue"
+    ],
+    "ortho tri cyclen lo": [
+      "ortho tri cyclen"
+    ],
+    "precose": [
+      "precare"
+    ],
+    "pralatrexate": [
+      "pemetrexed"
+    ],
+    "mevacor": [
+      "benicar"
+    ],
+    "duloxetine": [
+      "dexilant",
+      "fluoxetine",
+      "paroxetine"
+    ],
+    "zegerid": [
+      "zestril"
+    ],
+    "seroquel": [
+      "desyrel",
+      "seroquel xr",
+      "serzone",
+      "sinequan"
+    ],
+    "protain xl": [
+      "procardia xl"
+    ],
+    "fomepizole": [
+      "omeprazole"
+    ],
+    "daptomycin": [
+      "dactinomycin"
+    ],
+    "zyprexa": [
+      "celexa",
+      "reprexain",
+      "zestril",
+      "zyrtec"
+    ],
+    "prenexa": [
+      "ranexa"
+    ],
+    "spravato": [
+      "steglatro"
+    ],
+    "ceftriaxone": [
+      "cefazolin",
+      "cefotetan",
+      "cefoxitin",
+      "ceftazidime"
+    ],
+    "mtx patch": [
+      "methotrexate",
+      "mitoxantrone"
+    ],
+    "doxorubicin": [
+      "daunorubicin",
+      "doxorubicin liposomal",
+      "idarubicin"
+    ],
+    "enablex": [
+      "effexor xr"
+    ],
+    "ethmozine": [
+      "ethambutol"
+    ],
+    "trexall": [
+      "paxil"
+    ],
+    "hyalgan": [
+      "healon"
+    ],
+    "briviact": [
+      "brilinta"
+    ],
+    "cabenuva": [
+      "cabotegravir"
+    ],
+    "fortical": [
+      "foradil"
+    ],
+    "tiazac": [
+      "ziac"
+    ],
+    "sunitinib": [
+      "sorafenib"
+    ],
+    "migalastat": [
+      "miglustat"
+    ],
+    "potassium acetate": [
+      "sodium acetate"
+    ],
+    "lovenox": [
+      "levemir"
+    ],
+    "alprazolam": [
+      "clonazepam",
+      "lorazepam"
+    ],
+    "benazepril": [
+      "benadryl"
+    ],
+    "effexor": [
+      "effexor xr"
+    ],
+    "hydroxyzine": [
+      "hydralazine",
+      "hydrochlorothiazide",
+      "hydrogesic",
+      "hydromorphone",
+      "hydroxyurea"
+    ],
+    "adderall xr": [
+      "adderall"
+    ],
+    "bicitra": [
+      "polycitra"
+    ],
+    "dilacor xr": [
+      "pilocar"
+    ],
+    "claritin": [
+      "clarispray",
+      "claritin eye"
+    ],
+    "mitomycin": [
+      "mitoxantrone"
+    ],
+    "taxotere": [
+      "taxol"
+    ],
+    "novolog flexpen": [
+      "novolog mix 70 30 flexpen"
+    ],
+    "robinul": [
+      "reminyl"
+    ],
+    "viokase 8": [
+      "viokase"
+    ],
+    "sertraline": [
+      "cetirizine",
+      "soriatane"
+    ],
+    "dilaudid": [
+      "dilaudid 5"
+    ],
+    "sudafed 12 hour": [
+      "sudafed 12 hour pressure pain"
+    ],
+    "levofloxacin": [
+      "levetiracetam"
+    ],
+    "tylenol": [
+      "tylenol pm"
+    ],
+    "zemplar": [
+      "zemuron"
+    ],
+    "proscar": [
+      "prograf",
+      "provera"
+    ],
+    "mucinex d": [
+      "mucinex dm"
+    ],
+    "ilaris": [
+      "ilumya"
+    ],
+    "atorvastatin": [
+      "atomoxetine"
+    ],
+    "matulane": [
+      "materna"
+    ],
+    "ticlid": [
+      "tequin"
+    ],
+    "norvasc": [
+      "navane"
+    ],
+    "lente": [
+      "lantus"
+    ],
+    "azathioprine": [
+      "azacitidine"
+    ],
+    "aripiprazole": [
+      "proton pump inhibitors",
+      "rabeprazole"
+    ],
+    "doxil": [
+      "paxil"
+    ],
+    "pyridoxine": [
+      "pralidoxime",
+      "pyridium",
+      "pyridostigmine"
+    ],
+    "amicar": [
+      "omacor"
+    ],
+    "tequin": [
+      "tegretol",
+      "ticlid"
+    ],
+    "yasmin": [
+      "yaz"
+    ],
+    "lasix": [
+      "luvox",
+      "wakix"
+    ],
+    "azacitidine": [
+      "azathioprine"
+    ],
+    "vigabatrin": [
+      "dabigatran"
+    ],
+    "renagel": [
+      "renvela"
+    ],
+    "narcan": [
+      "norcuron"
+    ],
+    "bio t gel": [
+      "t gel"
+    ],
+    "nuedexta": [
+      "neulasta"
+    ],
+    "roxicodone intensol": [
+      "roxanol"
+    ],
+    "sitagliptin": [
+      "saxagliptin",
+      "sumatriptan"
+    ],
+    "sarafem": [
+      "serophene"
+    ],
+    "fluzone high dose quadrivalent": [
+      "fluzone quadrivalent"
+    ],
+    "hydrocodone": [
+      "oxycodone"
+    ],
+    "colazal": [
+      "clozaril"
+    ],
+    "t gel": [
+      "bio t gel"
+    ],
+    "mitoxantrone": [
+      "mitomycin",
+      "mtx patch"
+    ],
+    "rifampin": [
+      "rifamate",
+      "rifaximin"
+    ],
+    "probenecid": [
+      "procanbid"
+    ],
+    "acetazolamide": [
+      "acetaminophen",
+      "acetohexamide"
+    ],
+    "niraparib": [
+      "neratinib",
+      "nilotinib"
+    ],
+    "tambocor": [
+      "pamelor"
+    ],
+    "mifepristone": [
+      "misoprostol"
+    ],
+    "colace": [
+      "cozaar"
+    ],
+    "sodium acetate": [
+      "potassium acetate"
+    ],
+    "granulex": [
+      "regranex"
+    ],
+    "edetate calcium disodium": [
+      "edetate disodium"
+    ],
+    "oxcarbazepine": [
+      "carbamazepine",
+      "oxaprozin"
+    ],
+    "pavulon": [
+      "peptavlon"
+    ],
+    "testoderm": [
+      "testoderm tts",
+      "testoderm with adhesive"
+    ],
+    "azilect": [
+      "aricept"
+    ],
+    "romiplostim": [
+      "romidepsin"
+    ],
+    "noroxin": [
+      "neurontin"
+    ],
+    "pitressin": [
+      "pitocin"
+    ],
+    "dioval": [
+      "diovan"
+    ],
+    "dabigatran": [
+      "vigabatrin"
+    ],
+    "mephyton": [
+      "methadone"
+    ],
+    "denavir": [
+      "indinavir"
+    ],
+    "linaclotide": [
+      "linagliptin"
+    ],
+    "wakix": [
+      "lasix"
+    ],
+    "miglustat": [
+      "migalastat"
+    ],
+    "floranex": [
+      "florinef"
+    ],
+    "zeniquin": [
+      "sinequan"
+    ],
+    "docetaxel": [
+      "paclitaxel"
+    ],
+    "klonopin": [
+      "clonidine"
+    ],
+    "metyrosine": [
+      "metyrapone"
+    ],
+    "cardene": [
+      "cardizem"
+    ],
+    "cardizem": [
+      "cardene"
+    ],
+    "natru vent": [
+      "atrovent"
+    ],
+    "bayrab": [
+      "bayhep b",
+      "bayrho d"
+    ],
+    "cubicin rf": [
+      "cubicin"
+    ],
+    "fluvoxamine": [
+      "flavoxate",
+      "fluphenazine"
+    ],
+    "arixtra": [
+      "arista ah"
+    ],
+    "flovent": [
+      "flonase"
+    ],
+    "influenza virus vaccine": [
+      "flumazenil",
+      "perflutren lipid microspheres",
+      "tuberculin purified protein derivative"
+    ],
+    "zyrtec d": [
+      "zyrtec"
+    ],
+    "anacin": [
+      "anacin 3"
+    ],
+    "prograf": [
+      "proscar",
+      "prozac"
+    ],
+    "darvocet": [
+      "percocet"
+    ],
+    "risperdal": [
+      "restoril",
+      "ropinirole"
+    ],
+    "mucinex allergy": [
+      "mucinex"
+    ],
+    "pralidoxime": [
+      "pyridoxine"
+    ],
+    "norpramin": [
+      "normodyne"
+    ],
+    "xeloda": [
+      "xenical"
+    ],
+    "pristiq": [
+      "prilosec"
+    ],
+    "bayrho d": [
+      "bayhep b",
+      "bayrab"
+    ],
+    "procet": [
+      "percocet"
+    ],
+    "adderall": [
+      "adderall xr",
+      "inderal"
+    ],
+    "inspra": [
+      "spiriva"
+    ],
+    "zostrix": [
+      "zovirax"
+    ],
+    "cometriq": [
+      "coenzyme q10"
+    ],
+    "amaryl": [
+      "reminyl"
+    ],
+    "comvax": [
+      "recombivax hb"
+    ],
+    "clarispray": [
+      "claritin"
+    ],
+    "amantadine": [
+      "amiodarone"
+    ],
+    "coenzyme q10": [
+      "cometriq"
+    ],
+    "flumazenil": [
+      "influenza virus vaccine"
+    ],
+    "edetate disodium": [
+      "edetate calcium disodium"
+    ],
+    "amlodipine": [
+      "amiloride"
+    ],
+    "darvon": [
+      "diovan"
+    ],
+    "nexavar": [
+      "nexium"
+    ],
+    "prilosec": [
+      "pristiq",
+      "prozac"
+    ],
+    "rozerem": [
+      "razadyne",
+      "remeron"
+    ],
+    "peptavlon": [
+      "pavulon"
+    ],
+    "humulin": [
+      "humalog",
+      "novolin"
+    ],
+    "panlor dc": [
+      "pamelor"
+    ],
+    "ritalin": [
+      "ritodrine"
+    ],
+    "tramadol": [
+      "trazodone"
+    ],
+    "tretinoin": [
+      "isotretinoin"
+    ],
+    "paroxetine": [
+      "duloxetine",
+      "fluoxetine",
+      "piroxicam"
+    ],
+    "effexor xr": [
+      "effexor",
+      "enablex"
+    ],
+    "dactinomycin": [
+      "daptomycin"
+    ],
+    "linagliptin": [
+      "linaclotide"
+    ],
+    "desmopressin": [
+      "vasopressin"
+    ],
+    "menomune": [
+      "menactra"
+    ],
+    "phenobarbital": [
+      "pentobarbital"
+    ],
+    "tizanidine": [
+      "nizatidine",
+      "tiagabine"
+    ],
+    "blisovi fe 1 20": [
+      "blisovi 24 fe"
+    ],
+    "liothyronine": [
+      "levothyroxine"
+    ],
+    "dexmedetomidine": [
+      "dexamethasone"
+    ],
+    "daptacel": [
+      "adacel"
+    ],
+    "proton pump inhibitors": [
+      "aripiprazole"
+    ],
+    "doribax": [
+      "zovirax"
+    ],
+    "fluzone quadrivalent": [
+      "fluzone high dose quadrivalent"
+    ],
+    "nexium": [
+      "nexavar"
+    ],
+    "anticoagulant citrate dextrose solution formula a": [
+      "anticoagulant sodium citrate solution"
+    ],
+    "rifater": [
+      "rifadin"
+    ],
+    "clonidine": [
+      "clonazepam",
+      "clozapine",
+      "klonopin"
+    ],
+    "cubicin": [
+      "cubicin rf"
+    ],
+    "tresiba": [
+      "tanzeum",
+      "tarceva",
+      "toujeo",
+      "tradjenta",
+      "trulicity"
+    ],
+    "atrovent": [
+      "natru vent"
+    ],
+    "talquetamab tgvs": [
+      "teclistamab cqyv"
+    ],
+    "humalog": [
+      "humulin",
+      "novolog"
+    ],
+    "rifadin": [
+      "rifater"
+    ],
+    "zetia": [
+      "bextra",
+      "zebeta",
+      "zestril"
+    ],
+    "lamotrigine": [
+      "labetalol",
+      "lamivudine",
+      "levetiracetam",
+      "levothyroxine"
+    ],
+    "levothyroxine": [
+      "lamotrigine",
+      "lanoxin",
+      "liothyronine"
+    ],
+    "neurontin": [
+      "motrin",
+      "noroxin"
+    ],
+    "lamivudine": [
+      "lamotrigine"
+    ],
+    "dynacirc": [
+      "dynacin"
+    ],
+    "iodine": [
+      "lodine"
+    ],
+    "nicardipine": [
+      "nifedipine",
+      "nimodipine"
+    ],
+    "bicillin l a": [
+      "bicillin c r"
+    ],
+    "acetic acid for irrigation": [
+      "glacial acetic acid"
+    ],
+    "flonase": [
+      "flovent"
+    ],
+    "florastor": [
+      "florinef"
+    ],
+    "pneumococcal polyvalent vaccine": [
+      "pneumococcal 7 valent vaccine"
+    ],
+    "cathflo activase": [
+      "activase"
+    ],
+    "celexa": [
+      "celebrex",
+      "cerebyx",
+      "zyprexa"
+    ],
+    "carvedilol": [
+      "captopril"
+    ],
+    "vosol": [
+      "vexol"
+    ],
+    "dilaudid 5": [
+      "dilaudid"
+    ],
+    "sandostatin": [
+      "sandimmune"
+    ],
+    "opium tincture": [
+      "paregoric"
+    ],
+    "ethionamide": [
+      "ethosuximide"
+    ],
+    "apresoline": [
+      "priscoline"
+    ],
+    "zovirax": [
+      "doribax",
+      "zostrix",
+      "zyvox"
+    ],
+    "florinef": [
+      "floranex",
+      "florastor"
+    ],
+    "buprenorphine": [
+      "hydromorphone"
+    ],
+    "toujeo": [
+      "tanzeum",
+      "tradjenta",
+      "tresiba",
+      "trulicity"
+    ],
+    "fanapt": [
+      "xanax"
+    ],
+    "precare": [
+      "precose"
+    ],
+    "neumega": [
+      "neulasta",
+      "neupogen"
+    ],
+    "vesanoid": [
+      "vesicare"
+    ],
+    "arista ah": [
+      "arixtra"
+    ],
+    "abelcet": [
+      "amphotericin b"
+    ],
+    "t pa": [
+      "tnkase"
+    ],
+    "vioxx": [
+      "zyvox"
+    ],
+    "diabeta": [
+      "zebeta"
+    ],
+    "elvitegravir cobicistat emtricitabine and tenofovir disoproxil fumarate": [
+      "elvitegravir cobicistat emtricitabine and tenofovir alafenamide"
+    ],
+    "novolog mix 70 30": [
+      "novolin 70 30"
+    ],
+    "thrombin topical": [
+      "thrombate iii"
+    ],
+    "foltx": [
+      "folex"
+    ],
+    "nifedipine": [
+      "nicardipine",
+      "nimodipine"
+    ],
+    "ribavirin": [
+      "riboflavin"
+    ],
+    "blisovi 24 fe": [
+      "blisovi fe 1 20"
+    ],
+    "humalog mix 75 25": [
+      "humulin 70 30"
+    ],
+    "rasageline": [
+      "repaglinide"
+    ],
+    "tetanus diptheria toxoid": [
+      "tuberculin purified protein derivative"
+    ],
+    "penicillamine": [
+      "penicillin"
+    ],
+    "romazicon": [
+      "rocuronium"
+    ],
+    "purinethol": [
+      "propylthiouracil"
+    ],
+    "humapen memoir": [
+      "humira pen"
+    ],
+    "kadian": [
+      "kapidex"
+    ],
+    "paclitaxel": [
+      "docetaxel",
+      "paclitaxel protein bound particles"
+    ],
+    "isotretinoin": [
+      "tretinoin"
+    ],
+    "kuric": [
+      "carac"
+    ],
+    "tuberculin purified protein derivative": [
+      "influenza virus vaccine",
+      "tetanus diptheria toxoid"
+    ],
+    "chlorpropamide": [
+      "chlorpromazine"
+    ],
+    "novolog": [
+      "humalog",
+      "novolin"
+    ],
+    "sandimmune": [
+      "sandostatin"
+    ],
+    "teclistamab cqyv": [
+      "talquetamab tgvs"
+    ],
+    "foradil": [
+      "fortical",
+      "toradol"
+    ],
+    "cidex": [
+      "cedax"
+    ],
+    "hydroxychloroquine": [
+      "hydrochlorothiazide",
+      "hydroxyurea"
+    ],
+    "zyrtec": [
+      "lipitor",
+      "zantac",
+      "zerit",
+      "zocor",
+      "zyprexa",
+      "zyrtec d",
+      "zyrtec itchy eye drops"
+    ],
+    "tnkase": [
+      "activase",
+      "t pa"
+    ],
+    "physostigmine": [
+      "pyridostigmine"
+    ],
+    "coumadin": [
+      "avandia",
+      "cardura"
+    ],
+    "ambien": [
+      "ambrisentan"
+    ],
+    "guaifenesin": [
+      "guanfacine"
+    ],
+    "metoprolol tartrate": [
+      "metoprolol succinate"
+    ],
+    "zemuron": [
+      "zemplar"
+    ],
+    "pazopanib": [
+      "ponatinib"
+    ],
+    "rituxan hycela": [
+      "rituxan"
+    ],
+    "betaine": [
+      "betaine hcl"
+    ],
+    "motrin": [
+      "neurontin"
+    ],
+    "dexmethylphenidate": [
+      "dexmethylphenidate mixed salts",
+      "methadone"
+    ],
+    "humulin r u 500": [
+      "humulin r u 100"
+    ],
+    "levoleucovorin": [
+      "leucovorin calcium"
+    ],
+    "hydralazine": [
+      "hydrochlorothiazide",
+      "hydromorphone",
+      "hydroxyzine"
+    ],
+    "droperidol": [
+      "dronabinol"
+    ],
+    "trophamine": [
+      "tromethamine"
+    ],
+    "viramune": [
+      "viracept"
+    ],
+    "tricor": [
+      "tracleer"
+    ],
+    "betaine hcl": [
+      "betaine"
+    ],
+    "methylphenidate": [
+      "methadone"
+    ],
+    "glyburide": [
+      "glipizide"
+    ],
+    "b o": [
+      "beano"
+    ],
+    "avinza": [
+      "evista",
+      "invanz"
+    ],
+    "lovaza": [
+      "lorazepam"
+    ],
+    "actos": [
+      "actonel"
+    ],
+    "yaz": [
+      "yasmin"
+    ],
+    "ado trastuzumab emtansine": [
+      "trastuzumab"
+    ],
+    "factor ix complex vapor heated": [
+      "coagulation factor ix"
+    ],
+    "platinol": [
+      "patanol"
+    ],
+    "perflutren lipid microspheres": [
+      "influenza virus vaccine"
+    ],
+    "ropinirole": [
+      "risperdal",
+      "risperidone"
+    ],
+    "claritin d 24": [
+      "claritin d"
+    ],
+    "alfentanil": [
+      "fentanyl",
+      "sufentanil"
+    ],
+    "avandia": [
+      "coumadin",
+      "prandin"
+    ],
+    "aggrastat": [
+      "argatroban"
+    ],
+    "femhrt": [
+      "femara"
+    ],
+    "recombivax hb": [
+      "comvax"
+    ],
+    "nalbuphine": [
+      "naloxone"
+    ],
+    "seroquel xr": [
+      "seroquel"
+    ],
+    "latuda": [
+      "lantus"
+    ],
+    "atomoxetine": [
+      "atorvastatin"
+    ],
+    "zonegran": [
+      "sinequan"
+    ],
+    "methergine": [
+      "brethine"
+    ],
+    "ambisome": [
+      "amphotericin b"
+    ],
+    "pilocar": [
+      "dilacor xr"
+    ],
+    "zestril": [
+      "zegerid",
+      "zetia",
+      "zyprexa"
+    ],
+    "ephedrine": [
+      "epinephrine"
+    ],
+    "lamisil": [
+      "lamictal"
+    ],
+    "ketamine": [
+      "ketorolac"
+    ],
+    "dexamethasone": [
+      "dexmedetomidine"
+    ],
+    "cefuroxime": [
+      "sulfasalazine"
+    ],
+    "ketorolac": [
+      "ketalar",
+      "ketamine",
+      "methadone"
+    ],
+    "cabotegravir": [
+      "cabenuva"
+    ],
+    "kaletra": [
+      "keppra"
+    ],
+    "toprol xl": [
+      "topamax"
+    ],
+    "sinemet": [
+      "janumet"
+    ],
+    "jantoven": [
+      "janumet",
+      "januvia"
+    ],
+    "tylenol pm": [
+      "tylenol"
+    ],
+    "lotronex": [
+      "protonix"
+    ],
+    "pitocin": [
+      "pitressin"
+    ],
+    "tolazamide": [
+      "tolbutamide"
+    ],
+    "metronidazole": [
+      "metformin"
+    ],
+    "diphenhydramine": [
+      "dimenhydrinate"
+    ],
+    "colchicine": [
+      "cortrosyn"
+    ],
+    "kwell": [
+      "qwell"
+    ],
+    "paxil": [
+      "doxil",
+      "plavix",
+      "taxol",
+      "trexall"
+    ],
+    "metadate": [
+      "methadone"
+    ],
+    "metyrapone": [
+      "metyrosine"
+    ],
+    "amiloride": [
+      "amlodipine"
+    ],
+    "aldara": [
+      "alora"
+    ],
+    "keppra": [
+      "kaletra",
+      "keflex"
+    ],
+    "olanzapine": [
+      "quetiapine"
+    ],
+    "hydrochlorothiazide": [
+      "hydralazine",
+      "hydroxychloroquine",
+      "hydroxyzine"
+    ],
+    "bayhep b": [
+      "bayrab",
+      "bayrho d"
+    ],
+    "hydrogesic": [
+      "hydroxyzine"
+    ],
+    "aciphex": [
+      "accupril",
+      "aricept"
+    ],
+    "mucomyst": [
+      "mucinex"
+    ],
+    "quetiapine": [
+      "olanzapine"
+    ],
+    "letaris": [
+      "letairis"
+    ],
+    "thiamine": [
+      "thalomid"
+    ],
+    "thalomid": [
+      "thiamine"
+    ],
+    "procardia xl": [
+      "protain xl"
+    ],
+    "glacial acetic acid": [
+      "acetic acid for irrigation"
+    ],
+    "diazepam": [
+      "diltiazem"
+    ],
+    "ritodrine": [
+      "ritalin"
+    ],
+    "metadate cd": [
+      "metadate er"
+    ],
+    "engerix b adult": [
+      "engerix b pediatric adolescent"
+    ],
+    "methylene blue": [
+      "visionblue"
+    ],
+    "dopamine": [
+      "dobutamine"
+    ],
+    "inderal": [
+      "adderall"
+    ],
+    "sonata": [
+      "soriatane"
+    ],
+    "quinine": [
+      "quinidine"
+    ],
+    "ritalin la": [
+      "ritalin sr"
+    ],
+    "morphine": [
+      "hydromorphone"
+    ],
+    "daunorubicin liposomal": [
+      "daunorubicin"
+    ],
+    "neostigmine": [
+      "neo synephrine"
+    ],
+    "qwell": [
+      "kwell"
+    ],
+    "maalox": [
+      "maalox total stomach relief"
+    ],
+    "zantac 360": [
+      "zantac"
+    ],
+    "coagulation factor ix": [
+      "factor ix complex vapor heated"
+    ],
+    "priscoline": [
+      "apresoline"
+    ],
+    "ditropan": [
+      "diprivan"
+    ],
+    "folex": [
+      "foltx"
+    ],
+    "brevibloc": [
+      "brevital"
+    ],
+    "os cal": [
+      "asacol"
+    ],
+    "diamox": [
+      "diabenese"
+    ],
+    "rituxan": [
+      "rituxan hycela"
+    ],
+    "trulicity": [
+      "tanzeum",
+      "toujeo",
+      "tradjenta",
+      "tresiba"
+    ],
+    "enbrel": [
+      "levbid"
+    ],
+    "fentanyl": [
+      "alfentanil",
+      "sufentanil"
+    ],
+    "antivert": [
+      "axert"
+    ],
+    "trastuzumab": [
+      "ado trastuzumab emtansine"
+    ],
+    "zelapar": [
+      "zyprexa zydis"
+    ],
+    "oxytocin": [
+      "oxycontin"
+    ],
+    "fioricet": [
+      "fiorinal"
+    ],
+    "xanax": [
+      "fanapt",
+      "tenex",
+      "zantac"
+    ],
+    "nystatin": [
+      "hmg coa reductase inhibitors"
+    ],
+    "materna": [
+      "matulane"
+    ],
+    "babybig": [
+      "hbig"
+    ],
+    "tegretol": [
+      "tegretol xr",
+      "tequin",
+      "trental"
+    ],
+    "invanz": [
+      "avinza"
+    ],
+    "omacor": [
+      "amicar"
+    ],
+    "tradjenta": [
+      "tanzeum",
+      "toujeo",
+      "tresiba",
+      "trulicity"
+    ],
+    "idarucizumab": [
+      "idarubicin"
+    ],
+    "axitinib": [
+      "apixaban"
+    ],
+    "zerit": [
+      "zyrtec"
+    ],
+    "mirapex": [
+      "miralax"
+    ],
+    "folinic acid": [
+      "folic acid"
+    ],
+    "midodrine": [
+      "midrin"
+    ],
+    "cefotetan": [
+      "cefazolin",
+      "cefoxitin",
+      "ceftazidime",
+      "ceftriaxone"
+    ],
+    "farxiga": [
+      "fetzima"
+    ],
+    "orencia": [
+      "oracea"
+    ],
+    "zyban": [
+      "diovan"
+    ],
+    "brethine": [
+      "methergine"
+    ],
+    "fiorinal": [
+      "fioricet"
+    ],
+    "hydroxyurea": [
+      "hydroxychloroquine",
+      "hydroxyzine",
+      "ure na"
+    ],
+    "levetiracetam": [
+      "lamotrigine",
+      "levocarnitine",
+      "levofloxacin"
+    ],
+    "tarceva": [
+      "tresiba"
+    ],
+    "acetohexamide": [
+      "acetazolamide"
+    ],
+    "covera hs": [
+      "covaryx hs"
+    ],
+    "neo synephrine": [
+      "neostigmine"
+    ],
+    "methazolamide": [
+      "methimazole",
+      "metolazone"
+    ],
+    "claritin eye": [
+      "claritin"
+    ],
+    "k phos neutral": [
+      "neutra phos k"
+    ],
+    "cymbalta": [
+      "symbyax"
+    ],
+    "folic acid": [
+      "folinic acid"
+    ],
+    "tiagabine": [
+      "tizanidine"
+    ],
+    "percocet": [
+      "darvocet",
+      "procet"
+    ],
+    "escitalopram": [
+      "citalopram"
+    ],
+    "zyvox": [
+      "vioxx",
+      "zovirax"
+    ],
+    "covaryx hs": [
+      "covera hs"
+    ],
+    "minoxidil": [
+      "minoxidin"
+    ],
+    "glucotrol": [
+      "glycotrol"
+    ],
+    "chlorpromazine": [
+      "chlordiazepoxide",
+      "chlorpropamide"
+    ],
+    "protamine": [
+      "protonix"
+    ],
+    "voluven": [
+      "volumen"
+    ],
+    "risperidone": [
+      "ropinirole"
+    ],
+    "amikin": [
+      "kineret"
+    ],
+    "januvia": [
+      "enjuvia",
+      "jantoven",
+      "janumet"
+    ],
+    "omeprazole": [
+      "fomepizole"
+    ],
+    "codeine": [
+      "lodine"
+    ],
+    "lithium carbonate": [
+      "lanthanum carbonate"
+    ],
+    "apixaban": [
+      "axitinib"
+    ],
+    "polyethylene glycol": [
+      "propylene glycol"
+    ],
+    "hmg coa reductase inhibitors": [
+      "nystatin"
+    ],
+    "tanzeum": [
+      "toujeo",
+      "tradjenta",
+      "tresiba",
+      "trulicity"
+    ],
+    "cetirizine": [
+      "sertraline",
+      "stavudine"
+    ],
+    "pradaxa": [
+      "plavix"
+    ],
+    "estratest hs": [
+      "estratest"
+    ],
+    "metformin": [
+      "metronidazole"
+    ],
+    "ranexa": [
+      "prenexa"
+    ],
+    "zyprexa zydis": [
+      "zelapar"
+    ],
+    "hydrea": [
+      "lyrica"
+    ],
+    "apidra": [
+      "spiriva"
+    ],
+    "elvitegravir cobicistat emtricitabine and tenofovir alafenamide": [
+      "elvitegravir cobicistat emtricitabine and tenofovir disoproxil fumarate"
+    ],
+    "carboplatin": [
+      "cisplatin"
+    ],
+    "pyridostigmine": [
+      "physostigmine",
+      "pyridoxine"
+    ],
+    "ethambutol": [
+      "ethmozine"
+    ],
+    "testoderm tts": [
+      "testoderm",
+      "testoderm with adhesive"
+    ],
+    "adacel": [
+      "daptacel"
+    ],
+    "aricept": [
+      "aciphex",
+      "azilect"
+    ],
+    "anticoagulant sodium citrate solution": [
+      "anticoagulant citrate dextrose solution formula a"
+    ],
+    "ilumya": [
+      "ilaris"
+    ],
+    "paregoric": [
+      "opium tincture"
+    ],
+    "vzig": [
+      "varivax"
+    ],
+    "citalopram": [
+      "escitalopram"
+    ],
+    "anzemet": [
+      "avandamet"
+    ],
+    "naloxone": [
+      "lanoxin",
+      "nalbuphine"
+    ],
+    "levaquin": [
+      "lariam"
+    ],
+    "doxorubicin liposomal": [
+      "doxorubicin"
+    ],
+    "lipitor": [
+      "loniten",
+      "zyrtec"
+    ],
+    "lupron depot 3 month": [
+      "lupron depot ped"
+    ],
+    "visicol": [
+      "vicodin"
+    ],
+    "alora": [
+      "aldara"
+    ],
+    "disopyramide": [
+      "desipramine"
+    ],
+    "altocor": [
+      "advicor"
+    ],
+    "methotrexate": [
+      "metolazone",
+      "mtx patch"
+    ],
+    "norcuron": [
+      "narcan"
+    ],
+    "procanbid": [
+      "probenecid",
+      "procan sr"
+    ],
+    "lantus": [
+      "latuda",
+      "lente"
+    ],
+    "rocuronium": [
+      "romazicon"
+    ],
+    "sudafed 12 hour pressure pain": [
+      "sudafed 12 hour"
+    ],
+    "argatroban": [
+      "aggrastat",
+      "orgaran"
+    ],
+    "bextra": [
+      "zetia"
+    ],
+    "zebeta": [
+      "diabeta",
+      "zetia"
+    ],
+    "diltiazem": [
+      "diazepam"
+    ],
+    "razadyne": [
+      "rozerem"
+    ],
+    "vimpat": [
+      "venofer",
+      "vfend"
+    ],
+    "morphine oral liquid concentrate": [
+      "morphine non concentrated oral liquid"
+    ],
+    "silodosin": [
+      "sirolimus"
+    ],
+    "celebrex": [
+      "celexa",
+      "cerebyx"
+    ],
+    "soriatane": [
+      "loxitane",
+      "sertraline",
+      "sonata"
+    ],
+    "advair": [
+      "advicor"
+    ],
+    "gemfibrozil": [
+      "gabapentin"
+    ],
+    "bupivacaine": [
+      "ropivacaine"
+    ],
+    "clozapine": [
+      "clonazepam",
+      "clonidine"
+    ],
+    "isordil": [
+      "plendil"
+    ],
+    "vesicare": [
+      "vesanoid",
+      "vessel care"
+    ],
+    "prozac": [
+      "prilosec",
+      "prograf",
+      "provera"
+    ],
+    "ceftazidime": [
+      "cefazolin",
+      "cefotetan",
+      "cefoxitin",
+      "ceftriaxone"
+    ],
+    "dobutamine": [
+      "dopamine"
+    ],
+    "metoprolol succinate": [
+      "metoprolol tartrate"
+    ],
+    "evista": [
+      "avinza"
+    ],
+    "claritin d": [
+      "claritin d 24"
+    ],
+    "engerix b pediatric adolescent": [
+      "engerix b adult"
+    ],
+    "prednisone": [
+      "prednisolone"
+    ],
+    "epinephrine": [
+      "ephedrine"
+    ],
+    "ethaverine": [
+      "etravirine"
+    ],
+    "vexol": [
+      "vosol"
+    ],
+    "varivax": [
+      "vzig"
+    ],
+    "videx": [
+      "bidex"
+    ],
+    "guanfacine": [
+      "guaifenesin"
+    ],
+    "cardura": [
+      "coumadin"
+    ],
+    "asacol": [
+      "os cal"
+    ],
+    "ranitidine": [
+      "rimantadine"
+    ],
+    "bicillin c r": [
+      "bicillin l a"
+    ],
+    "diabenese": [
+      "diamox"
+    ],
+    "cefazolin": [
+      "cefotetan",
+      "cefoxitin",
+      "ceftazidime",
+      "ceftriaxone"
+    ],
+    "desipramine": [
+      "disopyramide"
+    ],
+    "humulin r u 100": [
+      "humulin r u 500"
+    ],
+    "novolog mix 70 30 flexpen": [
+      "novolog flexpen"
+    ],
+    "roxanol": [
+      "roxicet",
+      "roxicodone intensol"
+    ],
+    "actonel": [
+      "actos"
+    ],
+    "zolmitriptan": [
+      "sumatriptan"
+    ],
+    "rifamate": [
+      "rifampin"
+    ],
+    "durasal": [
+      "durezol"
+    ],
+    "lariam": [
+      "levaquin"
+    ],
+    "rapamune": [
+      "rapaflo"
+    ],
+    "fluphenazine": [
+      "fluvoxamine"
+    ],
+    "methylprednisolone": [
+      "medroxyprogesterone",
+      "methyltestosterone"
+    ],
+    "cozaar": [
+      "colace",
+      "zocor"
+    ],
+    "invega": [
+      "intuniv"
+    ],
+    "solu medrol": [
+      "depo medrol",
+      "solu cortef"
+    ],
+    "pexeva": [
+      "lexiva"
+    ],
+    "rimantadine": [
+      "ranitidine"
+    ],
+    "navane": [
+      "norvasc"
+    ],
+    "duricef": [
+      "ultracet"
+    ],
+    "tolbutamide": [
+      "tolazamide"
+    ],
+    "etravirine": [
+      "ethaverine"
+    ],
+    "benadryl": [
+      "benazepril"
+    ],
+    "roxicet": [
+      "roxanol"
+    ],
+    "dynacin": [
+      "dynacirc"
+    ],
+    "oracea": [
+      "orencia"
+    ],
+    "misoprostol": [
+      "mifepristone"
+    ],
+    "ms contin": [
+      "oxycontin"
+    ],
+    "taxol": [
+      "paxil",
+      "taxotere"
+    ],
+    "normodyne": [
+      "norpramin"
+    ],
+    "pneumococcal 7 valent vaccine": [
+      "pneumococcal polyvalent vaccine"
+    ],
+    "salagen": [
+      "selegiline"
+    ],
+    "microzide": [
+      "maxzide",
+      "micronase"
+    ],
+    "rifabutin": [
+      "rifapentine"
+    ],
+    "cyclophosphamide": [
+      "cycloserine",
+      "cyclosporine"
+    ],
+    "rifaximin": [
+      "rifampin"
+    ],
+    "acetaminophen": [
+      "acetazolamide"
+    ],
+    "depo subq provera 104": [
+      "depo provera"
+    ],
+    "epirubicin": [
+      "eribulin"
+    ],
+    "terbutaline": [
+      "terbinafine"
+    ],
+    "ure na": [
+      "hydroxyurea"
+    ],
+    "ultram": [
+      "lithium"
+    ],
+    "protonix": [
+      "lotronex",
+      "protamine"
+    ],
+    "zantac": [
+      "xanax",
+      "zantac 360",
+      "zyrtec"
+    ],
+    "capex": [
+      "kapidex"
+    ],
+    "clobazam": [
+      "clonazepam"
+    ],
+    "renvela": [
+      "renagel"
+    ],
+    "riboflavin": [
+      "ribavirin"
+    ],
+    "penicillin": [
+      "penicillamine"
+    ],
+    "ziac": [
+      "tiazac"
+    ],
+    "atacand": [
+      "antacid"
+    ],
+    "sulfisoxazole": [
+      "sulfadiazine"
+    ],
+    "clomiphene": [
+      "clomipramine"
+    ],
+    "ritalin sr": [
+      "ritalin la"
+    ],
+    "memantine": [
+      "methadone"
+    ],
+    "kayexalate": [
+      "kay ciel"
+    ],
+    "clindesse": [
+      "clindets"
+    ],
+    "brevital": [
+      "brevibloc"
+    ],
+    "lamictal": [
+      "labetalol",
+      "lamisil"
+    ],
+    "vicodin": [
+      "visicol"
+    ],
+    "durezol": [
+      "durasal"
+    ],
+    "levbid": [
+      "enbrel"
+    ],
+    "kapidex": [
+      "capadex",
+      "capex",
+      "casodex",
+      "kadian"
+    ],
+    "tamsulosin": [
+      "tacrolimus"
+    ],
+    "hydromorphone": [
+      "buprenorphine",
+      "hydralazine",
+      "hydroxyzine",
+      "morphine",
+      "oxymorphone"
+    ],
+    "dimenhydrinate": [
+      "diphenhydramine"
+    ],
+    "bamlanivimab": [
+      "belimumab"
+    ],
+    "micronase": [
+      "microzide"
+    ],
+    "venofer": [
+      "vfend",
+      "vimpat"
+    ],
+    "malarone": [
+      "mefloquine"
+    ],
+    "bupropion": [
+      "buspirone"
+    ],
+    "prednisolone": [
+      "prednisone"
+    ],
+    "singulair": [
+      "sinequan"
+    ],
+    "patanol": [
+      "platinol"
+    ],
+    "axert": [
+      "antivert"
+    ],
+    "estratest": [
+      "estratest hs"
+    ],
+    "keflex": [
+      "keppra"
+    ],
+    "gentian violet": [
+      "gentamicin"
+    ],
+    "lorazepam": [
+      "alprazolam",
+      "clonazepam",
+      "lovaza"
+    ],
+    "leukeran": [
+      "alkeran",
+      "leucovorin calcium",
+      "myleran"
+    ],
+    "xenical": [
+      "xeloda"
+    ],
+    "mefloquine": [
+      "malarone"
+    ],
+    "tromethamine": [
+      "trophamine"
+    ],
+    "testoderm with adhesive": [
+      "testoderm",
+      "testoderm tts"
+    ],
+    "plavix": [
+      "paxil",
+      "pradax",
+      "pradaxa"
+    ],
+    "eribulin": [
+      "epirubicin"
+    ],
+    "lanthanum carbonate": [
+      "lithium carbonate"
+    ],
+    "vessel care": [
+      "vesicare"
+    ],
+    "depo provera": [
+      "depo subq provera 104"
+    ],
+    "desyrel": [
+      "seroquel"
+    ],
+    "thrombate iii": [
+      "thrombin topical"
+    ],
+    "pyridium": [
+      "pyridoxine"
+    ],
+    "orgaran": [
+      "argatroban"
+    ],
+    "kay ciel": [
+      "kayexalate"
+    ],
+    "restoril": [
+      "risperdal"
+    ],
+    "diprivan": [
+      "diflucan",
+      "ditropan"
+    ],
+    "provera": [
+      "proscar",
+      "prozac"
+    ],
+    "syeda": [
+      "slynd"
+    ],
+    "sotalol": [
+      "sudafed"
+    ],
+    "benicar": [
+      "mevacor"
+    ],
+    "tegretol xr": [
+      "tegretol"
+    ],
+    "propylene glycol": [
+      "polyethylene glycol"
+    ],
+    "beano": [
+      "b o"
+    ],
+    "daunorubicin": [
+      "daunorubicin liposomal",
+      "doxorubicin",
+      "idarubicin"
+    ],
+    "ritonavir": [
+      "retrovir"
+    ],
+    "fluoxetine": [
+      "duloxetine",
+      "loxitane",
+      "paroxetine"
+    ],
+    "pamelor": [
+      "panlor dc",
+      "tambocor"
+    ],
+    "enjuvia": [
+      "januvia"
+    ],
+    "minoxidin": [
+      "minoxidil"
+    ],
+    "quinidine": [
+      "quinine"
+    ],
+    "ortho tri cyclen": [
+      "ortho tri cyclen lo"
+    ],
+    "viagra": [
+      "allegra"
+    ],
+    "cyclosporine modified": [
+      "cyclosporine"
+    ],
+    "maxzide": [
+      "microzide"
+    ],
+    "sinequan": [
+      "saquinavir",
+      "seroquel",
+      "singulair",
+      "zeniquin",
+      "zonegran"
+    ],
+    "tracleer": [
+      "tricor"
+    ],
+    "clindets": [
+      "clindesse"
+    ],
+    "occlusal hp": [
+      "ocuflox"
+    ],
+    "tobradex": [
+      "tobrex"
+    ],
+    "janumet": [
+      "jantoven",
+      "januvia",
+      "sinemet"
+    ],
+    "tobrex": [
+      "tobradex"
+    ],
+    "diflucan": [
+      "diprivan"
+    ],
+    "talvey": [
+      "tecvayli"
+    ],
+    "repaglinide": [
+      "rasageline"
+    ],
+    "cyclosporine": [
+      "cyclophosphamide",
+      "cycloserine",
+      "cyclosporine modified"
+    ],
+    "pentobarbital": [
+      "phenobarbital"
+    ],
+    "toradol": [
+      "foradil"
+    ],
+    "cisplatin": [
+      "carboplatin"
+    ],
+    "cerebyx": [
+      "celebrex",
+      "celexa"
+    ],
+    "diovan": [
+      "darvon",
+      "dioval",
+      "zyban"
+    ],
+    "brintellix": [
+      "brilinta"
+    ],
+    "mucinex dm": [
+      "mucinex d"
+    ],
+    "reprexain": [
+      "zyprexa"
+    ],
+    "mucinex": [
+      "mucinex allergy",
+      "mucomyst"
+    ],
+    "saquinavir mesylate": [
+      "saquinavir"
+    ],
+    "leucovorin calcium": [
+      "leukeran",
+      "levoleucovorin"
+    ],
+    "advicor": [
+      "advair",
+      "altocor"
+    ],
+    "serophene": [
+      "sarafem"
+    ],
+    "sorafenib": [
+      "sunitinib"
+    ],
+    "hydroxyprogesterone": [
+      "medroxyprogesterone"
+    ],
+    "symbyax": [
+      "cymbalta"
+    ],
+    "regranex": [
+      "granulex"
+    ],
+    "humira pen": [
+      "humapen memoir"
+    ],
+    "serzone": [
+      "seroquel"
+    ],
+    "sufentanil": [
+      "alfentanil",
+      "fentanyl"
+    ],
+    "captopril": [
+      "carvedilol"
+    ],
+    "hespan": [
+      "heparin"
+    ],
+    "bidex": [
+      "videx"
+    ],
+    "pradax": [
+      "plavix"
+    ],
+    "novolin 70 30": [
+      "novolog mix 70 30"
+    ],
+    "solu cortef": [
+      "solu medrol"
+    ],
+    "ethosuximide": [
+      "ethionamide"
+    ],
+    "zyrtec itchy eye drops": [
+      "zyrtec"
+    ],
+    "chlordiazepoxide": [
+      "chlorpromazine"
+    ],
+    "cortrosyn": [
+      "colchicine"
+    ],
+    "cycloserine": [
+      "cyclophosphamide",
+      "cyclosporine"
+    ],
+    "vasopressin": [
+      "desmopressin"
+    ],
+    "fetzima": [
+      "farxiga"
+    ],
+    "piroxicam": [
+      "paroxetine"
+    ],
+    "selegiline": [
+      "salagen"
+    ],
+    "sudafed": [
+      "sotalol",
+      "sudafed pe"
+    ],
+    "accupril": [
+      "aciphex"
+    ],
+    "depo medrol": [
+      "solu medrol"
+    ],
+    "spiriva": [
+      "apidra",
+      "inspra"
+    ],
+    "clozaril": [
+      "colazal"
+    ],
+    "nilotinib": [
+      "neratinib",
+      "niraparib"
+    ],
+    "amiodarone": [
+      "amantadine"
+    ],
+    "neulasta": [
+      "lunesta",
+      "neumega",
+      "nuedexta"
+    ],
+    "lexiva": [
+      "pexeva"
+    ],
+    "wellbutrin xl": [
+      "wellbutrin sr"
+    ],
+    "amphotericin b liposomal": [
+      "amphotericin b"
+    ],
+    "loniten": [
+      "lipitor"
+    ],
+    "kineret": [
+      "amikin"
+    ],
+    "brilinta": [
+      "brintellix",
+      "briviact"
+    ],
+    "cefoxitin": [
+      "cefazolin",
+      "cefotetan",
+      "ceftazidime",
+      "ceftriaxone"
+    ],
+    "menactra": [
+      "menomune"
+    ],
+    "retrovir": [
+      "ritonavir"
+    ],
+    "sudafed pe": [
+      "sudafed"
+    ],
+    "flavoxate": [
+      "fluvoxamine"
+    ],
+    "lyrica": [
+      "hydrea",
+      "lopressor"
+    ],
+    "wellbutrin sr": [
+      "wellbutrin xl"
+    ],
+    "saquinavir": [
+      "saquinavir mesylate",
+      "sinequan"
+    ],
+    "lexapro": [
+      "loxitane"
+    ],
+    "rabeprazole": [
+      "aripiprazole"
+    ],
+    "myleran": [
+      "alkeran",
+      "leukeran"
+    ],
+    "clomipramine": [
+      "clomiphene"
+    ],
+    "pemetrexed": [
+      "pralatrexate"
+    ],
+    "dexilant": [
+      "duloxetine"
+    ],
+    "antacid": [
+      "atacand"
+    ],
+    "propylthiouracil": [
+      "purinethol"
+    ],
+    "valganciclovir": [
+      "valacyclovir"
+    ],
+    "tecvayli": [
+      "talvey"
+    ],
+    "humulin 70 30": [
+      "humalog mix 75 25"
+    ],
+    "sulfasalazine": [
+      "cefuroxime",
+      "sulfadiazine"
+    ],
+    "labetalol": [
+      "lamictal",
+      "lamotrigine"
+    ],
+    "lopressor": [
+      "lyrica"
+    ],
+    "oxaprozin": [
+      "oxcarbazepine"
+    ],
+    "ambrisentan": [
+      "ambien"
+    ],
+    "nimodipine": [
+      "nicardipine",
+      "nifedipine"
+    ],
+    "ropivacaine": [
+      "bupivacaine"
+    ],
+    "lupron depot ped": [
+      "lupron depot 3 month"
+    ],
+    "valtrex": [
+      "valcyte"
+    ],
+    "rituximab": [
+      "infliximab"
+    ],
+    "miralax": [
+      "mirapex"
+    ]
+  },
+  "easy_negatives": [
+    "multiple electrolytes injection type 1 usp ph 55",
+    "somophyllin crt",
+    "epaned",
+    "rauval",
+    "primaquine",
+    "reglan",
+    "prismasol b22gk 2 0 in plastic container",
+    "chlorothiazide w reserpine",
+    "prevacid 24 hr",
+    "turgex",
+    "subsys",
+    "aldoril 25",
+    "trogarzo",
+    "rimso 50",
+    "dobutamine hydrochloride in dextrose 5",
+    "stelara",
+    "crestor",
+    "habitrol",
+    "isolyte s w dextrose 5 in plastic container",
+    "promethazine hydrochloride dextromethorphan hydrobromide",
+    "luxzyla",
+    "zohydro er",
+    "efidac 24 chlorpheniramine maleate",
+    "flyrcado",
+    "alendronate sodium",
+    "jetrea",
+    "ortho tri cyclen 21",
+    "pentam",
+    "prosom",
+    "olux",
+    "nebivolol hydrochloride",
+    "aminosyn ii 35 w electrolytes in dextrose 25 w calcium in plastic container",
+    "chemet",
+    "megace",
+    "byqlovi",
+    "amlexanox",
+    "intermezzo",
+    "dexacort",
+    "chloraprep one step frepp",
+    "xifaxan",
+    "simulect",
+    "remodulin",
+    "embeline",
+    "perindopril erbumine",
+    "methenamine hippurate",
+    "vykoura",
+    "concentraid",
+    "iloperidone",
+    "lynavoy",
+    "aranelle",
+    "zarontin",
+    "danocrine",
+    "potassium chloride 011 in dextrose 5 in plastic container",
+    "aponvie",
+    "renamin w o electrolytes",
+    "savaysa",
+    "dextrose 5 sodium chloride 045 and potassium chloride 022 in plastic container",
+    "duopa",
+    "oxilan 300",
+    "hydrocodone bitartrate chlorpheniramine maleate and pseudoephedrine hydrochloride",
+    "evamist",
+    "grafapex",
+    "desloratadine",
+    "femstat 3",
+    "imbruvica",
+    "butalbital acetaminophen and caffeine",
+    "sustaire",
+    "miglitol",
+    "amoxicillin and clavulanate potassium",
+    "cobicistat",
+    "lo ovral 28",
+    "oretic",
+    "clarithromycin",
+    "procalamine",
+    "ponstel",
+    "previfem",
+    "estradiol and norethindrone acetate",
+    "candesartan cilexetil hydrochlorothiazide",
+    "mezofy",
+    "avtozma",
+    "amoxicillin",
+    "enbumyst",
+    "isopto cetamide",
+    "aloxi",
+    "readi cat 2",
+    "drospirenone and ethinyl estradiol",
+    "retin a micro",
+    "wayrilz",
+    "prismasol bgk 2 0 in plastic container",
+    "nilutamide",
+    "sulfadiazine sodium",
+    "fosfomycin tromethamine",
+    "mirabegron",
+    "hydralazine hydrochloride w hydrochlorothiazide 100 50",
+    "yutopar",
+    "lantrisul",
+    "frovatriptan succinate",
+    "oxycodone and aspirin",
+    "urocit k",
+    "thiothixene",
+    "vytorin",
+    "dv",
+    "atenolol and chlorthalidone",
+    "sulfatrim ds",
+    "tigan",
+    "tymtran",
+    "cefoxitin and dextrose in duplex container",
+    "novocain",
+    "supprelin la",
+    "vasopressin in sodium chloride 09",
+    "anjeso",
+    "halaven",
+    "spectracef",
+    "skyrizi",
+    "nesina",
+    "xermelo",
+    "triclos",
+    "chlorzoxazone",
+    "potassium chloride 15meq in dextrose 5 and lactated ringer s in plastic container",
+    "hyzaar",
+    "dilantin",
+    "valrelease",
+    "dapiprazole hydrochloride",
+    "mitosol",
+    "tavalisse",
+    "bacteriostatic sodium chloride 09 in plastic container",
+    "isolyte p in dextrose 5 in plastic container",
+    "tovalt odt",
+    "nasonex",
+    "iqirvo",
+    "hyrnuo",
+    "aminosyn 7 w electrolytes",
+    "levoleucovorin calcium",
+    "striverdi respimat",
+    "ziana",
+    "neomycin sulfate",
+    "orgovyx",
+    "bupivacaine hydrochloride",
+    "nortrel 1 35 28",
+    "edaravone",
+    "aloprim",
+    "iv persantine",
+    "norepinephrine bitartrate in 09 sodium chloride",
+    "tetracyn",
+    "mpi stannous diphosphonate",
+    "efavirenz emtricitabine tenofovir disoproxil fumarate",
+    "tuxarin er",
+    "delflex w dextrose 15 low magnesium in plastic container",
+    "neomycin and polymyxin b sulfates and hydrocortisone",
+    "doxil liposomal",
+    "rozlytrek",
+    "deoxycholic acid",
+    "clinimix e 425 25 sulfite free w elect in dextrose 25 w calcium in plastic container",
+    "potassium chloride 022 in dextrose 5 in plastic container",
+    "hydroflumethiazide",
+    "carbidopa leodopa",
+    "dihydroergotamine mesylate",
+    "ovide",
+    "dextrose 20 in plastic container",
+    "zovia 1 50e 21",
+    "ebanga",
+    "duragesic 25",
+    "triavil 4 10",
+    "macrodantin",
+    "constulose",
+    "haloperidol decanoate",
+    "semglee",
+    "ensacove",
+    "potassium chloride 40meq in dextrose 5 and sodium chloride 045 in plastic container",
+    "taytulla",
+    "dianeal low calcium w dextrose 35 in plastic container",
+    "indium in 111 pentetreotide kit",
+    "oxtriphylline",
+    "duragesic 50",
+    "gallium citrate ga 67",
+    "iquix",
+    "inomax",
+    "linagliptin metformin hydrochloride",
+    "rivastigmine",
+    "nor qd",
+    "potassium chloride 40meq in dextrose 5 and lactated ringer s in plastic container",
+    "miochol",
+    "azulfidine",
+    "humalog mix 75 25 kwikpen",
+    "eletriptan hydrobromide",
+    "tauvid",
+    "tiotropium bromide",
+    "vanceril double strength",
+    "duramorph pf",
+    "hydralazine and hydrochlorothiazide",
+    "trizivir",
+    "potassium chloride 0037 in dextrose 5 in plastic container",
+    "fluonid",
+    "midamor",
+    "cefotan in plastic container",
+    "kainair",
+    "combivent respimat",
+    "kisqali",
+    "metro iv",
+    "naropin"
+  ]
+}

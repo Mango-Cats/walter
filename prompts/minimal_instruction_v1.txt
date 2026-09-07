@@ -1,0 +1,77 @@
+You identify Look-Alike Sound-Alike (LASA) drug name pairs.
+
+Each example below shows a real input in the exact shape you'll receive it, a short explanation (for your understanding only -- never write this in your own answer), and then "Correct output" showing exactly what the answer should look like: nothing but the selected names, one per line, or no lines at all when nothing qualifies.
+
+Example 1
+Target Drug:
+hydralazine
+
+Candidate Drugs:
+hydroxyzine
+ibuprofen
+methotrexate
+
+Explanation (not part of the output): hydroxyzine shares the "hydr-" opening and a similar syllable rhythm with hydralazine, and mixing up this antihypertensive with an antihistamine is a real, documented risk. "ibuprofen" and "methotrexate" share no meaningful letters or sound with the target.
+
+Correct output:
+hydroxyzine
+
+Example 2
+Target Drug:
+memantine
+
+Candidate Drugs:
+methadone
+amantadine
+meloxicam
+
+Explanation (not part of the output): methadone and memantine share a similar syllable count and rhythm ("me-...-t...-ne"), and confusing this dementia medication with an opioid is a real documented risk despite the two names looking different at a glance. amantadine looks like a closer visual match at first glance, but that surface similarity is a distraction here -- it is not the drug actually at risk of confusion with the target. meloxicam shares only the "me-" opening with memantine and nothing else meaningful -- not a real risk.
+
+Correct output:
+methadone
+
+Example 3
+Target Drug:
+humulin 70 30
+
+Candidate Drugs:
+humalog mix 75 25
+novolin 70 30
+novolog mix 70 30 flexpen
+
+Explanation (not part of the output): humalog mix 75 25 and humulin 70 30 are both short premixed-insulin brand names with a similar shape (brand stem + number pair), genuinely mixable at the point of dispensing. novolin 70 30 and novolog mix 70 30 flexpen share the exact "70 30" ratio with the target, but that ratio is a standard insulin-dosing label used across many unrelated brands, not evidence of name confusability -- set the numbers aside and "humulin" does not meaningfully resemble "novolin" or "novolog".
+
+Correct output:
+humalog mix 75 25
+
+Example 4
+Target Drug:
+sufentanil
+
+Candidate Drugs:
+alfentanil
+fentanyl
+sertraline
+oxcarbazepine
+
+Explanation (not part of the output): alfentanil and fentanyl are both potent synthetic opioids with a shared "-fentanil"/"fentanyl" root and near-identical rhythm to sufentanil -- a well-documented real risk in anesthesia, and here BOTH are genuinely confusable, not just one. There is no fixed number of correct picks; select every one that qualifies. sertraline and oxcarbazepine don't share meaningful letters or sound with sufentanil at all.
+
+Correct output:
+alfentanil
+fentanyl
+
+Example 5
+Target Drug:
+metformin
+
+Candidate Drugs:
+metformin 500mg
+lisinopril
+atorvastatin
+
+Explanation (not part of the output): "metformin 500mg" is just a dosage-strength label for the same drug as the target, not a different drug. "lisinopril" and "atorvastatin" don't share any meaningful letters or sound with "metformin" beyond all three being ordinary generic names -- nothing here is a real confusion risk.
+
+Correct output:
+(nothing -- zero lines, since no candidate qualifies)
+
+Output your final answer as: ONLY the chosen drug names, one per line, however many are genuinely confusable (including none), chosen from the candidate list only. No other text.

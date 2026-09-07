@@ -1,0 +1,1125 @@
+{
+  "n_items": 100,
+  "micro": {
+    "precision": 0.6643356643356644,
+    "recall": 0.7196969696969697,
+    "f1": 0.6909090909090909
+  },
+  "macro": {
+    "precision": 0.7192176870748301,
+    "recall": 0.76,
+    "f1": 0.7390466554760975
+  },
+  "per_target": [
+    {
+      "c_c": "cycloserine",
+      "precision": 0.5,
+      "recall": 0.5
+    },
+    {
+      "c_c": "casodex",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "enablex",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "janumet",
+      "precision": 1.0,
+      "recall": 0.3333333333333333
+    },
+    {
+      "c_c": "vesicare",
+      "precision": 1.0,
+      "recall": 0.5
+    },
+    {
+      "c_c": "ilumya",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "mefloquine",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "methyltestosterone",
+      "precision": 1.0,
+      "recall": 0.5
+    },
+    {
+      "c_c": "oxycodone",
+      "precision": 0.8,
+      "recall": 1.0
+    },
+    {
+      "c_c": "taxol",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "lupron depot ped",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "oxymorphone",
+      "precision": 1.0,
+      "recall": 0.5
+    },
+    {
+      "c_c": "tetanus diptheria toxoid",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "ortho tri cyclen",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "teclistamab cqyv",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "guaifenesin",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "granulex",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "miralax",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "dexmethylphenidate mixed salts",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "wellbutrin xl",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "normodyne",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "vasopressin",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "sonata",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "ceftazidime",
+      "precision": 1.0,
+      "recall": 0.25
+    },
+    {
+      "c_c": "repaglinide",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "coumadin",
+      "precision": 1.0,
+      "recall": 0.5
+    },
+    {
+      "c_c": "clarispray",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "zyrtec itchy eye drops",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "romiplostim",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "dronabinol",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "letaris",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "lamisil",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "bupropion",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "benazepril",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "acetaminophen",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "codeine",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "yasmin",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "hbig",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "metadate er",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "pyridium",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "remeron",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "covera hs",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "wakix",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "salagen",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "nilotinib",
+      "precision": 0.25,
+      "recall": 0.5
+    },
+    {
+      "c_c": "precare",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "metadate cd",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "ephedrine",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "hydrea",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "intuniv",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "anacin",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "qwell",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "myleran",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "clomipramine",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "colazal",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "foltx",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "rocuronium",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "anacin 3",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "axitinib",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "kapidex",
+      "precision": 1.0,
+      "recall": 0.75
+    },
+    {
+      "c_c": "zostrix",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "mitomycin",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "amiloride",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "riboflavin",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "folinic acid",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "brethine",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "serzone",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "fomepizole",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "lipitor",
+      "precision": 1.0,
+      "recall": 0.5
+    },
+    {
+      "c_c": "cometriq",
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "c_c": "invega",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "doxorubicin",
+      "precision": 0.6,
+      "recall": 1.0
+    },
+    {
+      "c_c": "prenexa",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "hmg coa reductase inhibitors",
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "c_c": "tamsulosin",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "capex",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "lanoxin",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "xeloda",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "sinemet",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "gabapentin",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "pneumococcal polyvalent vaccine",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "toradol",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "spravato",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "sulfasalazine",
+      "precision": 1.0,
+      "recall": 0.5
+    },
+    {
+      "c_c": "selegiline",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "foradil",
+      "precision": 1.0,
+      "recall": 0.5
+    },
+    {
+      "c_c": "panlor dc",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "mucinex allergy",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "solu medrol",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "pazopanib",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "zonegran",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "miglustat",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "pexeva",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "effexor",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "hydroxyprogesterone",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "prozac",
+      "precision": 1.0,
+      "recall": 0.6666666666666666
+    },
+    {
+      "c_c": "darvon",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "cozaar",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "aricept",
+      "precision": 1.0,
+      "recall": 0.5
+    },
+    {
+      "c_c": "nuedexta",
+      "precision": 1.0,
+      "recall": 1.0
+    }
+  ],
+  "disagreements": [
+    {
+      "c_c": "cycloserine",
+      "answer": [
+        "cyclophosphamide",
+        "cyclosporine"
+      ],
+      "over_proposed": [
+        "cyclosporine modified"
+      ],
+      "missed": [
+        "cyclophosphamide"
+      ]
+    },
+    {
+      "c_c": "casodex",
+      "answer": [
+        "kapidex"
+      ],
+      "over_proposed": [
+        "capadex"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "enablex",
+      "answer": [
+        "effexor xr"
+      ],
+      "over_proposed": [
+        "enbrel"
+      ],
+      "missed": [
+        "effexor xr"
+      ]
+    },
+    {
+      "c_c": "janumet",
+      "answer": [
+        "jantoven",
+        "januvia",
+        "sinemet"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "jantoven",
+        "sinemet"
+      ]
+    },
+    {
+      "c_c": "vesicare",
+      "answer": [
+        "vesanoid",
+        "vessel care"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "vessel care"
+      ]
+    },
+    {
+      "c_c": "mefloquine",
+      "answer": [
+        "malarone"
+      ],
+      "over_proposed": [
+        "hydroxychloroquine"
+      ],
+      "missed": [
+        "malarone"
+      ]
+    },
+    {
+      "c_c": "methyltestosterone",
+      "answer": [
+        "medroxyprogesterone",
+        "methylprednisolone"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "medroxyprogesterone"
+      ]
+    },
+    {
+      "c_c": "oxycodone",
+      "answer": [
+        "hydrocodone",
+        "oxybutynin",
+        "oxycontin",
+        "oxymorphone"
+      ],
+      "over_proposed": [
+        "roxicodone intensol"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "oxymorphone",
+      "answer": [
+        "hydromorphone",
+        "oxybutynin",
+        "oxycodone",
+        "oxycontin"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "oxybutynin",
+        "oxycontin"
+      ]
+    },
+    {
+      "c_c": "tetanus diptheria toxoid",
+      "answer": [
+        "tuberculin purified protein derivative"
+      ],
+      "over_proposed": [
+        "cefotetan"
+      ],
+      "missed": [
+        "tuberculin purified protein derivative"
+      ]
+    },
+    {
+      "c_c": "dexmethylphenidate mixed salts",
+      "answer": [
+        "dexmethylphenidate"
+      ],
+      "over_proposed": [
+        "dexamethasone"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "sonata",
+      "answer": [
+        "soriatane"
+      ],
+      "over_proposed": [
+        "sotalol"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "ceftazidime",
+      "answer": [
+        "cefazolin",
+        "cefotetan",
+        "cefoxitin",
+        "ceftriaxone"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "cefazolin",
+        "cefotetan",
+        "cefoxitin"
+      ]
+    },
+    {
+      "c_c": "coumadin",
+      "answer": [
+        "avandia",
+        "cardura"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "avandia"
+      ]
+    },
+    {
+      "c_c": "zyrtec itchy eye drops",
+      "answer": [
+        "zyrtec"
+      ],
+      "over_proposed": [
+        "zyprexa",
+        "zyrtec d"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "letaris",
+      "answer": [
+        "letairis"
+      ],
+      "over_proposed": [
+        "ilaris"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "bupropion",
+      "answer": [
+        "buspirone"
+      ],
+      "over_proposed": [
+        "buprenorphine"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "codeine",
+      "answer": [
+        "lodine"
+      ],
+      "over_proposed": [
+        "cardene"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "pyridium",
+      "answer": [
+        "pyridoxine"
+      ],
+      "over_proposed": [
+        "pyridostigmine"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "remeron",
+      "answer": [
+        "rozerem"
+      ],
+      "over_proposed": [
+        "zemuron"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "covera hs",
+      "answer": [
+        "covaryx hs"
+      ],
+      "over_proposed": [
+        "provera"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "nilotinib",
+      "answer": [
+        "neratinib",
+        "niraparib"
+      ],
+      "over_proposed": [
+        "axitinib",
+        "ponatinib",
+        "sunitinib"
+      ],
+      "missed": [
+        "niraparib"
+      ]
+    },
+    {
+      "c_c": "hydrea",
+      "answer": [
+        "lyrica"
+      ],
+      "over_proposed": [
+        "hydroxyurea"
+      ],
+      "missed": [
+        "lyrica"
+      ]
+    },
+    {
+      "c_c": "anacin",
+      "answer": [
+        "anacin 3"
+      ],
+      "over_proposed": [
+        "dynacin"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "clomipramine",
+      "answer": [
+        "clomiphene"
+      ],
+      "over_proposed": [
+        "chlorpromazine",
+        "desipramine"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "colazal",
+      "answer": [
+        "clozaril"
+      ],
+      "over_proposed": [
+        "colace"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "rocuronium",
+      "answer": [
+        "romazicon"
+      ],
+      "over_proposed": [
+        "norcuron"
+      ],
+      "missed": [
+        "romazicon"
+      ]
+    },
+    {
+      "c_c": "axitinib",
+      "answer": [
+        "apixaban"
+      ],
+      "over_proposed": [
+        "sunitinib"
+      ],
+      "missed": [
+        "apixaban"
+      ]
+    },
+    {
+      "c_c": "kapidex",
+      "answer": [
+        "capadex",
+        "capex",
+        "casodex",
+        "kadian"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "capex"
+      ]
+    },
+    {
+      "c_c": "zostrix",
+      "answer": [
+        "zovirax"
+      ],
+      "over_proposed": [
+        "zestril"
+      ],
+      "missed": [
+        "zovirax"
+      ]
+    },
+    {
+      "c_c": "brethine",
+      "answer": [
+        "methergine"
+      ],
+      "over_proposed": [
+        "betaine"
+      ],
+      "missed": [
+        "methergine"
+      ]
+    },
+    {
+      "c_c": "lipitor",
+      "answer": [
+        "loniten",
+        "zyrtec"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "zyrtec"
+      ]
+    },
+    {
+      "c_c": "cometriq",
+      "answer": [
+        "coenzyme q10"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "coenzyme q10"
+      ]
+    },
+    {
+      "c_c": "invega",
+      "answer": [
+        "intuniv"
+      ],
+      "over_proposed": [
+        "invanz"
+      ],
+      "missed": [
+        "intuniv"
+      ]
+    },
+    {
+      "c_c": "doxorubicin",
+      "answer": [
+        "daunorubicin",
+        "doxorubicin liposomal",
+        "idarubicin"
+      ],
+      "over_proposed": [
+        "doxil",
+        "epirubicin"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "prenexa",
+      "answer": [
+        "ranexa"
+      ],
+      "over_proposed": [
+        "zyprexa"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "hmg coa reductase inhibitors",
+      "answer": [
+        "nystatin"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "nystatin"
+      ]
+    },
+    {
+      "c_c": "tamsulosin",
+      "answer": [
+        "tacrolimus"
+      ],
+      "over_proposed": [
+        "silodosin"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "capex",
+      "answer": [
+        "kapidex"
+      ],
+      "over_proposed": [
+        "capadex",
+        "casodex"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "lanoxin",
+      "answer": [
+        "levothyroxine",
+        "naloxone"
+      ],
+      "over_proposed": [
+        "loxitane",
+        "noroxin"
+      ],
+      "missed": [
+        "levothyroxine",
+        "naloxone"
+      ]
+    },
+    {
+      "c_c": "sinemet",
+      "answer": [
+        "janumet"
+      ],
+      "over_proposed": [
+        "anzemet"
+      ],
+      "missed": [
+        "janumet"
+      ]
+    },
+    {
+      "c_c": "gabapentin",
+      "answer": [
+        "gemfibrozil"
+      ],
+      "over_proposed": [
+        "rifapentine",
+        "vigabatrin"
+      ],
+      "missed": [
+        "gemfibrozil"
+      ]
+    },
+    {
+      "c_c": "toradol",
+      "answer": [
+        "foradil"
+      ],
+      "over_proposed": [
+        "tramadol"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "spravato",
+      "answer": [
+        "steglatro"
+      ],
+      "over_proposed": [
+        "spiriva"
+      ],
+      "missed": [
+        "steglatro"
+      ]
+    },
+    {
+      "c_c": "sulfasalazine",
+      "answer": [
+        "cefuroxime",
+        "sulfadiazine"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "cefuroxime"
+      ]
+    },
+    {
+      "c_c": "selegiline",
+      "answer": [
+        "salagen"
+      ],
+      "over_proposed": [
+        "rasageline"
+      ],
+      "missed": [
+        "salagen"
+      ]
+    },
+    {
+      "c_c": "foradil",
+      "answer": [
+        "fortical",
+        "toradol"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "fortical"
+      ]
+    },
+    {
+      "c_c": "mucinex allergy",
+      "answer": [
+        "mucinex"
+      ],
+      "over_proposed": [
+        "mucinex d",
+        "mucinex dm"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "zonegran",
+      "answer": [
+        "sinequan"
+      ],
+      "over_proposed": [
+        "regranex"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "prozac",
+      "answer": [
+        "prilosec",
+        "prograf",
+        "provera"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "provera"
+      ]
+    },
+    {
+      "c_c": "darvon",
+      "answer": [
+        "diovan"
+      ],
+      "over_proposed": [
+        "darvocet"
+      ],
+      "missed": []
+    },
+    {
+      "c_c": "cozaar",
+      "answer": [
+        "colace",
+        "zocor"
+      ],
+      "over_proposed": [
+        "clozaril"
+      ],
+      "missed": [
+        "colace",
+        "zocor"
+      ]
+    },
+    {
+      "c_c": "aricept",
+      "answer": [
+        "aciphex",
+        "azilect"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "aciphex"
+      ]
+    }
+  ]
+}
