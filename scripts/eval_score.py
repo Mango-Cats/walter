@@ -53,14 +53,14 @@ that run (default 5, the default used everywhere in this harness so far).
 
 Usage:
     uv run python scripts/eval_score.py \\
-        --input results/eval/proposer_output.json \\
-        --output results/eval/report.json
+        --input results/eval/proposer/proposer_output.json \\
+        --output results/eval/report/report.json
 
     # also report a production-proxy score restricted to the fuzzy tier
     uv run python scripts/eval_score.py \\
-        --input results/eval/proposer_output.json \\
-        --tiers-pool results/eval/pool.json \\
-        --output results/eval/report.json
+        --input results/eval/proposer/proposer_output.json \\
+        --tiers-pool results/eval/pool/pool.json \\
+        --output results/eval/report/report.json
 """
 
 import argparse

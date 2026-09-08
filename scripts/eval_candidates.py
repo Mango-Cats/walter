@@ -54,9 +54,9 @@ have no random/easy filler at all.
 
 Usage:
     uv run python scripts/eval_candidates.py \\
-        --pool results/eval/pool.json \\
+        --pool results/eval/pool/pool.json \\
         --n-fuzzy 5 --n-random 10 --n-easy 5 --seed 0 \\
-        --output results/eval/questionnaire.json
+        --output results/eval/questionnaire/questionnaire.json
 """
 
 import argparse
@@ -141,7 +141,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--n-easy", type=int, default=5, help="How many easy distractors to add per target")
     p.add_argument("--seed", type=int, default=0)
-    p.add_argument("--output", type=Path, default=Path("results/eval/questionnaire.json"))
+    p.add_argument("--output", type=Path, default=Path("results/eval/questionnaire/questionnaire.json"))
     return p
 
 

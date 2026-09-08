@@ -42,13 +42,13 @@ Usage:
     uv run python scripts/eval_sample.py \\
         --gold data/P_us.csv --seed 0 --sample-size 100 \\
         --registry data/R_us.csv --n-easy 200 \\
-        --output results/eval/pool.json
+        --output results/eval/pool/pool.json
 
     # targeted regression check on a small curated set instead
     uv run python scripts/eval_sample.py \\
         --gold data/P_us.csv --targets results/eval/hard_cases.txt \\
         --registry data/R_us.csv --n-easy 200 \\
-        --output results/eval/pool_targeted.json
+        --output results/eval/pool/pool_targeted.json
 """
 
 import argparse
@@ -223,7 +223,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--n-easy", type=int, default=0,
         help="How many easy negatives to sample. Requires --registry.",
     )
-    p.add_argument("--output", type=Path, default=Path("results/eval/pool.json"))
+    p.add_argument("--output", type=Path, default=Path("results/eval/pool/pool.json"))
     return p
 
 

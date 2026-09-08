@@ -78,20 +78,20 @@ result comes back.
 
 Usage:
     uv run python scripts/eval_propose.py \\
-        --input results/eval/questionnaire.json \\
-        --output results/eval/proposer_output.json
+        --input results/eval/questionnaire/questionnaire.json \\
+        --output results/eval/proposer/proposer_output.json
 
     # try a different prompt against the same questionnaire
     uv run python scripts/eval_propose.py \\
-        --input results/eval/questionnaire.json \\
+        --input results/eval/questionnaire/questionnaire.json \\
         --system-prompt prompts/few_shot_v1.txt \\
-        --output results/eval/proposer_output_few_shot_v1.json
+        --output results/eval/proposer/proposer_output_few_shot_v1.json
 
     # cheap smoke test before spending a full run's worth of API calls
-    uv run python scripts/eval_propose.py --input results/eval/questionnaire.json --limit 3
+    uv run python scripts/eval_propose.py --input results/eval/questionnaire/questionnaire.json --limit 3
 
     # got interrupted? just run the same command again -- it resumes
-    uv run python scripts/eval_propose.py --input results/eval/questionnaire.json --concurrency 50
+    uv run python scripts/eval_propose.py --input results/eval/questionnaire/questionnaire.json --concurrency 50
 """
 
 import argparse
@@ -294,7 +294,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Run a proposer over an eval questionnaire and record what it picks."
     )
     p.add_argument("--input", type=Path, required=True, help="questionnaire.json from eval_candidates.py")
-    p.add_argument("--output", type=Path, default=Path("results/eval/proposer_output.json"))
+    p.add_argument("--output", type=Path, default=Path("results/eval/proposer/proposer_output.json"))
     p.add_argument(
         "--system-prompt", type=Path, default=Path("prompts/baseline.txt"),
         help="Path to a text file to use as the system prompt. Defaults to "
