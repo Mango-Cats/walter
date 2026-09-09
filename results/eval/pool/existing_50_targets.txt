@@ -1,0 +1,51 @@
+# targets already used in the original 50-item pro run -- excluded here so the second batch is a disjoint extension to 100
+rituximab
+metformin
+belimumab
+memantine
+atomoxetine
+bayrab
+etravirine
+purinethol
+influenza virus vaccine
+elvitegravir cobicistat emtricitabine and tenofovir disoproxil fumarate
+ethambutol
+motrin
+cymbalta
+kaletra
+menactra
+humulin 70 30
+lithium
+rapaflo
+renvela
+amlodipine
+avandamet
+sudafed 12 hour
+hydrea
+paroxetine
+daunorubicin
+solu cortef
+bupropion
+zyloprim
+cometriq
+humulin r u 100
+vfend
+apixaban
+platinol
+ketalar
+recombivax hb
+ethaverine
+covera hs
+effexor xr
+edetate calcium disodium
+metyrapone
+bamlanivimab
+carbamazepine
+sitagliptin
+intuniv
+malarone
+ropivacaine
+amphotericin b
+methotrexate
+ortho tri cyclen lo
+atrovent

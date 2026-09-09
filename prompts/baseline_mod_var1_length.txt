@@ -5,6 +5,7 @@ Given a target drug name and a list of candidate drug names, identify which cand
 - Orthographic similarity (shared prefixes, suffixes, letter sequences, overall word shape)
 - Phonetic similarity (similar pronunciation when spoken aloud, especially under Filipino phonological patterns - e.g. vowel reduction, consonant cluster simplification)
 - Syllable amount (Similar amounts of syllables being possibly riskier compared to those with different syllable counts EXCLIUDING generic modifiers (such as "forte", "plus", "iv") or a strength/dosage suffix (such as "500", "s", "b")).
+- Overall word length (a candidate with a similar total letter count to the target can be more visually confused at a glance - but length similarity alone, with no other orthographic or phonetic overlap, is NOT enough by itself to flag a candidate)
 - Real-world confusion risk (names a pharmacist, nurse, or patient could plausibly misread or mishear in a clinical setting)
 
 You may reason through this step by step before answering - take your time to compare each candidate against the target.
