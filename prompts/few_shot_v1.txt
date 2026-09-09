@@ -6,83 +6,85 @@ Given a target drug name and a list of candidate drug names, identify which cand
 - Phonetic similarity (similar pronunciation when spoken aloud, especially under Filipino phonological patterns - e.g. vowel reduction, consonant cluster simplification)
 - Real-world confusion risk (names a pharmacist, nurse, or patient could plausibly misread or mishear in a clinical setting)
 
+You may reason through this step by step before answering - take your time to compare each candidate against the target.
+
 Rules:
 - Only choose from the provided candidate list
 - Do NOT modify, abbreviate, or reformat names
 - Do NOT repeat the target drug
-- Prefer genuine look-alike/sound-alike risk over superficial overlap - avoid pairs that only share a generic modifier (such as "forte", "plus", "iv"), a strength suffix (such as "500", "s", "b"), or a dosage-ratio suffix (such as "70 30", "75 25" - a standard insulin-mix ratio used across many unrelated brands). Set any shared number aside first, then judge whether the remaining name text still looks or sounds alike.
+- Prefer genuine look-alike/sound-alike risk over superficial overlap - e.g. avoid pairs that only share a generic modifier (such as "forte", "plus", "iv") or a strength/dosage suffix (such as "500", "s", "b")
 
 Examples:
 Each example below shows a real input in the exact shape you'll receive it, a short explanation (for your understanding only -- never write this in your own answer), and then "Correct output" showing exactly what the answer should look like: nothing but the selected names, one per line, or no lines at all when nothing qualifies.
 
 Example 1
 Target Drug:
-hydralazine
+gydroxizine
 
 Candidate Drugs:
-hydroxyzine
-ibuprofen
-methotrexate
+gydromemine
+saiburafen
+menthaloxate
 
-Explanation (not part of the output): hydroxyzine shares the "hydr-" opening and a similar syllable rhythm with hydralazine, and mixing up this antihypertensive with an antihistamine is a real, documented risk. "ibuprofen" and "methotrexate" share no meaningful letters or sound with the target.
+Explanation (not part of the output): gydromemine shares the "gydro-" opening and a similar syllable rhythm with gydroxizine. "saiburafen" and "menthaloxate" share no meaningful letters or sound with the target.
 
 Correct output:
-hydroxyzine
+gydromemine
 
 Example 2
 Target Drug:
-memantine
+elantin
 
 Candidate Drugs:
-methadone
-amantadine
-meloxicam
+mentholdin
+elaxdin
+hyrolizam
 
-Explanation (not part of the output): methadone and memantine share a similar syllable count and rhythm ("me-...-t...-ne"), and confusing this dementia medication with an opioid is a real documented risk despite the two names looking different at a glance. amantadine looks like a closer visual match at first glance, but that surface similarity is a distraction here -- it is not the drug actually at risk of confusion with the target. meloxicam shares only the "me-" opening with memantine and nothing else meaningful -- not a real risk.
+Explanation (not part of the output): elaxdin shares the "ela-" opening and a similar closing shape ("-din"/"-tin") with elantin, giving it a close overall syllable count and rhythm. mentholdin echoes a bit of the middle sound but carries an extra syllable that shifts its rhythm away from the target. hyrolizam shares no meaningful letters or sound with elantin at all.
 
 Correct output:
-methadone
+elaxdin
 
 Example 3
 Target Drug:
-humulin 70 30
+fumulin 70 30
 
 Candidate Drugs:
-humalog mix 75 25
-novolin 70 30
-novolog mix 70 30 flexpen
+fumulog mix 75 25
+kovolin 70 30
+kovolog mix 70 30 flexpen
 
-Explanation (not part of the output): humalog mix 75 25 and humulin 70 30 are both short premixed-insulin brand names with a similar shape (brand stem + number pair), genuinely mixable at the point of dispensing. novolin 70 30 and novolog mix 70 30 flexpen share the exact "70 30" ratio with the target, but that ratio is a standard insulin-dosing label used across many unrelated brands, not evidence of name confusability -- set the numbers aside and "humulin" does not meaningfully resemble "novolin" or "novolog".
+Explanation (not part of the output): fumulog mix 75 25 and fumulin 70 30 are both short brand-style names sharing the "fumul-" stem, with a similar shape overall (name stem + number pair). kovolin 70 30 and kovolog mix 70 30 flexpen share the exact "70 30" number pair with the target, but that number pair alone doesn't make a name confusable -- set the numbers aside, and "fumulin" does not meaningfully resemble "kovolin" or "kovolog".
 
 Correct output:
-humalog mix 75 25
+fumulog mix 75 25
 
 Example 4
 Target Drug:
-sufentanil
+fesuntanyl
 
 Candidate Drugs:
-alfentanil
-fentanyl
-sertraline
-oxcarbazepine
+fenaltanil
+felanyl
+trasealine
+bazoxcarepine
 
-Explanation (not part of the output): alfentanil and fentanyl are both potent synthetic opioids with a shared "-fentanil"/"fentanyl" root and near-identical rhythm to sufentanil -- a well-documented real risk in anesthesia, and here BOTH are genuinely confusable, not just one. There is no fixed number of correct picks; select every one that qualifies. sertraline and oxcarbazepine don't share meaningful letters or sound with sufentanil at all.
+Explanation (not part of the output): fenaltanil and felanyl both share the "-tanil"/"-anyl" ending and a similar overall sound shape with fesuntanyl, and here BOTH are genuinely confusable, not just one. There is no fixed number of correct picks; select every one that qualifies. trasealine and bazoxcarepine don't share meaningful letters or sound with fesuntanyl at all.
 
 Correct output:
-alfentanil
-fentanyl
+fenaltanil
+felanyl
 
 Example 5
 Target Drug:
-metformin
+lormetmin
 
 Candidate Drugs:
-metformin 500mg
-lisinopril
-atorvastatin
+lormetmin 500mg
+nazoprilex
+dovastanix
 
-Explanation (not part of the output): "metformin 500mg" is just a dosage-strength label for the same drug as the target, not a different drug. "lisinopril" and "atorvastatin" don't share any meaningful letters or sound with "metformin" beyond all three being ordinary generic names -- nothing here is a real confusion risk.
+Explanation (not part of the output): "lormetmin 500mg" is just a dosage-strength label attached to the same name as the target, not a different name. "nazoprilex" and "dovastanix" don't share any meaningful letters or sound with "lormetmin" -- nothing here is a real orthographic or phonetic match.
 
 Correct output:
 (nothing -- zero lines, since no candidate qualifies)

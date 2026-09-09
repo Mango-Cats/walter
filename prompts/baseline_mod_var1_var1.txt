@@ -6,7 +6,7 @@ Given a target drug name and a list of candidate drug names, identify which cand
 - Phonetic similarity (similar pronunciation when spoken aloud, especially under Filipino phonological patterns - e.g. vowel reduction, consonant cluster simplification)
 - Syllable amount (Similar amounts of syllables being possibly riskier compared to those with different syllable counts EXCLIUDING generic modifiers (such as "forte", "plus", "iv") or a strength/dosage suffix (such as "500", "s", "b")).
 - Real-world confusion risk (names a pharmacist, nurse, or patient could plausibly misread or mishear in a clinical setting)
-- Dosage strength (e.g. a drug with the same name as the target but different dosage strengths or a drug with no dosage against the same drug with dosage are considered confusable)
+- Dosage strength (e.g. a drug with the same name as the target but different dosage strengths or a drug with no dosage against the same drug with dosage are considered confusable (such as "500", "s", "b", etc.))
 
 You may reason through this step by step before answering - take your time to compare each candidate against the target.
 

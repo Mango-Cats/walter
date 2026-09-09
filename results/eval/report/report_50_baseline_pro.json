@@ -1,0 +1,782 @@
+{
+  "n_items": 50,
+  "micro": {
+    "precision": 0.4766355140186916,
+    "recall": 0.8095238095238095,
+    "f1": 0.6000000000000001
+  },
+  "macro": {
+    "precision": 0.6033333333333334,
+    "recall": 0.8466666666666667,
+    "f1": 0.7045823754789272
+  },
+  "per_target": [
+    {
+      "c_c": "rituximab",
+      "precision": 0.25,
+      "recall": 1.0
+    },
+    {
+      "c_c": "metformin",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "belimumab",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "memantine",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "atomoxetine",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "bayrab",
+      "precision": 1.0,
+      "recall": 0.5
+    },
+    {
+      "c_c": "etravirine",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "purinethol",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "influenza virus vaccine",
+      "precision": 1.0,
+      "recall": 0.3333333333333333
+    },
+    {
+      "c_c": "elvitegravir cobicistat emtricitabine and tenofovir disoproxil fumarate",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "ethambutol",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "motrin",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "cymbalta",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "kaletra",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "menactra",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "humulin 70 30",
+      "precision": 0.16666666666666666,
+      "recall": 1.0
+    },
+    {
+      "c_c": "lithium",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "rapaflo",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "renvela",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "amlodipine",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "avandamet",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "sudafed 12 hour",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "hydrea",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "paroxetine",
+      "precision": 0.6,
+      "recall": 1.0
+    },
+    {
+      "c_c": "daunorubicin",
+      "precision": 0.5,
+      "recall": 0.6666666666666666
+    },
+    {
+      "c_c": "solu cortef",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "bupropion",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "zyloprim",
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "c_c": "cometriq",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "humulin r u 100",
+      "precision": 0.2,
+      "recall": 1.0
+    },
+    {
+      "c_c": "vfend",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "apixaban",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "platinol",
+      "precision": 0.3333333333333333,
+      "recall": 1.0
+    },
+    {
+      "c_c": "ketalar",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "recombivax hb",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "ethaverine",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "covera hs",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "effexor xr",
+      "precision": 0.6666666666666666,
+      "recall": 1.0
+    },
+    {
+      "c_c": "edetate calcium disodium",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "metyrapone",
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "c_c": "bamlanivimab",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "carbamazepine",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "sitagliptin",
+      "precision": 0.6666666666666666,
+      "recall": 1.0
+    },
+    {
+      "c_c": "intuniv",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "malarone",
+      "precision": 0.25,
+      "recall": 1.0
+    },
+    {
+      "c_c": "ropivacaine",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "amphotericin b",
+      "precision": 1.0,
+      "recall": 0.3333333333333333
+    },
+    {
+      "c_c": "methotrexate",
+      "precision": 0.2,
+      "recall": 0.5
+    },
+    {
+      "c_c": "ortho tri cyclen lo",
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "c_c": "atrovent",
+      "precision": 0.5,
+      "recall": 1.0
+    }
+  ],
+  "disagreements": [
+    {
+      "c_c": "rituximab",
+      "answer": [
+        "infliximab"
+      ],
+      "over_proposed": [
+        "ethosuximide",
+        "rituxan",
+        "rituxan hycela"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "ethosuximide": "random",
+        "rituxan": "fuzzy",
+        "rituxan hycela": "fuzzy"
+      }
+    },
+    {
+      "c_c": "metformin",
+      "answer": [
+        "metronidazole"
+      ],
+      "over_proposed": [
+        "metyrapone",
+        "metyrosine"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "metyrapone": "random",
+        "metyrosine": "fuzzy"
+      }
+    },
+    {
+      "c_c": "memantine",
+      "answer": [
+        "methadone"
+      ],
+      "over_proposed": [
+        "amantadine",
+        "rimantadine"
+      ],
+      "missed": [
+        "methadone"
+      ],
+      "over_proposed_tiers": {
+        "amantadine": "fuzzy",
+        "rimantadine": "fuzzy"
+      }
+    },
+    {
+      "c_c": "atomoxetine",
+      "answer": [
+        "atorvastatin"
+      ],
+      "over_proposed": [
+        "duloxetine",
+        "paroxetine"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "duloxetine": "fuzzy",
+        "paroxetine": "fuzzy"
+      }
+    },
+    {
+      "c_c": "bayrab",
+      "answer": [
+        "bayhep b",
+        "bayrho d"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "bayhep b"
+      ],
+      "over_proposed_tiers": {}
+    },
+    {
+      "c_c": "purinethol",
+      "answer": [
+        "propylthiouracil"
+      ],
+      "over_proposed": [
+        "platinol"
+      ],
+      "missed": [
+        "propylthiouracil"
+      ],
+      "over_proposed_tiers": {
+        "platinol": "fuzzy"
+      }
+    },
+    {
+      "c_c": "influenza virus vaccine",
+      "answer": [
+        "flumazenil",
+        "perflutren lipid microspheres",
+        "tuberculin purified protein derivative"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "perflutren lipid microspheres",
+        "tuberculin purified protein derivative"
+      ],
+      "over_proposed_tiers": {}
+    },
+    {
+      "c_c": "elvitegravir cobicistat emtricitabine and tenofovir disoproxil fumarate",
+      "answer": [
+        "elvitegravir cobicistat emtricitabine and tenofovir alafenamide"
+      ],
+      "over_proposed": [
+        "cabotegravir"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "cabotegravir": "fuzzy"
+      }
+    },
+    {
+      "c_c": "ethambutol",
+      "answer": [
+        "ethmozine"
+      ],
+      "over_proposed": [
+        "ethosuximide",
+        "tambocor"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "ethosuximide": "random",
+        "tambocor": "fuzzy"
+      }
+    },
+    {
+      "c_c": "motrin",
+      "answer": [
+        "neurontin"
+      ],
+      "over_proposed": [
+        "morphine"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "morphine": "fuzzy"
+      }
+    },
+    {
+      "c_c": "humulin 70 30",
+      "answer": [
+        "humalog mix 75 25"
+      ],
+      "over_proposed": [
+        "humulin",
+        "humulin r u 100",
+        "humulin r u 500",
+        "novolin 70 30",
+        "novolog mix 70 30 flexpen"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "humulin": "fuzzy",
+        "humulin r u 100": "fuzzy",
+        "humulin r u 500": "fuzzy",
+        "novolin 70 30": "fuzzy",
+        "novolog mix 70 30 flexpen": "fuzzy"
+      }
+    },
+    {
+      "c_c": "lithium",
+      "answer": [
+        "ultram"
+      ],
+      "over_proposed": [
+        "liothyronine",
+        "lithium carbonate"
+      ],
+      "missed": [
+        "ultram"
+      ],
+      "over_proposed_tiers": {
+        "liothyronine": "fuzzy",
+        "lithium carbonate": "fuzzy"
+      }
+    },
+    {
+      "c_c": "renvela",
+      "answer": [
+        "renagel"
+      ],
+      "over_proposed": [
+        "enbrel",
+        "ranexa"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "enbrel": "fuzzy",
+        "ranexa": "fuzzy"
+      }
+    },
+    {
+      "c_c": "amlodipine",
+      "answer": [
+        "amiloride"
+      ],
+      "over_proposed": [
+        "nicardipine",
+        "nimodipine"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "nicardipine": "fuzzy",
+        "nimodipine": "fuzzy"
+      }
+    },
+    {
+      "c_c": "avandamet",
+      "answer": [
+        "anzemet"
+      ],
+      "over_proposed": [
+        "avandia",
+        "janumet"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "avandia": "fuzzy",
+        "janumet": "fuzzy"
+      }
+    },
+    {
+      "c_c": "sudafed 12 hour",
+      "answer": [
+        "sudafed 12 hour pressure pain"
+      ],
+      "over_proposed": [
+        "sudafed",
+        "sudafed pe"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "sudafed": "fuzzy",
+        "sudafed pe": "fuzzy"
+      }
+    },
+    {
+      "c_c": "hydrea",
+      "answer": [
+        "lyrica"
+      ],
+      "over_proposed": [
+        "hydralazine"
+      ],
+      "missed": [
+        "lyrica"
+      ],
+      "over_proposed_tiers": {
+        "hydralazine": "fuzzy"
+      }
+    },
+    {
+      "c_c": "paroxetine",
+      "answer": [
+        "duloxetine",
+        "fluoxetine",
+        "piroxicam"
+      ],
+      "over_proposed": [
+        "atomoxetine",
+        "pyridoxine"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "atomoxetine": "fuzzy",
+        "pyridoxine": "fuzzy"
+      }
+    },
+    {
+      "c_c": "daunorubicin",
+      "answer": [
+        "daunorubicin liposomal",
+        "doxorubicin",
+        "idarubicin"
+      ],
+      "over_proposed": [
+        "doxorubicin liposomal",
+        "epirubicin"
+      ],
+      "missed": [
+        "daunorubicin liposomal"
+      ],
+      "over_proposed_tiers": {
+        "doxorubicin liposomal": "fuzzy",
+        "epirubicin": "fuzzy"
+      }
+    },
+    {
+      "c_c": "bupropion",
+      "answer": [
+        "buspirone"
+      ],
+      "over_proposed": [
+        "buprenorphine"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "buprenorphine": "fuzzy"
+      }
+    },
+    {
+      "c_c": "zyloprim",
+      "answer": [
+        "zolpidem"
+      ],
+      "over_proposed": [
+        "zyprexa zydis"
+      ],
+      "missed": [
+        "zolpidem"
+      ],
+      "over_proposed_tiers": {
+        "zyprexa zydis": "fuzzy"
+      }
+    },
+    {
+      "c_c": "humulin r u 100",
+      "answer": [
+        "humulin r u 500"
+      ],
+      "over_proposed": [
+        "humalog",
+        "humira pen",
+        "humulin",
+        "humulin 70 30"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "humalog": "fuzzy",
+        "humira pen": "fuzzy",
+        "humulin": "fuzzy",
+        "humulin 70 30": "fuzzy"
+      }
+    },
+    {
+      "c_c": "platinol",
+      "answer": [
+        "patanol"
+      ],
+      "over_proposed": [
+        "carboplatin",
+        "cisplatin"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "carboplatin": "fuzzy",
+        "cisplatin": "fuzzy"
+      }
+    },
+    {
+      "c_c": "ketalar",
+      "answer": [
+        "ketorolac"
+      ],
+      "over_proposed": [
+        "kaletra"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "kaletra": "fuzzy"
+      }
+    },
+    {
+      "c_c": "recombivax hb",
+      "answer": [
+        "comvax"
+      ],
+      "over_proposed": [
+        "varivax"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "varivax": "fuzzy"
+      }
+    },
+    {
+      "c_c": "covera hs",
+      "answer": [
+        "covaryx hs"
+      ],
+      "over_proposed": [
+        "provera"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "provera": "fuzzy"
+      }
+    },
+    {
+      "c_c": "effexor xr",
+      "answer": [
+        "effexor",
+        "enablex"
+      ],
+      "over_proposed": [
+        "keflex"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "keflex": "fuzzy"
+      }
+    },
+    {
+      "c_c": "metyrapone",
+      "answer": [
+        "metyrosine"
+      ],
+      "over_proposed": [
+        "metolazone"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "metolazone": "fuzzy"
+      }
+    },
+    {
+      "c_c": "sitagliptin",
+      "answer": [
+        "saxagliptin",
+        "sumatriptan"
+      ],
+      "over_proposed": [
+        "linagliptin"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "linagliptin": "fuzzy"
+      }
+    },
+    {
+      "c_c": "malarone",
+      "answer": [
+        "mefloquine"
+      ],
+      "over_proposed": [
+        "amiodarone",
+        "matulane",
+        "metolazone"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "amiodarone": "fuzzy",
+        "matulane": "fuzzy",
+        "metolazone": "fuzzy"
+      }
+    },
+    {
+      "c_c": "amphotericin b",
+      "answer": [
+        "abelcet",
+        "ambisome",
+        "amphotericin b liposomal"
+      ],
+      "over_proposed": [],
+      "missed": [
+        "abelcet",
+        "ambisome"
+      ],
+      "over_proposed_tiers": {}
+    },
+    {
+      "c_c": "methotrexate",
+      "answer": [
+        "metolazone",
+        "mtx patch"
+      ],
+      "over_proposed": [
+        "methimazole",
+        "methylphenidate",
+        "pemetrexed",
+        "trexall"
+      ],
+      "missed": [
+        "mtx patch"
+      ],
+      "over_proposed_tiers": {
+        "methimazole": "random",
+        "methylphenidate": "random",
+        "pemetrexed": "fuzzy",
+        "trexall": "fuzzy"
+      }
+    },
+    {
+      "c_c": "atrovent",
+      "answer": [
+        "natru vent"
+      ],
+      "over_proposed": [
+        "flovent"
+      ],
+      "missed": [],
+      "over_proposed_tiers": {
+        "flovent": "fuzzy"
+      }
+    }
+  ],
+  "production_proxy": {
+    "micro": {
+      "precision": 0.5,
+      "recall": 0.8095238095238095,
+      "f1": 0.6181818181818182
+    },
+    "macro": {
+      "precision": 0.6143333333333334,
+      "recall": 0.8466666666666667,
+      "f1": 0.7120267700965853
+    }
+  }
+}
