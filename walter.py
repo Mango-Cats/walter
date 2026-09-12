@@ -380,9 +380,6 @@ def main() -> None:
     try:
         args.func(args)
     except (FileNotFoundError, ValueError) as exc:
-        # ValueError is how the stages report a bad input schema (a CSV without
-        # x_1/x_2, transcription columns phoc needs); that is the user's to fix,
-        # so it reads as an error line rather than a traceback.
         raise SystemExit(f"error: {exc}")
 
 

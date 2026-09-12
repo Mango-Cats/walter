@@ -14,8 +14,10 @@ seed pairs are supplied by the user and are not produced by another stage.
 import json
 from pathlib import Path
 
+import jellyfish
 import pandas as pd
-from rapidfuzz import fuzz, process
+from rapidfuzz import fuzz
+from rapidfuzz.distance import Levenshtein
 
 from config import (
     REGISTRY_COL,
@@ -33,6 +35,76 @@ from src.proposer.prompt import SYSTEM_PROMPT, construct_user_prompt
 # Fuzzy candidates pulled per seed drug before the LLM sees them. One extra is
 # requested so the seed drug itself can be dropped without going short.
 _CANDIDATE_LIMIT = 20
+
+
+def _soundex_code(name: str) -> str:
+    """Safely compute 4-char Soundex code for name."""
+    if not isinstance(name, str):
+        return ""
+    name = name.strip()
+    if not name:
+        return ""
+    try:
+        return jellyfish.soundex(name)
+    except Exception:
+        return ""
+
+
+def _soundex_similarity(code_a: str, code_b: str) -> float:
+    """Levenshtein similarity on 4-char Soundex codes in [0.0, 1.0]."""
+    if not code_a or not code_b:
+        return 0.0
+    dist = Levenshtein.distance(code_a, code_b)
+    return max(0.0, 1.0 - (dist / 4.0))
+
+
+def extract_candidates(
+    anchor: str,
+    known: str,
+    all_drugs: list[str],
+    drug_soundex_map: dict[str, str] | None = None,
+    limit: int = _CANDIDATE_LIMIT,
+) -> list[str]:
+    """
+    Extract candidate confusibles for an anchor drug satisfying:
+      ((fuzzy_score > 60) or (soundex_similarity >= 0.75)) and (edit_distance > 2)
+
+    Excludes exact matches to anchor and known. Candidates are ranked by:
+      composite_score = 0.5 * (fuzzy_score / 100.0) + 0.5 * soundex_similarity
+
+    Returns at most `limit` unique candidate names.
+    """
+    if drug_soundex_map is None:
+        drug_soundex_map = {d: _soundex_code(d) for d in all_drugs}
+
+    s_anchor = _soundex_code(anchor)
+    scored: list[tuple[float, float, str]] = []
+
+    for candidate in all_drugs:
+        if candidate == anchor or candidate == known:
+            continue
+        if Levenshtein.distance(anchor, candidate) <= 2:
+            continue
+
+        s_candidate = drug_soundex_map.get(candidate, "")
+        s_sim = _soundex_similarity(s_anchor, s_candidate)
+        f_score = fuzz.WRatio(anchor, candidate)
+
+        if f_score > 60 or s_sim >= 0.75:
+            composite = 0.5 * (f_score / 100.0) + 0.5 * s_sim
+            scored.append((composite, f_score, candidate))
+
+    scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+
+    seen: set[str] = set()
+    result: list[str] = []
+    for _, _, candidate in scored:
+        if candidate not in seen:
+            seen.add(candidate)
+            result.append(candidate)
+            if len(result) >= limit:
+                break
+    return result
 
 
 def load_seed_pairs(seed_csv: Path | str) -> pd.DataFrame:
@@ -67,9 +139,10 @@ def run_inference(
     Augment predefined LASA pairs with additional confusibles.
 
     For each seed pair, x_1 is the anchor: registry drugs similar to it are
-    gathered by fuzzy matching and the LLM picks the true confusibles among
-    them. The seed's own x_2 is excluded from the candidate list (it is
-    already confirmed) and carried into the output directly.
+    gathered by similarity constraints (fuzzy match > 0.6 or Soundex
+    similarity >= 0.75, edit distance > 2) and the LLM picks the true
+    confusibles among them. The seed's own x_2 is excluded from the candidate
+    list (it is already confirmed) and carried into the output directly.
 
     Writes results to a JSON file and returns the path.
 
@@ -84,18 +157,18 @@ def run_inference(
         Path to the written JSON file.
     """
     all_drugs = registry_df[REGISTRY_COL].tolist()
+    drug_soundex_map = {drug: _soundex_code(drug) for drug in all_drugs}
     results = []
     total = len(seed_pairs)
 
     for i, (anchor, known) in enumerate(zip(seed_pairs[COL_X1], seed_pairs[COL_X2])):
-        # remove this to allow the entire dataset to be fed to the LLM
-        # @hootawsneaks
-        top_matches = process.extract(
-            anchor, all_drugs, scorer=fuzz.WRatio, limit=_CANDIDATE_LIMIT + 2
+        candidates = extract_candidates(
+            anchor,
+            known,
+            all_drugs,
+            drug_soundex_map=drug_soundex_map,
+            limit=_CANDIDATE_LIMIT,
         )
-        candidates = [m[0] for m in top_matches if m[0] != anchor and m[0] != known][
-            :_CANDIDATE_LIMIT
-        ]
 
         proposed: list[str] = []
         reasoning = ""
