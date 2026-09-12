@@ -29,7 +29,11 @@ Tier 2 (~35%): Broader coverage, per cluster.
     (Tier 1 + this sample) are scored pairwise.
 
 A pair qualifies for U if it exceeds SIMILARITY_THRESHOLD on ANY measure,
-and is not already a known positive pair. A cluster that would otherwise
+is not already a known positive pair, and is not a "name + trailing
+qualifier" pair (see is_qualifier_pair) - P's own confirmed pairs treat
+that construction (zantac / zantac 360, adderall / adderall xr, ...) as
+confusable, so U must not contradict it by emitting the same construction
+as a negative (e.g. tagamet / tagamet hb). A cluster that would otherwise
 end up with zero negatives (all-positive, useless for train/test) gets a
 best-effort fallback negative instead.
 """
@@ -66,6 +70,26 @@ def normalize(name: str) -> str:
     name = name.strip().lower()
     nfd = unicodedata.normalize("NFD", name)
     return "".join(c for c in nfd if unicodedata.category(c) != "Mn")
+
+
+def is_qualifier_pair(a: str, b: str) -> bool:
+    """
+    True iff one normalized name is a strict, word-boundary prefix of the
+    other - e.g. "tagamet" / "tagamet hb", "zantac" / "zantac 360". P's own
+    confirmed pairs already treat this pattern as confusable (zantac /
+    zantac 360 = 1), so U must never emit it as a negative - that would be
+    a direct label contradiction on the exact same construction.
+
+    Deliberately stricter than "shares a word": "super drug" is not a
+    prefix of "super duper drug" (they diverge inside the second word), so
+    unrelated same-word names are not caught by this and stay eligible for
+    U.
+    """
+    na, nb = normalize(a), normalize(b)
+    if na == nb:
+        return False
+    short, long_ = (na, nb) if len(na) < len(nb) else (nb, na)
+    return long_.startswith(short) and long_[len(short) : len(short) + 1] == " "
 
 
 def _soundex_match(a: str, b: str) -> bool:
@@ -231,6 +255,8 @@ def _build_tier_1(
                 pair = frozenset([anchor, candidate])
                 if pair in positive_pairs:
                     continue
+                if is_qualifier_pair(anchor, candidate):
+                    continue
                 qualifies, score = is_similar_enough(anchor, candidate, threshold)
                 if qualifies:
                     owner[candidate] = cluster_id
@@ -305,6 +331,8 @@ def _build_tier_2(
             pair = frozenset([a, b])
             if pair in positive_pairs:
                 continue
+            if is_qualifier_pair(a, b):
+                continue
             qualifies, score = is_similar_enough(a, b, threshold)
             if qualifies:
                 rows.append(
@@ -344,6 +372,8 @@ def _fallback_negative(
             if not _claimable(candidate, cluster_id, owner):
                 continue
             if frozenset([anchor, candidate]) in positive_pairs:
+                continue
+            if is_qualifier_pair(anchor, candidate):
                 continue
             score = fuzz.WRatio(anchor, candidate)
             if score > best_score:

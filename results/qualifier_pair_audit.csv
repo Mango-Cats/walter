@@ -1,0 +1,31 @@
+x_1,x_2,source,current_label,correct_label
+adderall,adderall xr,P,1,1
+allegra,allegra anti-itch cream,P,1,1
+amphotericin b,amphotericin b liposomal,P,1,1
+betaine,betaine hcl,P,1,1
+claritin,claritin eye,P,1,1
+claritin-d,claritin-d 24,P,1,1
+cubicin,cubicin rf,P,1,1
+cyclosporine,cyclosporine modified,P,1,1
+daunorubicin,daunorubicin liposomal,P,1,1
+depakote,depakote er,P,1,1
+dexmethylphenidate,dexmethylphenidate mixed salts,P,1,1
+doxorubicin,doxorubicin liposomal,P,1,1
+effexor,effexor xr,P,1,1
+estratest,estratest hs,P,1,1
+maalox,maalox total stomach relief,P,1,1
+mucinex,mucinex allergy,P,1,1
+ortho tri-cyclen,ortho tri-cyclen lo,P,1,1
+paclitaxel,paclitaxel protein-bound particles,P,1,1
+rituxan,rituxan hycela,P,1,1
+saquinavir,saquinavir mesylate,P,1,1
+seroquel,seroquel xr,P,1,1
+sudafed,sudafed pe,P,1,1
+sudafed 12 hour,sudafed 12 hour pressure + pain,P,1,1
+tegretol,tegretol xr,P,1,1
+testoderm,testoderm tts,P,1,1
+testoderm,testoderm with adhesive,P,1,1
+tylenol,tylenol pm,P,1,1
+viokase,viokase 8,P,1,1
+zantac,zantac 360,P,1,1
+zyrtec,zyrtec itchy eye drops,P,1,1
