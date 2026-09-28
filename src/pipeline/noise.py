@@ -19,8 +19,8 @@ cluster may use it, so no name can ever bridge two clusters.
 
 Tier 1 (~65%): Anchor-based hard negatives, per cluster.
     For each anchor in a cluster, scan the still-unclaimed outside pool
-    for names similar under ANY of: WRatio, Soundex, Metaphone. First
-    cluster to match a given outside name claims it.
+    for names similar under ANY of: WRatio, nativized Soundex, Metaphone.
+    First cluster to match a given outside name claims it.
 
 Tier 2 (~35%): Broader coverage, per cluster.
     Each cluster claims a further small random sample of unclaimed
@@ -62,6 +62,7 @@ from config import (
     CANDIDATE_MIN_POOL,
     SEED,
 )
+from src.adapters.tbb import nativize as _nativize
 from src.pipeline.clustering import build_components
 
 
@@ -92,16 +93,25 @@ def is_qualifier_pair(a: str, b: str) -> bool:
     return long_.startswith(short) and long_[len(short) : len(short) + 1] == " "
 
 
-def _soundex_match(a: str, b: str) -> bool:
+def _metaphone_match(a: str, b: str) -> bool:
     try:
-        return jellyfish.soundex(a) == jellyfish.soundex(b)
+        return jellyfish.metaphone(a) == jellyfish.metaphone(b)
     except Exception:
         return False
 
 
-def _metaphone_match(a: str, b: str) -> bool:
+def _nativized_soundex_match(a: str, b: str) -> bool:
+    """
+    Soundex agreement on the tbb-cli Filipino-nativized spelling rather than
+    the raw English name. jellyfish.soundex encodes American-English
+    phonetics, so scoring the raw name would miss confusability that only
+    shows up once a name is heard/spelled the way a Filipino listener would
+    nativize it (and could likewise flag English-orthography collisions that
+    don't survive nativization) - this runs Soundex on the nativized form
+    instead.
+    """
     try:
-        return jellyfish.metaphone(a) == jellyfish.metaphone(b)
+        return jellyfish.soundex(_nativize(a)) == jellyfish.soundex(_nativize(b))
     except Exception:
         return False
 
@@ -113,14 +123,14 @@ def is_similar_enough(
 ) -> tuple[bool, int]:
     """
     Returns (qualifies, wratio_score).
-    Qualifies if ANY of WRatio >= threshold, Soundex match, Metaphone match.
-    Using ANY avoids Levenshtein bias for phonetically similar but
-    orthographically distant pairs (e.g. Xanax / Zantac).
+    Qualifies if ANY of WRatio >= threshold, nativized Soundex match,
+    Metaphone match. Using ANY avoids Levenshtein bias for phonetically
+    similar but orthographically distant pairs (e.g. Xanax / Zantac).
     """
     score = fuzz.WRatio(a, b)
     if score >= threshold:
         return True, score
-    if _soundex_match(a, b):
+    if _nativized_soundex_match(a, b):
         return True, score
     if _metaphone_match(a, b):
         return True, score

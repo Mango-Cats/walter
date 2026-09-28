@@ -11,7 +11,6 @@ Usage:
                                 (--soft-labels adds the rejected pairs as -1)
     walter phoc                 add phonetic-similarity features
     walter featurize            g2p + phoc on an existing CSV
-    walter annotate             export blinded rater sheets for IAA
 
 --input and --output are directories, not files. Each artifact has one
 canonical filename (config/paths.py): a stage reads that name out of its
@@ -35,20 +34,14 @@ import argparse
 import time
 from pathlib import Path
 
-import pandas as pd
 from rich.console import Console
 
 from config import (
-    ANNOTATION_DIR,
-    ANNOTATION_SEED,
     D_FILENAME,
     D_PHO_FILENAME,
     DATA_SOURCE,
     FROM_FILE,
     LLM_OUTPUT_FILENAME,
-    N_CANDIDATES,
-    N_PLACEBO,
-    NEG_PER_POSITIVE,
     P,
     POSITIVE_PREVALENCE,
     RESULTS_DIR,
@@ -229,58 +222,6 @@ def cmd_all(args: argparse.Namespace) -> None:
     print(f"D_pho -> {d_pho_csv}")
 
 
-def cmd_annotate(args: argparse.Namespace) -> None:
-    from src import annotation
-
-    D = pd.read_csv(in_file(args.input, D_FILENAME, "walter assemble"))
-    batch = annotation.build_batch(
-        D,
-        n_candidates=args.n_candidates,
-        neg_per_positive=args.neg_per_positive,
-        n_placebo=args.n_placebo,
-        seed=args.seed,
-    )
-    annotation.export(
-        batch,
-        round_name=args.round,
-        base=args.output,
-        show_similarity=args.show_similarity,
-    )
-    print(
-        "\nThe batch is stratified, not the true class prevalence "
-        f"({POSITIVE_PREVALENCE:.6f}), so agreement computed on it does not "
-        "estimate agreement over D."
-    )
-
-
-def _add_annotate_command(sub) -> None:
-    p = sub.add_parser("annotate", help="Export blinded rater sheets for IAA")
-    p.add_argument("--round", default="r1", help="Round name (default: r1)")
-    p.add_argument(
-        "--input",
-        type=Path,
-        default=RESULTS_DIR,
-        help=f"Directory holding {D_FILENAME}",
-    )
-    p.add_argument(
-        "--output",
-        type=Path,
-        default=ANNOTATION_DIR,
-        help="Directory to write the round's sheets into",
-    )
-    p.add_argument("--n-candidates", type=int, default=N_CANDIDATES)
-    p.add_argument("--neg-per-positive", type=float, default=NEG_PER_POSITIVE)
-    p.add_argument("--n-placebo", type=int, default=N_PLACEBO)
-    p.add_argument("--seed", type=int, default=ANNOTATION_SEED)
-    p.add_argument(
-        "--show-similarity",
-        action="store_true",
-        help="Include the fuzzy score (codebook Section 8.2 leaves this open; "
-        "it may anchor raters toward the orthographic channel)",
-    )
-    p.set_defaults(func=cmd_annotate)
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="walter",
@@ -366,8 +307,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output CSV (default: <input>_pho.csv beside the input)",
     )
     p_featurize.set_defaults(func=cmd_featurize)
-
-    _add_annotate_command(sub)
 
     return parser
 

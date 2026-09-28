@@ -52,7 +52,7 @@ uv run walter propose     # augment predefined P    -> results/lasa_run.json
 uv run walter noise       # sample U                -> results/U.csv
 uv run walter assemble    # merge P + U, transcribe -> results/D.csv
 uv run walter phoc        # phonetic features       -> results/D_pho.csv
-uv run walter all         # every stage (same as bare `uv run walter`)
+uv run walter all         # every stage
 ```
 
 Plus `featurize`, which runs the feature stages over pairs you already
@@ -60,7 +60,7 @@ have instead of pairs this pipeline builds (see below).
 
 #### Directories in, directories out
 
-`--input` and `--output` are **directories**, not files. Every artifact has one canonical filename (`config/paths.py`), and a stage always reads that name out of its input directory and writes that name into its output directory:
+`--input` and `--output` are **directories**. Every artifact has one canonical filename (`config/paths.py`), and a stage always reads that name out of its input directory and writes that name into its output directory:
 
 | stage | reads | writes |
 | --- | --- | --- |
@@ -69,19 +69,18 @@ have instead of pairs this pipeline builds (see below).
 | `assemble` | `U.csv` + `lasa_run.json` | `D.csv` |
 | `phoc` | `D.csv` | `D_pho.csv` |
 | `featurize` | *(any pairs CSV - see below)* | `<input>_pho.csv` |
-| `annotate` | `D.csv` | `<round>/R*.csv`, `<round>/_key.csv` |
 
 Because the name a stage writes is exactly the name the next one looks for,
 chaining stages is just pointing them at the same directory:
 
 ```bash
-uv run walter noise    --input /tmp/run7 --output /tmp/run7   # -> /tmp/run7/U.csv
-uv run walter assemble --input /tmp/run7 --output /tmp/run7   # -> /tmp/run7/D.csv
-uv run walter phoc     --input /tmp/run7 --output /tmp/run7   # -> /tmp/run7/D_pho.csv
+uv run walter noise    --input /my_dir --output /my_dir   # -> /my_dir/U.csv
+uv run walter assemble --input /my_dir --output /my_dir   # -> /my_dir/D.csv
+uv run walter phoc     --input /my_dir --output /my_dir   # -> /my_dir/D_pho.csv
 ```
 
-Both default to `results/` (`annotate`'s `--output` defaults to `annotation/`),
-so the bare commands above all work with no arguments. Output directories are
+Both default to `results/`, so the bare commands above all work with no
+arguments. Output directories are
 created if missing.
 
 Running a stage whose input is missing names the command that produces it:
@@ -157,8 +156,6 @@ is byte-for-byte the dataset it was before.
 A pair can be claimed by more than one input - the LLM rejects it and the
 sampler happens to draw it - so the union resolves in the order P, N, U and the
 strongest claim wins: confirmed positive over rejection, either over unlabeled.
-The `annotate` stage is unaffected; its negative stratum still draws from the
-sampled `0` pairs only, so rejections never reach a rater sheet.
 
 #### Featurizing a dataset you already have
 
@@ -188,44 +185,6 @@ keeps the work already paid for:
 | --- | --- |
 | `<input>_t.csv` | + the IPA transcriptions |
 | `<input>_pho.csv` | + the phonetic-similarity columns *(the default `--output`)* |
-
-### Annotation sheets
-
-Draws a batch from `D.csv` and writes one blinded CSV per rater, for the human
-round described in `docs/annotation_codebook.md`. Agreement itself is computed
-outside this pipeline, from the sheets the raters hand back.
-
-```bash
-uv run walter annotate   # -> annotation/r1/R1.csv, R2.csv, R3.csv, _key.csv
-```
-
-`--input` is the directory holding `D.csv` (default `results/`) and `--output`
-the directory the round is written under (default `annotation/`); `--round`
-names the subdirectory within it.
-
-Sheets are blinded by construction: they carry only `pair_id`, the pair, its
-Filipino IPA, and empty `label` / `channel` / `confidence` / `notes` columns.
-The true label, the fuzzy score, the stratum, and the English transcription are
-all withheld. `--show-similarity` opts the fuzzy score in (codebook Section 8.2
-leaves that open, and it may anchor raters toward the orthographic channel).
-All three raters get identical rows in identical order, so position cannot be a
-source of systematic difference between them.
-
-The `_key.csv` written alongside maps each `pair_id` back to its stratum and
-source label. It is what joins the returned sheets together for the agreement
-calculation, and must not be given to raters.
-
-Batch composition is configurable, because a uniform sample of `D` is almost
-entirely negative and leaves an agreement statistic nothing to estimate:
-
-```bash
-uv run walter annotate --n-candidates 120 --neg-per-positive 0.5 --n-placebo 20
-```
-
-Placebo pairs are unrelated names no attentive rater should mark positive, so
-agreement on them is the straight-lining check from codebook Section 8.1.
-Because the batch is stratified this way, agreement measured on it is not an
-estimate of agreement over `D`.
 
 ### Outputs
 

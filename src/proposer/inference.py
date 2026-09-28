@@ -30,6 +30,7 @@ from config import (
 )
 from src.adapters.llm.api import api_response
 from src.adapters.llm.local import LocalModel, response
+from src.adapters.tbb import nativize as _nativize
 from src.proposer.prompt import SYSTEM_PROMPT, construct_user_prompt
 
 # Fuzzy candidates pulled per seed drug before the LLM sees them. One extra is
@@ -38,14 +39,20 @@ _CANDIDATE_LIMIT = 20
 
 
 def _soundex_code(name: str) -> str:
-    """Safely compute 4-char Soundex code for name."""
+    """
+    Safely compute a 4-char Soundex code for the tbb-cli Filipino-nativized
+    spelling of name, rather than the raw English name. jellyfish.soundex
+    encodes American-English phonetics, so scoring it against the nativized
+    form catches confusability that only shows up once a name is
+    heard/spelled the way a Filipino listener would nativize it.
+    """
     if not isinstance(name, str):
         return ""
     name = name.strip()
     if not name:
         return ""
     try:
-        return jellyfish.soundex(name)
+        return jellyfish.soundex(_nativize(name))
     except Exception:
         return ""
 
@@ -68,6 +75,9 @@ def extract_candidates(
     """
     Extract candidate confusibles for an anchor drug satisfying:
       ((fuzzy_score > 60) or (soundex_similarity >= 0.75)) and (edit_distance > 2)
+
+    soundex_similarity is scored on the Filipino-nativized spelling (see
+    _soundex_code), not the raw English name.
 
     Excludes exact matches to anchor and known. Candidates are ranked by:
       composite_score = 0.5 * (fuzzy_score / 100.0) + 0.5 * soundex_similarity
@@ -140,8 +150,9 @@ def run_inference(
 
     For each seed pair, x_1 is the anchor: registry drugs similar to it are
     gathered by similarity constraints (fuzzy match > 0.6 or Soundex
-    similarity >= 0.75, edit distance > 2) and the LLM picks the true
-    confusibles among them. The seed's own x_2 is excluded from the candidate
+    similarity >= 0.75 on the Filipino-nativized spelling, edit distance > 2)
+    and the LLM picks the true confusibles among them. The seed's own x_2 is
+    excluded from the candidate
     list (it is already confirmed) and carried into the output directly.
 
     Writes results to a JSON file and returns the path.
