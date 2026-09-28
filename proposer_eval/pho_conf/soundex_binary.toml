@@ -1,0 +1,3 @@
+algorithm = "soundex"
+case_insensitive = true
+mode = "binary"
