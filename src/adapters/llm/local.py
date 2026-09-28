@@ -1,9 +1,7 @@
-"""
-Local LLM loader and inference runner, backing the LASA proposer.
+"""Local model inference loader for finding confusable drug pairs.
 
-Models are downloaded by scripts/model_setup.py into config.MODELS_DIR. Both
-the model and tokenizer are cached in _MODELS, since loading is slow and the
-proposer calls response() once per seed pair.
+Loads pre-downloaded open-weights models (such as Qwen or SmolLM) using
+HuggingFace Transformers to run inference locally on CPU or GPU.
 """
 
 import os
@@ -27,7 +25,7 @@ if _TORCH_AVAILABLE:
 
 
 class LocalModel(Enum):
-    """Supported local models. Values are HuggingFace repo IDs."""
+    """Supported local models with their HuggingFace repository identifiers."""
 
     QWEN3_4B = "Qwen/Qwen3-4B-Instruct-2507"
     SMOLLM2 = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
@@ -35,6 +33,7 @@ class LocalModel(Enum):
 
     @property
     def path(self) -> str:
+        """Return the local filesystem path where this model is saved."""
         return str(MODELS_DIR / self.value.split("/")[-1].lower())
 
 
@@ -42,6 +41,19 @@ _MODELS: dict[LocalModel, tuple] = {}
 
 
 def get_model(model_choice: LocalModel) -> tuple:
+    """Load a local language model and its tokenizer, caching them in memory.
+
+    Args:
+        model_choice: The LocalModel enum value to load.
+
+    Returns:
+        A tuple of (model_object, tokenizer_object).
+
+    Raises:
+        RuntimeError: If torch or transformers packages are not installed.
+        FileNotFoundError: If the model weights have not been downloaded.
+
+    """
     if not _TORCH_AVAILABLE:
         raise RuntimeError(
             "torch/transformers not installed. "
@@ -82,11 +94,18 @@ def response(
     system_prompt: str,
     new_toks_len: int = 64,
 ) -> list[str]:
-    """
-    Run a single inference call and return cleaned proposed confusibles.
+    """Run local text generation and return validated confusable candidates.
 
-    system_prompt is passed in rather than imported so this module stays free
-    of proposer-specific domain knowledge; src/proposer owns the wording.
+    Args:
+        user_prompt: Prompt text containing the target drug and candidate list.
+        model: The LocalModel enum specifying which local weights to run.
+        candidates: List of valid candidate drug names to validate against.
+        system_prompt: System prompt instructing the model on clinical confusion.
+        new_toks_len: Maximum number of new tokens to generate.
+
+    Returns:
+        List of validated confusable drug names chosen by the model.
+
     """
     model_obj, tokenizer = get_model(model)
     prompt = f"{system_prompt}\n\n{user_prompt}\n\nOutput:"

@@ -153,7 +153,9 @@ def main() -> None:
 
     pool_target = args.oversample * n_pos
     prevalence = n_pos / (n_pos + pool_target)
-    with Spinner(f"Mining {pool_target:,} candidate negatives ({args.oversample}x oversample)"):
+    with Spinner(
+        f"Mining {pool_target:,} candidate negatives ({args.oversample}x oversample)"
+    ):
         candidates = make_noise(
             pairs_df=P_df,
             registry_df=R_clean,

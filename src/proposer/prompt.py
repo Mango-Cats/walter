@@ -1,5 +1,10 @@
-"""
-System prompt and user prompt constructor for the local LLM LASA proposer.
+"""Prompts used to guide AI models in identifying confusable drug pairs.
+
+This module contains:
+    - SYSTEM_PROMPT: Instructions detailing clinical Look-Alike Sound-Alike (LASA)
+      confusion risks, orthographic similarity, phonetic similarity, and output rules.
+    - construct_user_prompt: Helper function that formats the target drug and candidate
+      list into a clean input prompt.
 """
 
 SYSTEM_PROMPT = """You are a pharmacist and an expert in Filipino phonology, \
@@ -59,13 +64,16 @@ suffix is confusable.
 
 
 def construct_user_prompt(drug_name: str, candidates: str, n: int = 1) -> str:
-    """
-    Build the user-turn prompt for the LLM.
+    """Build the user prompt requesting confusable candidates for a target drug.
 
     Args:
-        drug_name:  The target drug name.
-        candidates: Newline-separated candidate drug names.
-        n:          Number of confusibles to request.
+        drug_name: The anchor drug name.
+        candidates: Newline-separated list of candidate drug names.
+        n: Number of confusable candidates requested.
+
+    Returns:
+        Formatted prompt string for the AI model.
+
     """
     return (
         f"Target Drug:\n{drug_name}\n\n"

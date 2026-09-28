@@ -1,13 +1,12 @@
-"""
-Assembles P, N and U into the final dataset D and saves it:
+"""Combines confusable and non-confusable drug pairs into the main dataset (D.csv).
 
-D.csv (classification) - x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label.
-One IPA transcription per language per name (see config.TRANSCRIPTION_LANGS).
-
-D is the shuffled union of its inputs, deduplicated. N (rejected pairs, label
--1) is optional: pass it only under soft labels, otherwise D is the two-value
-P/U dataset. Where a pair appears in more than one input the stronger claim
-wins - a confirmed positive over a rejection, either over an unlabeled pair.
+This module handles:
+    1. Merging confirmed confusable pairs (P), sampled non-confusable pairs (U),
+       and optionally rejected pairs (N).
+    2. Deduplicating pairs regardless of word order (e.g. A-B is the same as B-A).
+    3. Generating spoken pronunciations in the International Phonetic Alphabet (IPA)
+       for both English and Filipino.
+    4. Saving the assembled dataset to disk.
 """
 
 import re
@@ -17,20 +16,20 @@ from pathlib import Path
 import pandas as pd
 
 from config import (
-    COL_X1,
-    COL_X2,
+    COL_LABEL,
     COL_T_ENG_1,
     COL_T_ENG_2,
     COL_T_FIL_1,
     COL_T_FIL_2,
-    COL_LABEL,
-    NEGATIVE_LABEL,
-    POSITIVE_LABEL,
-    UNLABELED_LABEL,
-    RESULTS_DIR,
+    COL_X1,
+    COL_X2,
     D_CSV,
     LASA_RUN_U_CSV,
+    NEGATIVE_LABEL,
+    POSITIVE_LABEL,
+    RESULTS_DIR,
     SHUFFLE_SEED,
+    UNLABELED_LABEL,
 )
 from src.adapters.g2p.transcribe import transcribe_all
 
@@ -39,9 +38,17 @@ _T2_COLS: list[str] = [COL_T_ENG_2, COL_T_FIL_2]
 
 
 def _clean_name(name: str) -> str:
-    """
-    Normalize a drug name for deduplication purposes.
-    Lowercase, strip, diacritics removed, symbols → space, collapse spaces.
+    """Normalize a drug name for deduplication.
+
+    Converts the name to lowercase, removes accents, strips punctuation, and
+    collapses extra whitespace.
+
+    Args:
+        name: The raw drug name.
+
+    Returns:
+        The normalized drug name string.
+
     """
     if not isinstance(name, str):
         return ""
@@ -54,14 +61,28 @@ def _clean_name(name: str) -> str:
 
 
 def canonical_key(a: str, b: str) -> tuple[str, str]:
-    """Sorted pair so (A, B) and (B, A) are treated as duplicates."""
-    return tuple(sorted([a, b]))  # type: ignore[return-value]
+    """Return a sorted pair of names so (A, B) and (B, A) match as duplicates.
+
+    Args:
+        a: First drug name.
+        b: Second drug name.
+
+    Returns:
+        Alphabetically sorted tuple of both drug names.
+
+    """
+    return (a, b) if a <= b else (b, a)
 
 
 def clean_and_deduplicate(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Clean drug names in COL_X1 / COL_X2, remove self-pairs,
-    and drop canonical duplicates. Keeps the first occurrence.
+    """Clean drug names in pair columns and remove duplicate or self-paired rows.
+
+    Args:
+        df: DataFrame containing pair columns COL_X1 and COL_X2.
+
+    Returns:
+        Cleaned and deduplicated DataFrame.
+
     """
     df = df.copy()
     df[COL_X1] = df[COL_X1].apply(_clean_name)
@@ -85,14 +106,18 @@ def clean_and_deduplicate(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _normalize_pairs(df: pd.DataFrame, label: int) -> pd.DataFrame:
-    """
-    Ensure a pairs DataFrame has exactly [COL_X1, COL_X2, COL_LABEL].
-    Drops any extra columns (similarity, tier, etc.) from noise output.
+    """Format pair DataFrame with standard columns and assign a label.
+
+    Args:
+        df: Input pairs DataFrame.
+        label: Numeric label to assign to all rows.
+
+    Returns:
+        A DataFrame with standard columns [COL_X1, COL_X2, COL_LABEL].
+
     """
     df = df.copy()
 
-    # Handle noise output column naming (COL_X1 may already be correct,
-    # but noise.py might have used legacy col names - guard here)
     for old, new in [("Brand Name", COL_X1), ("Confusible", COL_X2)]:
         if old in df.columns and new not in df.columns:
             df = df.rename(columns={old: new})
@@ -109,24 +134,22 @@ def assemble_and_save(
     verbose: bool = True,
     output_csv: Path = D_CSV,
 ) -> pd.DataFrame:
-    """
-    Clean, deduplicate, transcribe, and save D to output_csv.
+    """Combine confusable, non-confusable, and rejected pairs into the dataset CSV.
 
-    Steps:
-      1. Normalize column names and labels for each input
-      2. Clean and deduplicate each independently
-      3. Concatenate into D, deduplicate again across the union
-      4. Add IPA transcriptions, one pair per language (English + Filipino)
-      5. Reorder to [x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label]
-      6. Shuffle D
-      7. Save D (classification) to output_csv
+    Merges all pair sets, removes duplicates, adds English and Filipino IPA
+    pronunciations, shuffles the rows, and writes the final dataset to disk.
 
-    N is the soft-label input: rejected pairs, labelled NEGATIVE_LABEL. Leave
-    it None for the two-value P/U dataset. The concatenation order is P, N, U
-    and deduplication keeps the first occurrence, so a pair claimed by two
-    inputs takes the label of the strongest claim rather than the last one read.
+    Args:
+        P: Confirmed confusable drug pairs (label = 1).
+        U: Sampled non-confusable drug pairs (label = 0).
+        N: Optional rejected pairs for soft labeling (label = -1).
+        add_phonemes: Whether to transcribe drug names into IPA pronunciations.
+        verbose: Whether to print progress messages.
+        output_csv: Destination file path for D.csv.
 
-    Returns the assembled D DataFrame (classification schema).
+    Returns:
+        The assembled DataFrame.
+
     """
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -146,8 +169,6 @@ def assemble_and_save(
             print(f"[dataset] N (clean): {len(N_clean):,} pairs")
         print(f"[dataset] U (clean): {len(U_clean):,} pairs")
 
-    # parts is P before N before U, and clean_and_deduplicate keeps the first
-    # occurrence, so the concatenation order is what resolves a contested pair.
     D = pd.concat(parts, ignore_index=True)
     D = clean_and_deduplicate(D)
 
@@ -204,19 +225,15 @@ def unselected_candidate_pairs(
     lasa_data: list[dict],
     label: int = UNLABELED_LABEL,
 ) -> pd.DataFrame:
-    """
-    Build a (x_1, x_2, label) DataFrame from the candidates each entry in
-    lasa_run.json was shown but did NOT propose (candidates - x_2).
+    """Extract unselected candidate pairs from AI proposer output.
 
     Args:
-        lasa_data: Parsed JSON from LLM_OUTPUT_JSON / LASA_RUN_JSON -
-                   a list of {"x_1": ..., "candidates": [...], "x_2": [...]}.
-        label:     What to label these pairs. UNLABELED_LABEL treats "the LLM
-                   passed over it" as no information; NEGATIVE_LABEL treats it
-                   as the rejection it is, and is what soft labels pass.
+        lasa_data: Parsed JSON data containing proposer runs and candidates.
+        label: Label value to assign to these pairs (UNLABELED_LABEL or NEGATIVE_LABEL).
 
     Returns:
-        DataFrame with columns [COL_X1, COL_X2, COL_LABEL].
+        A DataFrame with columns [COL_X1, COL_X2, COL_LABEL].
+
     """
     rows = []
     for entry in lasa_data:
@@ -225,8 +242,6 @@ def unselected_candidate_pairs(
             continue
         candidates = entry.get("candidates", [])
         selected = {c.lower() for c in entry.get(COL_X2, [])}
-        # The seed pair is confirmed input, never a candidate the LLM judged,
-        # but guard anyway: it must never come back out as a rejection.
         seed = entry.get("seed_x_2")
         if seed:
             selected.add(seed.lower())
@@ -239,14 +254,19 @@ def unselected_candidate_pairs(
 
 def write_lasa_run_unlabeled_csv(
     lasa_data: list[dict],
-    output_path=LASA_RUN_U_CSV,
+    output_path: Path = LASA_RUN_U_CSV,
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """
-    Write the (x_1, unselected candidate) pairs from lasa_run.json to
-    their own CSV, in isolation, for inspection.
+    """Write unselected candidate pairs from the proposer output to a separate CSV.
 
-    Returns the cleaned, deduplicated DataFrame that was written.
+    Args:
+        lasa_data: Parsed JSON data from the AI proposer.
+        output_path: File path to save the unselected pairs CSV.
+        verbose: Whether to print progress messages.
+
+    Returns:
+        Cleaned and deduplicated DataFrame that was written to disk.
+
     """
     df = unselected_candidate_pairs(lasa_data)
     df = clean_and_deduplicate(df)
@@ -268,26 +288,21 @@ def add_lasa_run_unlabeled(
     add_phonemes: bool = True,
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """
-    Extend D with (x_1, unselected candidate) pairs as label=0 rows.
-
-    Cleans and deduplicates the new pairs, drops any that already exist
-    in D (in either direction), optionally adds IPA transcriptions for
-    any new drug names, and returns the extended D.
+    """Extend dataset D with unselected candidates from proposer output.
 
     Args:
-        lasa_data:    Parsed JSON from LLM_OUTPUT_JSON / LASA_RUN_JSON.
-        D:            Existing assembled dataset (columns x_1, t_1, x_2, t_2, label).
-        add_phonemes: If True, transcribe any new unique drug names to IPA.
-        verbose:      Print progress.
+        lasa_data: Parsed JSON data from the AI proposer.
+        D: Existing assembled dataset DataFrame.
+        add_phonemes: Whether to generate IPA pronunciations for new names.
+        verbose: Whether to print progress messages.
 
     Returns:
-        Extended copy of D, NOT yet saved to disk.
+        Extended copy of DataFrame D.
+
     """
     new_pairs = unselected_candidate_pairs(lasa_data)
     new_pairs = clean_and_deduplicate(new_pairs)
 
-    # Drop new pairs that duplicate an existing row in D (either order)
     existing_keys = {canonical_key(a, b) for a, b in zip(D[COL_X1], D[COL_X2])}
     new_pairs["_key"] = new_pairs.apply(
         lambda r: canonical_key(r[COL_X1], r[COL_X2]), axis=1

@@ -1,41 +1,15 @@
-"""
-Constructs the unlabeled set U for PU learning via two-tier
-similarity-filtered sampling, constrained per-cluster so the emitted
-name graph stays a union of disjoint components instead of one giant
-blob.
+"""Constructs the unlabeled set of non-confusable drug pairs (U).
 
-Downstream, the LASA classifier splits train/test by connected
-component of the name graph (x_1/x_2 pairs = edges). That only works
-if the graph actually decomposes into many components. P's confirmed
-pairs already do this naturally - each connected component of P is a
-LASA confusion group. The risk is entirely in how U is built: if
-negatives are drawn from one shared global pool, the same
-outside-vocabulary name can end up paired with anchors from two
-different P clusters, bridging them into one component.
+Why this is needed:
+To train machine learning models to detect confusable drugs, we need both confusable
+pairs (positives) and realistic non-confusable pairs (negatives).
 
-To avoid that, every outside-vocabulary name is claimed *exclusively*
-by at most one cluster (tracked in `owner`). Once claimed, no other
-cluster may use it, so no name can ever bridge two clusters.
+This module samples negatives in two tiers:
+    - Tier 1 (~65%): Anchor-based hard negatives that sound or look similar to confirmed drugs.
+    - Tier 2 (~35%): Broader random samples within cluster pools to provide general coverage.
 
-Tier 1 (~65%): Anchor-based hard negatives, per cluster.
-    For each anchor in a cluster, scan the still-unclaimed outside pool
-    for names similar under ANY of: WRatio, nativized Soundex, Metaphone.
-    First cluster to match a given outside name claims it.
-
-Tier 2 (~35%): Broader coverage, per cluster.
-    Each cluster claims a further small random sample of unclaimed
-    outside names (TIER_2_SAMPLE_SIZE distributed across all clusters),
-    then all pairs within that cluster's combined claimed pool
-    (Tier 1 + this sample) are scored pairwise.
-
-A pair qualifies for U if it exceeds SIMILARITY_THRESHOLD on ANY measure,
-is not already a known positive pair, and is not a "name + trailing
-qualifier" pair (see is_qualifier_pair) - P's own confirmed pairs treat
-that construction (zantac / zantac 360, adderall / adderall xr, ...) as
-confusable, so U must not contradict it by emitting the same construction
-as a negative (e.g. tagamet / tagamet hb). A cluster that would otherwise
-end up with zero negatives (all-positive, useless for train/test) gets a
-best-effort fallback negative instead.
+Each outside drug is claimed exclusively by one cluster, preventing different clusters
+from merging together.
 """
 
 import random
@@ -47,44 +21,53 @@ import pandas as pd
 from rapidfuzz import fuzz
 
 from config import (
+    CANDIDATE_MIN_POOL,
+    CANDIDATE_OVERSAMPLE_FACTOR,
+    COL_LABEL,
     COL_X1,
     COL_X2,
-    COL_LABEL,
-    REGISTRY_COL,
-    UNLABELED_LABEL,
     POSITIVE_PREVALENCE,
+    REGISTRY_COL,
+    SEED,
     SIMILARITY_THRESHOLD,
     TIER_1_PROPORTION,
+    TIER_2_MAX_POOL_PER_CLUSTER,
     TIER_2_PROPORTION,
     TIER_2_SAMPLE_SIZE,
-    TIER_2_MAX_POOL_PER_CLUSTER,
-    CANDIDATE_OVERSAMPLE_FACTOR,
-    CANDIDATE_MIN_POOL,
-    SEED,
+    UNLABELED_LABEL,
 )
 from src.adapters.tbb import nativize as _nativize
 from src.pipeline.clustering import build_components
 
 
 def normalize(name: str) -> str:
-    """Lowercase, strip, remove diacritics. Keeps digits."""
+    """Normalize a drug name by lowercasing, stripping whitespace, and removing diacritics.
+
+    Args:
+        name: The input drug name string.
+
+    Returns:
+        Cleaned and normalized drug name string.
+
+    """
     name = name.strip().lower()
     nfd = unicodedata.normalize("NFD", name)
     return "".join(c for c in nfd if unicodedata.category(c) != "Mn")
 
 
 def is_qualifier_pair(a: str, b: str) -> bool:
-    """
-    True iff one normalized name is a strict, word-boundary prefix of the
-    other - e.g. "tagamet" / "tagamet hb", "zantac" / "zantac 360". P's own
-    confirmed pairs already treat this pattern as confusable (zantac /
-    zantac 360 = 1), so U must never emit it as a negative - that would be
-    a direct label contradiction on the exact same construction.
+    """Check if one drug name is a prefix of another with an added qualifier.
 
-    Deliberately stricter than "shares a word": "super drug" is not a
-    prefix of "super duper drug" (they diverge inside the second word), so
-    unrelated same-word names are not caught by this and stay eligible for
-    U.
+    For example, 'Zantac' vs 'Zantac 360'. Confirmed pairs treat these as confusable,
+    so they are excluded from the negative set.
+
+    Args:
+        a: First drug name.
+        b: Second drug name.
+
+    Returns:
+        True if one name is a word-boundary prefix of the other, False otherwise.
+
     """
     na, nb = normalize(a), normalize(b)
     if na == nb:
@@ -94,6 +77,16 @@ def is_qualifier_pair(a: str, b: str) -> bool:
 
 
 def _metaphone_match(a: str, b: str) -> bool:
+    """Check if two drug names produce the same Metaphone phonetic code.
+
+    Args:
+        a: First drug name.
+        b: Second drug name.
+
+    Returns:
+        True if their Metaphone codes match, False otherwise.
+
+    """
     try:
         return jellyfish.metaphone(a) == jellyfish.metaphone(b)
     except Exception:
@@ -101,14 +94,15 @@ def _metaphone_match(a: str, b: str) -> bool:
 
 
 def _nativized_soundex_match(a: str, b: str) -> bool:
-    """
-    Soundex agreement on the tbb-cli Filipino-nativized spelling rather than
-    the raw English name. jellyfish.soundex encodes American-English
-    phonetics, so scoring the raw name would miss confusability that only
-    shows up once a name is heard/spelled the way a Filipino listener would
-    nativize it (and could likewise flag English-orthography collisions that
-    don't survive nativization) - this runs Soundex on the nativized form
-    instead.
+    """Check if two drug names produce the same Soundex code under Filipino pronunciation.
+
+    Args:
+        a: First drug name.
+        b: Second drug name.
+
+    Returns:
+        True if their nativized Soundex codes match, False otherwise.
+
     """
     try:
         return jellyfish.soundex(_nativize(a)) == jellyfish.soundex(_nativize(b))
@@ -121,11 +115,16 @@ def is_similar_enough(
     b: str,
     threshold: int = SIMILARITY_THRESHOLD,
 ) -> tuple[bool, int]:
-    """
-    Returns (qualifies, wratio_score).
-    Qualifies if ANY of WRatio >= threshold, nativized Soundex match,
-    Metaphone match. Using ANY avoids Levenshtein bias for phonetically
-    similar but orthographically distant pairs (e.g. Xanax / Zantac).
+    """Check if two drug names meet any similarity criteria (spelling, Soundex, or Metaphone).
+
+    Args:
+        a: First drug name.
+        b: Second drug name.
+        threshold: Minimum RapidFuzz WRatio score required to qualify.
+
+    Returns:
+        A tuple of (qualifies, wratio_score).
+
     """
     score = fuzz.WRatio(a, b)
     if score >= threshold:
@@ -138,14 +137,27 @@ def is_similar_enough(
 
 
 def get_positive_vocabulary(pairs_df: pd.DataFrame) -> set[str]:
-    """All unique normalized drug names that appear in any confirmed pair."""
+    """Return all unique normalized drug names appearing in confirmed confusable pairs.
+
+    Args:
+        pairs_df: DataFrame of confirmed confusable pairs.
+
+    Returns:
+        Set of unique normalized drug names.
+
+    """
     return {normalize(v) for v in pairs_df[COL_X1].tolist() + pairs_df[COL_X2].tolist()}
 
 
 def get_positive_pairs(pairs_df: pd.DataFrame) -> set[frozenset]:
-    """
-    Known positive pairs as frozensets so (A,B) == (B,A).
-    Normalized to avoid case mismatches.
+    """Return confirmed confusable pairs as frozensets to treat (A, B) and (B, A) identically.
+
+    Args:
+        pairs_df: DataFrame of confirmed confusable pairs.
+
+    Returns:
+        Set of frozensets, each containing a normalized pair of drug names.
+
     """
     return {
         frozenset([normalize(row[COL_X1]), normalize(row[COL_X2])])
@@ -154,9 +166,14 @@ def get_positive_pairs(pairs_df: pd.DataFrame) -> set[frozenset]:
 
 
 def build_clusters(pairs_df: pd.DataFrame) -> dict[str, set[str]]:
-    """
-    Connected components of the confirmed P pairs. Each component is a
-    LASA confusion group and becomes one train/test-split-safe cluster.
+    """Group confirmed confusable pairs into connected confusion clusters.
+
+    Args:
+        pairs_df: DataFrame of confirmed confusable pairs.
+
+    Returns:
+        Dictionary mapping each cluster root name to the set of member drug names.
+
     """
     edges = [
         (normalize(row[COL_X1]), normalize(row[COL_X2]))
@@ -169,7 +186,16 @@ def _positives_per_cluster(
     clusters: dict[str, set[str]],
     positive_pairs: set[frozenset],
 ) -> dict[str, int]:
-    """Count of confirmed positive edges whose endpoints fall in each cluster."""
+    """Count how many confirmed positive pairs belong to each cluster.
+
+    Args:
+        clusters: Dictionary mapping cluster IDs to member drug names.
+        positive_pairs: Set of confirmed positive pair frozensets.
+
+    Returns:
+        Dictionary mapping cluster IDs to positive pair counts.
+
+    """
     node_to_cluster = {
         name: cid for cid, members in clusters.items() for name in members
     }
@@ -183,7 +209,17 @@ def _positives_per_cluster(
 
 
 def _claimable(candidate: str, cluster_id: str, owner: dict[str, str]) -> bool:
-    """True if `candidate` is unclaimed, or already claimed by this cluster."""
+    """Check whether a candidate name can be claimed by a cluster.
+
+    Args:
+        candidate: The drug name under consideration.
+        cluster_id: The ID of the claiming cluster.
+        owner: Dictionary tracking which cluster currently owns each candidate name.
+
+    Returns:
+        True if candidate is unclaimed or already claimed by this cluster, False otherwise.
+
+    """
     current = owner.get(candidate)
     return current is None or current == cluster_id
 
@@ -196,12 +232,19 @@ def _cluster_tier_targets(
     tier_1_proportion: float,
     tier_2_proportion: float,
 ) -> dict[str, tuple[int, int]]:
-    """
-    Per-cluster (tier_1_target, tier_2_target), each cluster's share of the
-    target |U| scaled by its share of the confirmed positives. Single source
-    of truth for both the accumulation caps (below) and the final
-    down-sampling in make_noise - they must agree so the caps never starve
-    the sampler.
+    """Compute target counts of Tier 1 and Tier 2 negative samples for each cluster.
+
+    Args:
+        cluster_order: List of cluster IDs.
+        pos_counts: Number of positive pairs per cluster.
+        num_positives: Total number of positive pairs.
+        target_total: Total target count of negative samples.
+        tier_1_proportion: Fraction of negatives from Tier 1.
+        tier_2_proportion: Fraction of negatives from Tier 2.
+
+    Returns:
+        Dictionary mapping cluster IDs to (tier_1_target, tier_2_target) tuples.
+
     """
     targets: dict[str, tuple[int, int]] = {}
     for cid in cluster_order:
@@ -218,12 +261,17 @@ def _accumulation_caps(
     factor: int,
     floor: int,
 ) -> dict[str, int]:
-    """
-    Per-cluster cap on how many candidates to *accumulate* before
-    down-sampling: factor × that cluster's tier target, floored so tiny
-    clusters still keep a spread to sample from. `which` selects the tier
-    (0 = tier 1, 1 = tier 2). Bounds memory to O(|U|) instead of
-    O(all qualifying pairs).
+    """Calculate the maximum candidates a cluster may accumulate before downsampling.
+
+    Args:
+        targets: Dictionary mapping cluster IDs to tier target counts.
+        which: Index selecting the tier (0 for Tier 1, 1 for Tier 2).
+        factor: Oversample multiplier factor.
+        floor: Minimum candidate floor.
+
+    Returns:
+        Dictionary mapping cluster IDs to candidate accumulation caps.
+
     """
     return {cid: max(floor, factor * tgt[which]) for cid, tgt in targets.items()}
 
@@ -237,18 +285,20 @@ def _build_tier_1(
     owner: dict[str, str],
     caps: dict[str, int],
 ) -> dict[str, list[dict]]:
-    """
-    Per-cluster anchor-based hard negatives. Scans outside names still
-    unclaimed by another cluster; on a qualifying match, claims that
-    name exclusively for this cluster so it can never bridge to another.
+    """Sample anchor-based hard negatives (Tier 1) for each cluster.
 
-    Accumulation is capped per cluster (`caps`): once a cluster has
-    collected its cap of candidates we stop scanning its remaining
-    anchors/outside names. Without this cap a single "hub" cluster whose
-    anchors Soundex/Metaphone-collide with a large slice of a big registry
-    accumulates millions of rows and OOMs - the cap bounds memory to
-    O(|U|). `outside` is expected pre-shuffled so early-stopping doesn't
-    bias toward registry insertion order.
+    Args:
+        clusters: Dictionary of clusters and their member drug names.
+        cluster_order: Order in which to process clusters.
+        outside: List of registry drug names outside the positive vocabulary.
+        positive_pairs: Set of confirmed positive pair frozensets.
+        threshold: Minimum RapidFuzz WRatio similarity score.
+        owner: Dictionary tracking candidate ownership by cluster.
+        caps: Per-cluster candidate accumulation caps.
+
+    Returns:
+        Dictionary mapping cluster IDs to lists of candidate pair dictionaries.
+
     """
     rows_by_cluster: dict[str, list[dict]] = {cid: [] for cid in clusters}
     for cluster_id in cluster_order:
@@ -297,22 +347,24 @@ def _build_tier_2(
     caps: dict[str, int],
     max_pool_per_cluster: int = TIER_2_MAX_POOL_PER_CLUSTER,
 ) -> dict[str, list[dict]]:
-    """
-    Per-cluster broader coverage. Each cluster claims a further small
-    random sample of still-unclaimed outside names (not anchored to a
-    specific match), then all pairs within its combined claimed pool
-    (Tier 1 matches + this sample) are scored pairwise.
+    """Sample broader pairwise negatives (Tier 2) for each cluster.
 
-    A handful of "hub" anchors (short, generic names) Soundex/Metaphone-
-    collide with a disproportionate slice of the outside vocabulary in
-    Tier 1, so their combined pool here can be far larger than
-    extra_per_cluster would suggest. combinations(pool, 2) is quadratic
-    in that pool size, so an uncapped pool is what floods memory - cap
-    and subsample it before scoring pairs.
+    Args:
+        clusters: Dictionary of clusters and their member drug names.
+        cluster_order: Order in which to process clusters.
+        tier_1_pool: Dictionary of Tier 1 candidate names claimed per cluster.
+        outside: List of registry drug names outside the positive vocabulary.
+        positive_pairs: Set of confirmed positive pair frozensets.
+        threshold: Minimum RapidFuzz WRatio similarity score.
+        extra_per_cluster: Number of extra random outside names each cluster claims.
+        owner: Dictionary tracking candidate ownership by cluster.
+        rng: Random number generator instance.
+        caps: Per-cluster candidate accumulation caps.
+        max_pool_per_cluster: Maximum combined pool size per cluster to avoid OOM.
 
-    Emitted rows are additionally capped per cluster (`caps`) so a cluster
-    never accumulates far more than it will sample (defense in depth,
-    mirroring Tier 1).
+    Returns:
+        Dictionary mapping cluster IDs to lists of candidate pair dictionaries.
+
     """
     rows_by_cluster: dict[str, list[dict]] = {cid: [] for cid in clusters}
     free = [n for n in outside if n not in owner]
@@ -369,11 +421,18 @@ def _fallback_negative(
     positive_pairs: set[frozenset],
     owner: dict[str, str],
 ) -> dict | None:
-    """
-    Best-effort single negative for a cluster that matched nothing: pick
-    the anchor/unclaimed-candidate pair with the highest raw WRatio,
-    ignoring the similarity threshold. Keeps the cluster from being
-    all-positive (which downstream would drop as useless anyway).
+    """Find a best-effort negative pair for a cluster with zero qualifying matches.
+
+    Args:
+        cluster_id: ID of the cluster needing a negative.
+        members: Set of anchor drug names in the cluster.
+        outside: List of outside drug names.
+        positive_pairs: Set of confirmed positive pair frozensets.
+        owner: Dictionary tracking candidate ownership.
+
+    Returns:
+        A candidate pair dictionary, or None if no candidate could be claimed.
+
     """
     best = None
     best_score = -1
@@ -415,37 +474,27 @@ def make_noise(
     candidate_min_pool: int = CANDIDATE_MIN_POOL,
     seed: int | None = SEED,
 ) -> pd.DataFrame:
-    """
-    Construct and return the unlabeled set U, one cluster at a time so
-    the resulting name graph is a union of disjoint components.
+    """Construct the unlabeled negative set U using two-tier similarity sampling.
 
     Args:
-        pairs_df:            Confirmed LASA pairs DataFrame [COL_X1, COL_X2].
-        registry_df:         Cleaned drug registry DataFrame [REGISTRY_COL].
-        positive_prevalence: Target share of D that is positives,
-                              |P| / (|P| + |U|). Must be in (0, 1).
-        similarity_threshold:Min score for ANY measure to qualify a pair.
-        tier_1_proportion:   Fraction of U from Tier 1.
-        tier_2_proportion:   Fraction of U from Tier 2 (must sum to 1 with tier_1).
-        tier_2_sample_size:  Total outside-vocab names sampled for Tier 2,
-                              distributed evenly across clusters.
-        tier_2_max_pool_per_cluster: Cap on a cluster's combined Tier 1 +
-                              Tier 2-extra pool before pairwise scoring,
-                              to bound the quadratic cost/memory of
-                              combinations() on "hub" clusters.
-        candidate_oversample_factor: Cap each cluster's *accumulated* Tier 1
-                              and Tier 2 candidates at this multiple of its
-                              tier target before down-sampling. Bounds total
-                              memory to O(|U|) instead of O(all qualifying
-                              pairs) - this is what keeps a large registry
-                              from OOM-ing during Tier 1.
-        candidate_min_pool:  Floor on that per-cluster cap, so tiny clusters
-                              still keep a spread to sample from.
-        seed:                Random seed.
+        pairs_df: Confirmed confusable drug pairs DataFrame.
+        registry_df: Cleaned drug registry DataFrame.
+        positive_prevalence: Target share of positive pairs in the final dataset.
+        similarity_threshold: Minimum RapidFuzz WRatio score for candidates.
+        tier_1_proportion: Fraction of negatives drawn from Tier 1 (anchor-based).
+        tier_2_proportion: Fraction of negatives drawn from Tier 2 (broader coverage).
+        tier_2_sample_size: Total outside names sampled for Tier 2 across all clusters.
+        tier_2_max_pool_per_cluster: Maximum candidate pool size per cluster.
+        candidate_oversample_factor: Multiple of target to accumulate before sampling.
+        candidate_min_pool: Minimum candidate accumulation floor per cluster.
+        seed: Random seed for reproducible sampling.
 
     Returns:
-        DataFrame with columns: COL_X1, COL_X2, similarity, tier, COL_LABEL.
-        All rows have COL_LABEL = UNLABELED_LABEL (0).
+        A DataFrame of sampled non-confusable pairs with columns x_1, x_2, similarity, tier, and label.
+
+    Raises:
+        ValueError: If parameters are invalid or no pairs could be sampled.
+
     """
     if not 0.0 < positive_prevalence < 1.0:
         raise ValueError(
@@ -469,12 +518,10 @@ def make_noise(
 
     all_names_norm = [normalize(n) for n in registry_df[REGISTRY_COL].dropna().tolist()]
     outside = [n for n in all_names_norm if n not in p_vocab]
-    # Shuffle once (seeded) so that per-cluster candidate caps, which stop
-    # scanning early, don't systematically favor registry insertion order.
     rng.shuffle(outside)
 
     cluster_order = list(clusters.keys())
-    rng.shuffle(cluster_order)  # claim order shouldn't systematically favor any cluster
+    rng.shuffle(cluster_order)
 
     pos_counts = _positives_per_cluster(clusters, positive_pairs)
 

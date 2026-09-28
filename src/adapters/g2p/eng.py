@@ -1,23 +1,12 @@
-"""
-English (en-us) G2P: adds IPA phonetic transcriptions to a drug-pair
-DataFrame using phonemizer (eSpeak-NG backend).
-Requirements:
-    pip install phonemizer
-    + espeak-ng installed on the system:
-        Windows : https://github.com/espeak-ng/espeak-ng/releases  (.msi)
-        Linux   : apt install espeak-ng
-        macOS   : brew install espeak-ng
+"""English (en-us) grapheme-to-phoneme (G2P) transcription.
+
+This module uses eSpeak-NG via the `phonemizer` library to convert English drug
+names into International Phonetic Alphabet (IPA) pronunciations.
 """
 
 import os
 import tempfile
 
-# eSpeak-NG pulls in libpulse, which on init tries to create its audio
-# runtime dir under $XDG_RUNTIME_DIR (e.g. /run/user/1000/pulse). On WSL
-# that path often doesn't exist, so libpulse spams stderr with
-# "Failed to create secure directory (...)". We never play audio (text
-# -> IPA only), so redirect pulse's runtime dir somewhere writable to
-# silence it. Must be set before phonemizer imports espeak below.
 os.environ.setdefault(
     "PULSE_RUNTIME_PATH", os.path.join(tempfile.gettempdir(), "pulse")
 )
@@ -37,17 +26,19 @@ if os.path.exists(_ESPEAK_DLL):
 
 
 def _normalize_ipa(ipa: str) -> str:
-    """
-    Normalize IPA strings to the symbol set supported by the ALINE config.
-    Handles:
-      - Unicode lookalikes (e.g. ɡ U+0261 -> g U+0067)
-      - Cover symbols (e.g. ᵻ -> ɪ)
-      - Syllabic diacritics (e.g. n̩ -> n)
+    """Normalize IPA phonetic symbols to match standard ALINE phonetic configurations.
+
+    Args:
+        ipa: Raw IPA pronunciation string.
+
+    Returns:
+        Normalized IPA pronunciation string.
+
     """
     replacements = {
-        "\u0261": "g",  # ɡ (IPA velar stop) -> g (ASCII lookalike already in config)
-        "\u1d7b": "ɪ",  # ᵻ (cover symbol)   -> ɪ
-        "\u0329": "",  # combining syllabic diacritic -> drop it (n̩ -> n)
+        "\u0261": "g",
+        "\u1d7b": "ɪ",
+        "\u0329": "",
     }
     for src, tgt in replacements.items():
         ipa = ipa.replace(src, tgt)
@@ -55,10 +46,14 @@ def _normalize_ipa(ipa: str) -> str:
 
 
 def _transcribe_batch(names: list[str]) -> list[str]:
-    """
-    Transcribe a batch of drug names to IPA using eSpeak-NG.
-    Returns one IPA string per name, stripped of trailing whitespace
-    and normalized to the ALINE config symbol set.
+    """Convert a batch of drug names into English IPA pronunciations using eSpeak-NG.
+
+    Args:
+        names: List of drug names.
+
+    Returns:
+        List of normalized IPA pronunciation strings.
+
     """
     results = phonemize(
         names,
@@ -77,16 +72,16 @@ def transcribe_dataframe(
     batch_size: int = IPA_BATCH_SIZE,
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """
-    Add English IPA transcription columns COL_T_ENG_1 / COL_T_ENG_2 to a
-    drug-pair DataFrame.
+    """Add English IPA pronunciation columns to a drug-pair DataFrame.
 
     Args:
-        df:         DataFrame with columns COL_X1 and COL_X2.
-        batch_size: Number of unique names per eSpeak call.
-        verbose:    Print progress.
+        df: DataFrame containing drug pair columns COL_X1 and COL_X2.
+        batch_size: Number of unique drug names per eSpeak batch.
+        verbose: Whether to print progress messages.
+
     Returns:
-        Copy of df with added columns COL_T_ENG_1 and COL_T_ENG_2.
+        Copy of DataFrame with English pronunciation columns added.
+
     """
     return _transcribe_dataframe(
         df,

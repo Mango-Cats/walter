@@ -1,17 +1,13 @@
-"""
-Phonetic-feature step: runs the bundled `bin/phoc` Rust CLI over an already
-assembled pair CSV.
+"""Phonetic similarity scoring using the bundled `phoc` tool.
 
-phoc reads a CSV with x_1/x_2, t_1/t_2, label, and any other
-columns, preserves every input column verbatim, and appends one similarity
-feature column per .toml config in PHOC_CONFIG_DIR, the algorithm is
-chosen by that file's `algorithm` key.
-
-Only the algorithms that actually read the transcription need duplicating.
-Those are listed in config.PHONETIC_ALGORITHMS, and their columns come
-back suffixed with the language code (e.g., _fil).
-
-This has no side effect on the input file.
+What this file does:
+1. Takes a CSV of drug pairs and their spoken pronunciations (IPA).
+2. Runs the fast `phoc` tool (located in `bin/phoc`) to compare each pair.
+3. Calculates similarity scores using multiple phonetic algorithms:
+   - Compares English spoken pronunciations.
+   - Compares Filipino spoken pronunciations.
+   - Compares raw drug name spellings (edit distance, prefix/suffix match).
+4. Appends these similarity scores as new columns and saves the enriched dataset (D_pho.csv).
 """
 
 import csv
@@ -35,8 +31,19 @@ from config import (
     TRANSCRIPTION_LANGS,
 )
 
+_SEPARATE_SUFFIXES = ("_substitutions", "_insertions", "_deletions")
+
 
 def _header(csv_path: Path) -> list[str]:
+    """Read the header row of column names from a CSV file.
+
+    Args:
+        csv_path: Path to the CSV file.
+
+    Returns:
+        List of column name strings.
+
+    """
     with csv_path.open(newline="") as f:
         return next(csv.reader(f), [])
 
@@ -46,13 +53,21 @@ def run_phoc(
     output_csv: Path,
     config_dir: Path = PHOC_CONFIG_DIR,
 ) -> list[str]:
-    """
-    Run phoc on ``input_csv`` and write the feature-augmented CSV to
-    ``output_csv``. Returns the list of feature columns phoc appended
-    (output header minus input header).
+    """Run the phoc command-line tool to calculate similarity scores between pairs.
 
-    Raises FileNotFoundError if the phoc binary or config dir is missing,
-    and RuntimeError (with phoc's stderr) if phoc exits non-zero.
+    Args:
+        input_csv: Path to input CSV file.
+        output_csv: Path to output CSV file with added feature columns.
+        config_dir: Directory containing algorithm configuration TOML files.
+
+    Returns:
+        List of new column names added by phoc.
+
+    Raises:
+        FileNotFoundError: If the phoc binary or configuration folder is missing.
+        PermissionError: If the phoc binary cannot be made executable.
+        RuntimeError: If phoc execution returns a non-zero exit code.
+
     """
     if not PHOC_BIN.exists():
         raise FileNotFoundError(
@@ -106,14 +121,16 @@ def run_phoc(
     return [c for c in output_cols if c not in input_cols]
 
 
-_SEPARATE_SUFFIXES = ("_substitutions", "_insertions", "_deletions")
-
-
 def _stem_columns(stem: str, separate: bool) -> list[str]:
-    """
-    The output column(s) phoc emits for one config stem: a single column
-    named after the stem, or - when the config sets `separate = true` - three
-    columns (substitutions/insertions/deletions), per `phoc --help`.
+    """Determine the output column names for a configuration stem.
+
+    Args:
+        stem: Base name of the configuration file.
+        separate: Whether the algorithm emits separate insertion/deletion/substitution scores.
+
+    Returns:
+        List of column name strings.
+
     """
     if separate:
         return [f"{stem}{suffix}" for suffix in _SEPARATE_SUFFIXES]
@@ -123,13 +140,17 @@ def _stem_columns(stem: str, separate: bool) -> list[str]:
 def _classify_configs(
     config_dir: Path,
 ) -> tuple[list[str], list[str], dict[str, bool]]:
-    """
-    Split the config stems into (phonetic, orthographic) by reading each
-    .toml's `algorithm` key. Phonetic configs read t_1/t_2 and so must be
-    computed once per language; orthographic ones read only x_1/x_2.
+    """Classify configuration files into phonetic (IPA-based) and orthographic (spelling-based).
 
-    Also returns a stem -> `separate` map, since a `separate = true` config
-    emits three output columns instead of one.
+    Args:
+        config_dir: Directory containing configuration TOML files.
+
+    Returns:
+        A tuple of (phonetic_stems, orthographic_stems, separate_mapping).
+
+    Raises:
+        FileNotFoundError: If no configuration files are found in the directory.
+
     """
     phonetic: list[str] = []
     orthographic: list[str] = []
@@ -153,11 +174,17 @@ def _feature_names(
     langs: dict[str, tuple[str, str]],
     separate: dict[str, bool],
 ) -> list[str]:
-    """
-    Every feature column a run emits, in output order: the orthographic ones
-    (computed once), then each phonetic one with its languages grouped together
-    (aline_ph_mc_eng, aline_ph_mc_fil, ...). Stems with `separate = true`
-    expand to their three sub-columns.
+    """Generate the full ordered list of feature column names produced by phoc.
+
+    Args:
+        phonetic: List of phonetic configuration stems.
+        orthographic: List of orthographic configuration stems.
+        langs: Mapping of language codes to transcription column names.
+        separate: Mapping of stems to their separation boolean flag.
+
+    Returns:
+        List of all feature column names in output order.
+
     """
     orth_cols = [
         c for stem in orthographic for c in _stem_columns(stem, separate[stem])
@@ -177,17 +204,21 @@ def run_phoc_multilingual(
     config_dir: Path = PHOC_CONFIG_DIR,
     langs: dict[str, tuple[str, str]] = TRANSCRIPTION_LANGS,
 ) -> list[str]:
-    """
-    Run phoc once per language in ``langs`` and merge the results.
+    """Run phoc across all supported languages and merge the resulting feature columns.
 
-    ``input_csv`` must carry every language's transcription columns. For each
-    language, phoc sees a temp CSV where that language's columns are presented
-    as t_1/t_2 (and the other languages' are dropped, so they can't leak into
-    the output). Transcription-dependent features come back as
-    ``<config_stem>_<lang>``; transcription-independent ones are taken once.
+    Args:
+        input_csv: Path to input CSV containing drug pairs and IPA pronunciations.
+        output_csv: Path to write the feature-augmented CSV file.
+        config_dir: Directory containing algorithm configuration TOML files.
+        langs: Dictionary mapping language codes to pairs of transcription columns.
 
-    Writes the merged frame - every original column, then the features - to
-    ``output_csv``. Returns the list of appended feature column names.
+    Returns:
+        List of feature column names appended to the dataset.
+
+    Raises:
+        ValueError: If any required transcription columns are missing from the input CSV.
+        RuntimeError: If a supposedly language-independent algorithm produces varying scores.
+
     """
     base = pd.read_csv(input_csv)
 
@@ -250,6 +281,8 @@ def run_phoc_multilingual(
     for name in ordered:
         if name in features:
             merged[name] = features[name]
+        elif name in orth_reference:
+            pass
 
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     merged.to_csv(output_csv, index=False)

@@ -1,19 +1,14 @@
-"""
-Single source of truth for the walter pipeline.
-All paths, column names, and tunable parameters live here.
-No other file should hardcode these values.
+"""Central configuration for the Walter pipeline.
 
-Split by pipeline stage:
+This folder holds all settings, file paths, column names, and model parameters.
+Settings are organized by category:
+    - paths:     where files, models, and outputs are stored.
+    - schema:    standard column names and labels used in datasets.
+    - sampling:  how non-confusable drug pairs (U) are sampled.
+    - proposer:  settings for finding confusable drug pairs with AI.
+    - phonetics: settings for speech pronunciation and similarity scoring tools.
 
-    paths      the active registry, directories, dataset files
-    schema     column names and label values
-    sampling   how U is built (class balance, tiers, memory caps)
-    proposer   where P comes from (file / local LLM / DeepSeek API)
-    phonetics  phoc, tbb-cli, and the G2P toolchain
-
-Every name is re-exported here, so `from config import COL_X1` keeps working.
-Import from the submodule (`from config.sampling import SEED`) when you want
-to be explicit about which stage a knob belongs to.
+All values are re-exported here so you can import them directly from `config`.
 """
 
 from .paths import (
@@ -87,7 +82,6 @@ from .schema import (
 )
 
 __all__ = [
-    # paths
     "DataSource",
     "DATA_SOURCE",
     "DATA_DIR",
@@ -104,7 +98,6 @@ __all__ = [
     "U_FILENAME",
     "D_FILENAME",
     "D_PHO_FILENAME",
-    # schema
     "REGISTRY_COL",
     "COL_X1",
     "COL_X2",
@@ -120,7 +113,6 @@ __all__ = [
     "POSITIVE_LABEL",
     "UNLABELED_LABEL",
     "NEGATIVE_LABEL",
-    # sampling
     "POSITIVE_PREVALENCE",
     "TIER_1_PROPORTION",
     "TIER_2_PROPORTION",
@@ -131,7 +123,6 @@ __all__ = [
     "SIMILARITY_THRESHOLD",
     "SEED",
     "SHUFFLE_SEED",
-    # proposer
     "FROM_FILE",
     "SOFT_LABELS",
     "LLM_N_PROPOSALS",
@@ -142,7 +133,6 @@ __all__ = [
     "USE_API_MODEL",
     "DEEPSEEK_MODEL",
     "DEEPSEEK_API_KEY",
-    # phonetics
     "PHOC_BIN",
     "PHOC_CONFIG_DIR",
     "PHONETIC_ALGORITHMS",

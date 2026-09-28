@@ -1,21 +1,13 @@
 """
-The pipeline as separately runnable stages.
+Separately runnable stages of the Walter pipeline.
 
-Each stage reads its input from disk and writes its output there, so a run
-can start from any point. The stages differ enormously in cost: proposing P
-is 400 LLM calls and G2P transcribes the whole registry, while sampling U is
-cheap. Retuning a sampling knob should not re-pay for the proposal.
-
-Functions here take and return DataFrames and never parse arguments. walter.py
-owns the CLI, resolves each stage's directory to the canonical filename inside
-it (see src/artifacts.py), and hands the resulting paths down.
-
-This module is the seam between the layers: it is the only place that composes
-src/pipeline, src/proposer and src/adapters into something runnable, so a stage
-can be reordered or re-pointed here without any of them knowing.
-
-load_positives() is deliberately separate from propose(): loading a previous
-proposal must never trigger a new one by accident.
+This module coordinates each major step of building LASA drug datasets:
+    - preprocess: Cleans raw drug names from national registries.
+    - propose: Uses an AI model to find new confusable drug pairs (P).
+    - noise: Samples similar non-confusable drug pairs (U).
+    - assemble: Combines pairs and adds spoken pronunciations (D).
+    - phoc: Adds phonetic and orthographic similarity scores (D_pho).
+    - featurize: Adds pronunciations and similarity scores to an existing pair CSV.
 """
 
 import json
@@ -54,7 +46,14 @@ from src.pipeline.preprocessing import run as run_preprocessing
 
 
 def preprocess(source: DataSource = DATA_SOURCE) -> pd.DataFrame:
-    """Clean the drug registry R, or load the cached clean copy."""
+    """Clean the drug registry, or load the cached clean copy.
+
+    Args:
+        source: The drug registry data source (PH or US).
+
+    Returns:
+        A DataFrame containing cleaned, unique drug names.
+    """
     return run_preprocessing(source=source)
 
 
@@ -63,14 +62,15 @@ def propose(
     seed_csv: Path,
     output_path: Path = LLM_OUTPUT_JSON,
 ) -> Path:
-    """
-    Augment the predefined LASA pairs in seed_csv with the LLM proposer.
+    """Augment predefined confusable drug pairs using an AI model.
 
-    seed_csv is a file, not a directory: it is user-supplied input that no
-    other stage produces.
+    Args:
+        registry_df: Cleaned drug registry DataFrame.
+        seed_csv: CSV file containing predefined confusable drug pairs.
+        output_path: Output file path for the AI proposals JSON.
 
-    Imports are local because the LLM extras are optional; a run that only
-    touches later stages should not need transformers or openai installed.
+    Returns:
+        Path to the saved JSON file.
     """
     from src.adapters.llm.local import LocalModel
     from src.proposer.inference import load_seed_pairs, run_inference
@@ -91,12 +91,17 @@ def load_positives(
     input_dir: Path = RESULTS_DIR,
     source: DataSource = DATA_SOURCE,
 ) -> pd.DataFrame:
-    """
-    Load P from wherever config says it lives, without ever generating it.
+    """Load confirmed confusable drug pairs (P) from disk without generating them.
 
-    Raises with the command to run when the artifact is absent, since the
-    fix differs: a missing CSV is the user's to supply, a missing proposal
-    means `walter propose` has not run yet.
+    Args:
+        input_dir: Directory containing previous proposal outputs.
+        source: Active data source (PH or US).
+
+    Returns:
+        A DataFrame containing confirmed confusable pairs.
+
+    Raises:
+        FileNotFoundError: If the required pairs file or proposal output does not exist.
     """
     if FROM_FILE:
         p_file: Path = P[source]
@@ -123,27 +128,24 @@ def load_rejections(
     source: DataSource = DATA_SOURCE,
     rejected_csv: Path | None = None,
 ) -> pd.DataFrame:
-    """
-    Load N, the rejected pairs, for a soft-labelled assembly. The mirror of
-    load_positives(), and like it, it never generates anything.
+    """Load rejected drug pairs (N) for soft-label dataset creation.
 
-    A rejection has two possible sources and both are read, since either can be
-    absent:
+    Args:
+        input_dir: Directory containing proposer JSON outputs.
+        source: Active data source (PH or US).
+        rejected_csv: Optional path to a CSV file of predefined rejected pairs.
 
-      * the LLM's - every candidate an entry in lasa_run.json was shown and did
-        not propose. Read whenever FROM_FILE is False, from the same file P
-        comes from, so no extra stage or LLM call is involved.
-      * a predefined file - rejected_csv when given, otherwise N[source] if it
-        happens to exist. An explicitly named file that is missing is an error;
-        the configured default simply being absent is not.
+    Returns:
+        A DataFrame containing rejected pairs with columns x_1 and x_2.
 
-    Returns a [COL_X1, COL_X2] DataFrame, empty when neither source yielded
-    anything. Callers only reach here under soft labels, so an empty N means
-    "nothing was rejected", not "rejections were not asked for".
+    Raises:
+        ValueError: If the predefined rejected CSV is missing required columns.
     """
     frames: list[pd.DataFrame] = []
 
-    n_file = seed_file(rejected_csv, "rejected pairs CSV") if rejected_csv else N[source]
+    n_file = (
+        seed_file(rejected_csv, "rejected pairs CSV") if rejected_csv else N[source]
+    )
     if n_file.exists():
         pairs = pd.read_csv(n_file)
         missing = [c for c in P_INPUT_COLS if c not in pairs.columns]
@@ -177,7 +179,16 @@ def noise(
     registry_df: pd.DataFrame,
     output_path: Path | None = U_CSV,
 ) -> pd.DataFrame:
-    """Sample the unlabeled set U. Writes a checkpoint unless output_path is None."""
+    """Sample non-confusable drug pairs (U) and optionally save a checkpoint.
+
+    Args:
+        pairs_df: Confirmed confusable drug pairs.
+        registry_df: Cleaned drug registry DataFrame.
+        output_path: Optional CSV destination for saving sampled pairs.
+
+    Returns:
+        A DataFrame of sampled non-confusable drug pairs.
+    """
     U = make_noise(
         pairs_df=pairs_df,
         registry_df=registry_df,
@@ -193,7 +204,17 @@ def noise(
 
 
 def load_noise(input_path: Path = U_CSV) -> pd.DataFrame:
-    """Load a previously sampled U."""
+    """Load previously sampled non-confusable drug pairs (U) from disk.
+
+    Args:
+        input_path: Path to the sampled U.csv file.
+
+    Returns:
+        A DataFrame of sampled non-confusable drug pairs.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+    """
     require_file(input_path, "walter noise")
     U = pd.read_csv(input_path)
     print(f"[stages] Loaded U from {input_path}: {len(U):,} pairs")
@@ -207,11 +228,17 @@ def assemble(
     output_csv: Path = D_CSV,
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """
-    Merge P, U and (under soft labels) N into D, transcribe, and write it.
+    """Merge confusable, non-confusable, and rejected pairs into the final dataset (D).
 
-    N_df is None for the two-value dataset; pass load_rejections() for the
-    three-value one.
+    Args:
+        pairs_df: Confirmed confusable drug pairs (P).
+        U: Sampled non-confusable drug pairs (U).
+        N_df: Optional rejected pairs for soft labeling (N).
+        output_csv: Path to save the assembled dataset (D.csv).
+        verbose: Whether to print progress messages.
+
+    Returns:
+        The assembled dataset DataFrame.
     """
     return assemble_and_save(
         pairs_df,
@@ -227,8 +254,18 @@ def phoc(
     input_csv: Path = D_CSV,
     output_csv: Path = D_PHO_CSV,
 ) -> list[str]:
-    """Append the phonetic-similarity columns (phoc), then the engineered
-    structural/prosodic/Filipino-nativization columns (features.py) on top."""
+    """Calculate phonetic and engineered similarity features for assembled pairs.
+
+    Args:
+        input_csv: Path to the assembled dataset CSV (D.csv).
+        output_csv: Path to save the dataset with added features (D_pho.csv).
+
+    Returns:
+        A list of newly added feature column names.
+
+    Raises:
+        FileNotFoundError: If the input CSV does not exist.
+    """
     require_file(input_csv, "walter assemble")
     feats = run_phoc_multilingual(input_csv, output_csv)
     engineered = run_engineering(output_csv, output_csv)
@@ -240,29 +277,18 @@ def featurize(
     output_csv: Path,
     verbose: bool = True,
 ) -> list[str]:
-    """
-    Run the feature half of the pipeline over an already-built pair CSV:
-    G2P, then phoc, then the engineered (features.py) columns.
+    """Add pronunciations and similarity scores to an existing drug-pair CSV.
 
-    This is the tail of `all` with the pair-construction head removed - no LLM
-    proposal, no predefined positive set, no sampled U, no assembly - for a
-    dataset whose pairs already exist. A label column is carried along and
-    never rewritten, unlike assemble(), which relabels every row by which of
-    P or U it came from.
+    Args:
+        input_csv: Path to an existing CSV file containing drug pairs (x_1 and x_2).
+        output_csv: Path to write the feature-enriched CSV.
+        verbose: Whether to print progress messages.
 
-    Every column other than x_1, x_2 and label is dropped up front and
-    rebuilt from scratch, whatever it's named - transcriptions, phoc
-    features, old engineered features, unrelated metadata, all of it.
-    featurize is for (re)computing features, not for carrying passengers.
+    Returns:
+        A list of added phonetic and engineered feature column names.
 
-    Each step writes its own CSV next to output_csv, named for the input, so a
-    failure halfway through leaves the work already paid for on disk:
-
-        <stem>_t.csv      transcriptions
-        output_csv        + the phonetic-similarity columns, then the
-                            engineered columns on top
-
-    Returns the phonetic and engineered feature columns added, in that order.
+    Raises:
+        ValueError: If required columns are missing or if output collides with intermediates.
     """
     input_csv, output_csv = Path(input_csv), Path(output_csv)
     df = pd.read_csv(input_csv)
@@ -282,8 +308,6 @@ def featurize(
     stage_dir.mkdir(parents=True, exist_ok=True)
     t_csv = stage_dir / f"{input_csv.stem}_t.csv"
 
-    # phoc reads t_csv; if the chosen output collides with it, phoc would
-    # overwrite its own input mid-run.
     if output_csv.resolve() == t_csv.resolve():
         raise ValueError(
             f"output {output_csv} collides with the transcription intermediate "
@@ -311,8 +335,16 @@ def featurize(
 
 
 def summarize(D: pd.DataFrame) -> str:
-    """One-line label breakdown for the CLI to print."""
+    """Return a summary string showing row counts broken down by label.
+
+    Args:
+        D: Assembled dataset DataFrame containing a 'label' column.
+
+    Returns:
+        A formatted string showing total row counts and counts per label.
+    """
     counts = D[COL_LABEL].value_counts().to_dict()
     return f"{len(D):,} rows  " + "  ".join(
         f"label={k}: {v:,}" for k, v in sorted(counts.items())
     )
+

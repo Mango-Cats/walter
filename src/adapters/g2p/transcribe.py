@@ -1,14 +1,7 @@
-"""
-Single dispatch point for per-language IPA transcription.
+"""Central dispatcher for grapheme-to-phoneme (G2P) pronunciations across languages.
 
-This lives above src/adapters/g2p/eng.py and src/adapters/g2p/fil.py rather than inside
-src/adapters/g2p/client.py, which those two modules import. Holding the language
-registry in g2p.client would make the import cycle.
-
-Four call sites used to keep private copies of this dispatch (dataset
-assembly, augmenter, featurize, g2p), and they had drifted: two always
-re-transcribed, one skipped languages already present, and one had gone
-stale against the per-language schema entirely.
+This module routes pronunciation requests to the appropriate language engines
+(English via eSpeak-NG and Filipino via Phonetisaurus) and merges their results.
 """
 
 import pandas as pd
@@ -31,23 +24,21 @@ def transcribe_all(
     tag: str = "g2p",
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """
-    Add every language's IPA transcription columns to a drug-pair DataFrame.
+    """Add IPA pronunciation columns for all requested languages to a drug-pair DataFrame.
 
     Args:
-        df:            DataFrame with columns COL_X1 and COL_X2.
-        langs:         Subset of TRANSCRIPTION_LANGS to transcribe.
-                        None means all of them.
-        skip_existing: Leave a language alone when its columns are already
-                        populated. Callers that build a DataFrame from
-                        scratch want False; callers re-processing a CSV
-                        that may already carry transcriptions want True,
-                        since G2P is the expensive stage.
-        tag:           Log prefix, e.g. "dataset".
-        verbose:       Print progress.
+        df: DataFrame containing drug pair columns COL_X1 and COL_X2.
+        langs: Optional list of language codes to transcribe (defaults to all configured).
+        skip_existing: If True, skips languages whose columns already contain values.
+        tag: Logging prefix for status output.
+        verbose: Whether to print progress messages.
 
     Returns:
-        Copy of df with each selected language's column pair added.
+        Copy of DataFrame with pronunciation columns added.
+
+    Raises:
+        ValueError: If an unknown language is requested or lacks an active transcriber.
+
     """
     selected = list(TRANSCRIPTION_LANGS) if langs is None else list(langs)
 
@@ -79,11 +70,15 @@ def transcribe_all(
 
 
 def _already_transcribed(df: pd.DataFrame, cols: tuple[str, str]) -> bool:
-    """
-    True when every column exists and holds at least one non-empty value.
+    """Check whether both pronunciation columns exist and contain non-empty values.
 
-    A present-but-blank column means a previous run failed or was run with
-    add_phonemes off, so treating it as done would silently keep the blanks.
+    Args:
+        df: Input DataFrame to check.
+        cols: Tuple of two column names.
+
+    Returns:
+        True if both columns exist and have at least one non-empty value, False otherwise.
+
     """
     if not all(c in df.columns for c in cols):
         return False

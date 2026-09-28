@@ -1,8 +1,7 @@
-"""
-DeepSeek API inference, backing the LASA proposer.
+"""Remote API integration for finding confusable drug pairs using DeepSeek.
 
-OpenAI-compatible client pointed at https://api.deepseek.com. Used when
-USE_API_MODEL = True in config.py; otherwise the local backend runs instead.
+Connects to DeepSeek's API using an OpenAI-compatible interface to evaluate
+drug candidate lists and select plausible confusable pairs.
 """
 
 import os
@@ -14,6 +13,15 @@ from src.adapters.llm import clean_output
 
 
 def _get_client() -> OpenAI:
+    """Initialize and return an OpenAI client connected to the DeepSeek API.
+
+    Returns:
+        Configured OpenAI client instance.
+
+    Raises:
+        ValueError: If the API key is not configured in config or environment variables.
+
+    """
     key = DEEPSEEK_API_KEY or os.environ.get("DEEPSEEK_API_KEY", "")
     if not key:
         raise ValueError(
@@ -30,27 +38,20 @@ def api_response(
     model: str = DEEPSEEK_MODEL,
     debug: bool = False,
     return_reasoning: bool = False,
-):
-    """
-    Call the DeepSeek API and return cleaned proposed confusibles.
+) -> list[str] | tuple[list[str], str]:
+    """Send a prompt to the DeepSeek API and return validated confusable candidates.
 
     Args:
-        user_prompt:      The constructed user-turn prompt.
-        candidates:       Valid drug names to validate output against.
-        system_prompt:    The system-turn prompt. Passed in rather than
-                          imported so this module stays free of
-                          proposer-specific domain knowledge.
-        model:            DeepSeek model string (overrides config default).
-        debug:            If True, dump the raw message object so we can see
-                          where reasoning/CoT content lands (e.g. a separate
-                          `reasoning_content` field vs. inline in `content`).
-        return_reasoning: If True, return (proposed, reasoning_content) instead
-                          of just proposed. reasoning_content may be "" if the
-                          model/response didn't include it.
+        user_prompt: Prompt text containing the target drug and candidate list.
+        candidates: List of valid candidate drug names to validate against.
+        system_prompt: Instructions guiding the model on clinical drug confusion.
+        model: DeepSeek model identifier string.
+        debug: Whether to print raw API response objects for debugging.
+        return_reasoning: If True, returns a tuple of (proposed_drugs, reasoning_text).
 
     Returns:
-        List of validated confusible drug names from candidates, or
-        (list, reasoning_content) if return_reasoning=True.
+        List of proposed confusable drug names, or a tuple of (proposed_drugs, reasoning_text).
+
     """
     client = _get_client()
 

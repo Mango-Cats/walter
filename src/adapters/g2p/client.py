@@ -1,11 +1,9 @@
-"""
-Shared batching / caching machinery for the per-language G2P modules
-(src/adapters/g2p/eng.py, src/adapters/g2p/fil.py).
+"""Shared batching and transcription helper for grapheme-to-phoneme (G2P) models.
 
-Each language module supplies a `batch_fn` that maps a list of names to a list
-of IPA strings, and the pair of output column names it owns. Everything else -
-deduplication, batching, progress, the empty-transcription warning - is the
-same regardless of language and lives here.
+This module provides common utilities for transcribing large datasets of drug names:
+    - Deduplicates names so each word is only transcribed once.
+    - Processes names in batches to keep memory usage low.
+    - Tracks progress and flags any empty transcriptions.
 """
 
 import time
@@ -25,30 +23,31 @@ def transcribe_dataframe(
     batch_size: int,
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """
-    Add a pair of IPA transcription columns to a drug-pair DataFrame.
+    """Add spoken IPA pronunciation columns to a drug-pair DataFrame.
 
     Deduplicates all unique drug names before transcription so each name is
-    only transcribed once regardless of how many pairs it appears in.
+    transcribed only once, then maps the results back into the DataFrame.
 
     Args:
-        df:         DataFrame with columns COL_X1 and COL_X2.
-        batch_fn:   Transcribes a batch of names, one IPA string per name.
-        out_cols:   (column for x_1's transcription, column for x_2's).
-        tag:        Log prefix, e.g. "eng_g2p".
-        batch_size: Number of unique names per batch_fn call.
-        verbose:    Print progress.
+        df: Input DataFrame containing columns COL_X1 and COL_X2.
+        batch_fn: Function that converts a list of drug names into IPA pronunciations.
+        out_cols: Tuple of output column names for x_1 and x_2 pronunciations.
+        tag: Logging prefix for status output (e.g. 'eng_g2p').
+        batch_size: Maximum number of unique names to process per batch.
+        verbose: Whether to print progress messages.
 
     Returns:
-        Copy of df with out_cols added.
+        A copy of the DataFrame with the new pronunciation columns added.
+
+    Raises:
+        RuntimeError: If the transcription function returns an unexpected number of results.
+
     """
     df = df.copy()
     col_1, col_2 = out_cols
 
     names_x1 = df[COL_X1].fillna("").tolist()
     names_x2 = df[COL_X2].fillna("").tolist()
-    # sorted() rather than list(set(...)) so batch composition - and thus the
-    # transcriptions - are reproducible across runs.
     unique_names = sorted(set(names_x1 + names_x2))
 
     if verbose:

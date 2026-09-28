@@ -1,33 +1,33 @@
-"""
-walter:
-    LLM-assisted dataset construction for LASA drugs.
+"""Walter: Main command-line tool for building Look-Alike, Sound-Alike (LASA) drug datasets.
+
+Look-Alike, Sound-Alike (LASA) drugs are medicines with similar names (such as Celebrex
+and Celexa) that can be easily confused by healthcare workers. Walter creates datasets
+of confusable and non-confusable drug pairs to train machine learning models to detect
+these dangerous mix-ups.
 
 Usage:
-    walter                      full pipeline
-    walter all                  same thing, named explicitly
-    walter propose              augment predefined LASA pairs into P
-    walter noise                sample U from the registry
-    walter assemble             merge P and U into D, transcribe
-                                (--soft-labels adds the rejected pairs as -1)
-    walter phoc                 add phonetic-similarity features
-    walter featurize            g2p + phoc on an existing CSV
+    walter               Run the full pipeline from start to finish.
+    walter all           Same as running `walter`.
+    walter propose       Use an AI (LLM) to find new confusable drug pairs (P).
+    walter noise         Sample similar-sounding non-confusable drug pairs (U).
+    walter assemble      Merge confusable and non-confusable pairs and generate
+                         spoken pronunciations in English and Filipino (D).
+    walter phoc          Calculate phonetic and spelling similarity scores (D_pho).
+    walter featurize     Take an existing list of drug pairs and add pronunciations
+                         and similarity scores without building a new dataset.
 
---input and --output are directories, not files. Each artifact has one
-canonical filename (config/paths.py): a stage reads that name out of its
-input directory and writes that name into its output directory, so pointing
-two stages at the same directory is all it takes to chain them, and stages
-run in any combination.
+File and folder inputs/outputs:
+    Most stages read and write files inside folders (directories). Each stage writes
+    a file with a standard name that the next stage expects:
+        - `propose` writes `lasa_run.json`
+        - `noise` writes `U.csv`
+        - `assemble` writes `D.csv`
+        - `phoc` writes `D_pho.csv`
+    By default, files are read from and written to the `results/` folder.
 
-    walter phoc --input results --output results
-        results/D.csv  ->  results/D_pho.csv
-
-`walter propose` and `walter featurize` are the exceptions. Both take a --input
-CSV file rather than a directory, because no stage produces that file: the
-proposer augments a CSV of predefined LASA pairs, and featurize runs the
-feature stages over a dataset whose pairs already exist. featurize names its
---output too, so it cannot silently overwrite a full run's D_pho.csv.
-
-A stage whose input is missing names the command that produces it.
+Exceptions:
+    `walter propose` and `walter featurize` take a specific CSV file as `--input`
+    instead of a folder.
 """
 
 import argparse
@@ -57,19 +57,27 @@ _console = Console()
 
 
 class Spinner:
-    """Per-stage loading indicator, backed by rich's Console.status()."""
+    """Per-stage terminal loading indicator backed by rich's Console.status."""
 
-    def __init__(self, label: str):
+    def __init__(self, label: str) -> None:
+        """Initialize the spinner with a progress label.
+
+        Args:
+            label: Description of the task in progress.
+
+        """
         self.label = label
         self._status = _console.status(f"[bold cyan]{label}...", spinner="dots")
         self._start = 0.0
 
     def __enter__(self) -> "Spinner":
+        """Start the progress spinner."""
         self._start = time.monotonic()
         self._status.__enter__()
         return self
 
     def __exit__(self, exc_type, exc, tb) -> None:
+        """Stop the progress spinner and display elapsed time."""
         self._status.__exit__(exc_type, exc, tb)
         elapsed = time.monotonic() - self._start
         if exc_type is None:
@@ -79,6 +87,12 @@ class Spinner:
 
 
 def _banner(soft_labels: bool) -> None:
+    """Print active configuration parameters to the console.
+
+    Args:
+        soft_labels: Whether soft labels (-1 / 0 / 1) are active.
+
+    """
     print(f"Data source    : {DATA_SOURCE.name}")
     print(f"Pos. prevalence: {POSITIVE_PREVALENCE:.6f}")
     print(f"Tier 2 sample  : {TIER_2_SAMPLE_SIZE:,}")
@@ -89,12 +103,17 @@ def _banner(soft_labels: bool) -> None:
 
 
 def _soft_labels(args: argparse.Namespace) -> bool:
-    """
-    Resolve --soft-labels/--no-soft-labels against config.SOFT_LABELS.
+    """Determine whether soft labels are enabled based on CLI arguments and configuration.
 
-    The flag defaults to None rather than to the config value so that passing
-    --rejected can imply soft labels without silently overriding an explicit
-    --no-soft-labels, which would be a contradiction worth reporting.
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        True if soft labeling is enabled, False otherwise.
+
+    Raises:
+        SystemExit: If contradictory flags are passed (e.g. --no-soft-labels with --rejected).
+
     """
     rejected = getattr(args, "rejected", None)
     if args.soft_labels is None:
@@ -107,8 +126,13 @@ def _soft_labels(args: argparse.Namespace) -> bool:
     return args.soft_labels
 
 
-def _add_label_flags(p) -> None:
-    """The soft-label switch and its optional predefined rejection file."""
+def _add_label_flags(p: argparse.ArgumentParser) -> None:
+    """Add soft-label and rejection-file command-line options to a parser.
+
+    Args:
+        p: Argument parser or subparser instance.
+
+    """
     p.add_argument(
         "--soft-labels",
         action=argparse.BooleanOptionalAction,
@@ -127,6 +151,12 @@ def _add_label_flags(p) -> None:
 
 
 def cmd_propose(args: argparse.Namespace) -> None:
+    """Run the AI proposer stage to augment seed pairs into new confusable pairs.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    """
     seed_csv = seed_file(args.input, "predefined LASA pairs CSV")
     out = out_file(args.output, LLM_OUTPUT_FILENAME)
     with Spinner("Preprocessing registry"):
@@ -137,6 +167,12 @@ def cmd_propose(args: argparse.Namespace) -> None:
 
 
 def cmd_noise(args: argparse.Namespace) -> None:
+    """Run the noise stage to sample non-confusable negative pairs (U).
+
+    Args:
+        args: Parsed command-line arguments.
+
+    """
     P_load = stages.load_positives(args.input)
     out = out_file(args.output, U_FILENAME)
     with Spinner("Preprocessing registry"):
@@ -148,6 +184,12 @@ def cmd_noise(args: argparse.Namespace) -> None:
 
 
 def cmd_assemble(args: argparse.Namespace) -> None:
+    """Run the assembly stage to combine pairs and add IPA pronunciations (D).
+
+    Args:
+        args: Parsed command-line arguments.
+
+    """
     soft = _soft_labels(args)
     U = stages.load_noise(in_file(args.input, U_FILENAME, "walter noise"))
     P_load = stages.load_positives(args.input)
@@ -162,6 +204,12 @@ def cmd_assemble(args: argparse.Namespace) -> None:
 
 
 def cmd_phoc(args: argparse.Namespace) -> None:
+    """Run the phoc and feature-engineering stage on the assembled dataset (D_pho).
+
+    Args:
+        args: Parsed command-line arguments.
+
+    """
     src = in_file(args.input, D_FILENAME, "walter assemble")
     out = out_file(args.output, D_PHO_FILENAME)
     with Spinner("Adding phonetic features (phoc)"):
@@ -171,6 +219,12 @@ def cmd_phoc(args: argparse.Namespace) -> None:
 
 
 def cmd_featurize(args: argparse.Namespace) -> None:
+    """Run G2P pronunciation and similarity scoring on an existing pair CSV.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    """
     src = seed_file(args.input, "pair CSV to featurize")
     out = args.output or src.parent / f"{src.stem}_pho.csv"
     if out.resolve() == src.resolve():
@@ -182,6 +236,12 @@ def cmd_featurize(args: argparse.Namespace) -> None:
 
 
 def cmd_all(args: argparse.Namespace) -> None:
+    """Run all pipeline stages in sequence from start to finish.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    """
     soft = _soft_labels(args)
     _banner(soft)
 
@@ -206,10 +266,10 @@ def cmd_all(args: argparse.Namespace) -> None:
     with Spinner("Sampling unlabeled pairs (U)"):
         U = stages.noise(P_load, R_clean, output_path=out_file(args.output, U_FILENAME))
 
-    # Read after the proposal has been written: with FROM_FILE False the
-    # rejections come out of the lasa_run.json this run just produced.
     N_load = (
-        stages.load_rejections(args.output, rejected_csv=args.rejected) if soft else None
+        stages.load_rejections(args.output, rejected_csv=args.rejected)
+        if soft
+        else None
     )
 
     with Spinner("Assembling and saving D"):
@@ -223,6 +283,12 @@ def cmd_all(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Construct the command-line argument parser for Walter.
+
+    Returns:
+        Configured ArgumentParser instance.
+
+    """
     parser = argparse.ArgumentParser(
         prog="walter",
         description="LLM-assisted dataset construction for LASA drugs.",
@@ -312,6 +378,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    """Execute the Walter command-line interface."""
     parser = build_parser()
     args = parser.parse_args()
     if getattr(args, "func", None) is None:

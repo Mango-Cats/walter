@@ -1,14 +1,7 @@
-"""
-Loads and cleans a drug name registry for the selected DataSource.
+"""Loads and cleans a drug name registry for the selected DataSource.
 
-Input:  the raw registry at R[source] (data/R_ph.csv or data/R_us.csv).
-        One-column CSV of raw drug names
-        (header optional; first column used).
-
-Output: Single-column DataFrame with column REGISTRY_COL ("drug_name"),
-        lowercase, symbols stripped, duplicates removed.
-
-Both sources go through the same cleaning pipeline.
+This module cleans raw drug names from national registries (such as the Philippines
+FDA or US FDA), removing accents, punctuation, duplicates, and invalid entries.
 """
 
 import re
@@ -19,19 +12,26 @@ from random import randint
 import pandas as pd
 
 from config import (
+    REGISTRY_COL,
+    USE_PRECLEANED_REGISTRY,
     DataSource,
     R,
     R_CLEAN,
-    REGISTRY_COL,
-    USE_PRECLEANED_REGISTRY,
 )
 
 
 def load_registry(source: DataSource) -> pd.DataFrame:
-    """
-    Load raw drug names from the CSV for the given source.
-    Always reads the first column regardless of its header,
-    then renames it to REGISTRY_COL.
+    """Load raw drug names from the CSV file for the given data source.
+
+    Args:
+        source: The drug registry data source (PH or US).
+
+    Returns:
+        A DataFrame containing raw drug names in a single column.
+
+    Raises:
+        FileNotFoundError: If the raw data file does not exist.
+
     """
     path: Path = R[source]
     if not path.exists():
@@ -46,21 +46,31 @@ def load_registry(source: DataSource) -> pd.DataFrame:
 
 
 def _remove_diacritics(text: str) -> str:
-    """Strip combining diacritical marks (accents, umlauts, etc.)."""
+    """Strip accent marks and diacritics from a string.
+
+    Args:
+        text: Input text string.
+
+    Returns:
+        Cleaned string without accents.
+
+    """
     nfd = unicodedata.normalize("NFD", text)
     return "".join(c for c in nfd if unicodedata.category(c) != "Mn")
 
 
 def clean_name(name: str) -> str:
-    """
-    Normalize a single drug name:
-      1. Lowercase
-      2. Strip leading/trailing whitespace
-      3. Remove diacritics
-      4. Replace hyphens, slashes, apostrophes with a space
-      5. Remove any remaining non-alphanumeric, non-space characters
-      6. Collapse runs of whitespace to a single space
-    Digits are kept (e.g. B12, D3).
+    """Normalize a single drug name.
+
+    Lowercases the name, removes accents, replaces punctuation with spaces,
+    strips non-alphanumeric characters, and collapses whitespace.
+
+    Args:
+        name: Raw drug name string.
+
+    Returns:
+        Cleaned drug name string.
+
     """
     if not isinstance(name, str):
         return ""
@@ -73,9 +83,14 @@ def clean_name(name: str) -> str:
 
 
 def clean_registry(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Apply clean_name to every row, then drop empties and duplicates.
-    Returns a reset-index DataFrame with column REGISTRY_COL.
+    """Clean all drug names in a registry DataFrame and remove duplicates and empties.
+
+    Args:
+        df: DataFrame containing raw drug names.
+
+    Returns:
+        Cleaned DataFrame with unique, non-empty drug names.
+
     """
     df = df.copy()
     df[REGISTRY_COL] = df[REGISTRY_COL].apply(clean_name)
@@ -88,7 +103,12 @@ def clean_registry(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def validate_raw(df: pd.DataFrame) -> None:
-    """Print warnings for suspicious raw data. Never raises."""
+    """Print warning notices for unusual or suspicious raw registry data.
+
+    Args:
+        df: Raw registry DataFrame.
+
+    """
     if len(df) < 500:
         print(f"[preprocessing] WARNING: only {len(df)} rows - unusually small.")
     nulls = df[REGISTRY_COL].isna().sum()
@@ -100,6 +120,13 @@ def validate_raw(df: pd.DataFrame) -> None:
 
 
 def cleaning_report(raw: pd.DataFrame, clean: pd.DataFrame) -> None:
+    """Print a summary of row counts before and after cleaning.
+
+    Args:
+        raw: Original raw DataFrame.
+        clean: Cleaned DataFrame.
+
+    """
     dropped = len(raw) - len(clean)
     print(
         f"[preprocessing] Rows: {len(raw):,} raw → {len(clean):,} clean  (dropped {dropped:,})"
@@ -107,7 +134,13 @@ def cleaning_report(raw: pd.DataFrame, clean: pd.DataFrame) -> None:
 
 
 def save_clean_registry(df: pd.DataFrame, source: DataSource) -> None:
-    """Write the cleaned registry to R_CLEAN[source] for reuse by later runs."""
+    """Save a cleaned registry DataFrame to disk for future reuse.
+
+    Args:
+        df: Cleaned registry DataFrame.
+        source: Data source enum key.
+
+    """
     path: Path = R_CLEAN[source]
     path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(path, index=False)
@@ -115,9 +148,17 @@ def save_clean_registry(df: pd.DataFrame, source: DataSource) -> None:
 
 
 def load_clean_registry(source: DataSource) -> pd.DataFrame:
-    """
-    Load a previously-saved cleaned registry, skipping clean_registry()
-    entirely. Used when USE_PRECLEANED_REGISTRY = True.
+    """Load a previously saved cleaned registry from disk.
+
+    Args:
+        source: Data source enum key.
+
+    Returns:
+        Cleaned registry DataFrame.
+
+    Raises:
+        FileNotFoundError: If the pre-cleaned file does not exist.
+
     """
     path: Path = R_CLEAN[source]
     if not path.exists():
@@ -131,18 +172,14 @@ def load_clean_registry(source: DataSource) -> pd.DataFrame:
 
 
 def run(source: DataSource) -> pd.DataFrame:
-    """
-    Full preprocessing pipeline for the given DataSource.
+    """Run the complete registry preprocessing pipeline for the given data source.
 
-    If USE_PRECLEANED_REGISTRY is True, loads the cached clean registry
-    from R_CLEAN[source] directly, skipping cleaning entirely. Otherwise:
+    Args:
+        source: Data source enum key (PH or US).
 
-    1. Load raw CSV (R_ph.csv or R_us.csv)
-    2. Validate
-    3. Clean
-    4. Save the cleaned registry to R_CLEAN[source] for next time
+    Returns:
+        A cleaned single-column DataFrame of unique drug names.
 
-    Returns cleaned single-column DataFrame [REGISTRY_COL].
     """
     if USE_PRECLEANED_REGISTRY:
         print(f"[preprocessing] Source: {source.name} (pre-cleaned cache)")
@@ -162,6 +199,15 @@ def run(source: DataSource) -> pd.DataFrame:
 
 
 def get_rand_entries(df: pd.DataFrame, count: int = 10) -> pd.DataFrame:
-    """Random slice of `count` rows (for spot-checking)."""
+    """Return a random slice of consecutive rows from a DataFrame for inspection.
+
+    Args:
+        df: Source DataFrame.
+        count: Number of rows to return.
+
+    Returns:
+        A slice of the DataFrame containing up to count rows.
+
+    """
     n = randint(0, max(0, len(df) - count))
     return df.iloc[n : n + count]

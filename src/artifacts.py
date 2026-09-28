@@ -1,27 +1,26 @@
-"""
-Resolving a stage's input and output to actual files.
+"""File path helpers for connecting pipeline stages.
 
-Every stage takes directories, not files: an artifact has one canonical
-filename (config.paths), and a stage always reads that name out of its input
-directory and writes that name into its output directory. Fixing the names
-means the file a stage writes is already the file the next stage looks for,
-so chaining stages is a matter of pointing them at the same directory.
-
-The proposer is the one exception -- it takes a path to a specific CSV of
-predefined LASA pairs -- so it uses seed_file() rather than in_file().
-
-walter.py owns the CLI; nothing here parses arguments.
+Each pipeline stage reads and writes files using standard names inside directories.
+This module ensures required input files exist before a stage starts, and creates
+output directories automatically before writing.
 """
 
 from pathlib import Path
 
 
 def require_file(path: Path, produced_by: str) -> Path:
-    """
-    Check that an input artifact exists, naming the command that writes it.
+    """Verify that an input file exists on disk.
 
-    produced_by is a walter command, since a missing input almost always
-    means an earlier stage has not been run rather than a typo.
+    Args:
+        path: Path to the expected file.
+        produced_by: Name of the Walter command that produces this file.
+
+    Returns:
+        The resolved Path object.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+
     """
     path = Path(path)
     if not path.exists():
@@ -30,23 +29,52 @@ def require_file(path: Path, produced_by: str) -> Path:
 
 
 def in_file(directory: Path, filename: str, produced_by: str) -> Path:
-    """Resolve <directory>/<filename> for reading."""
+    """Resolve an input file path inside a directory and verify it exists.
+
+    Args:
+        directory: Folder holding the file.
+        filename: Name of the file to read.
+        produced_by: Name of the Walter command that generates this file.
+
+    Returns:
+        The resolved Path object.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+
+    """
     return require_file(Path(directory) / filename, produced_by)
 
 
 def out_file(directory: Path, filename: str) -> Path:
-    """Resolve <directory>/<filename> for writing, creating the directory."""
+    """Resolve an output file path inside a directory, creating folders as needed.
+
+    Args:
+        directory: Folder to write the file into.
+        filename: Name of the output file.
+
+    Returns:
+        The resolved Path object for writing.
+
+    """
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     return directory / filename
 
 
 def seed_file(path: Path, what: str) -> Path:
-    """
-    Resolve a user-supplied input file.
+    """Validate and resolve a user-supplied input file.
 
-    Unlike in_file(), no walter command produces this, so the error asks for
-    the file instead of naming a stage to run.
+    Args:
+        path: File path supplied by the user.
+        what: Description of the expected file (for error reporting).
+
+    Returns:
+        The validated Path object.
+
+    Raises:
+        FileNotFoundError: If the path does not exist or points to a directory.
+
     """
     path = Path(path)
     if not path.exists():

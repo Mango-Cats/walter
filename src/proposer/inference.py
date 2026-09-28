@@ -1,14 +1,15 @@
-"""
-LLM-based LASA pair proposer.
+"""AI-assisted confusable drug pair finder (Proposer).
 
-The proposer augments rather than invents: it is seeded with a CSV of
-predefined LASA pairs (columns x_1, x_2), and for each seed pair it asks the
-LLM which *other* registry drugs are also confusible with x_1. The seed pair
-always survives into the output -- it is confirmed input, not a proposal, and
-the LLM is never given the chance to drop it.
-
-This is the one stage that takes a file rather than a directory, because the
-seed pairs are supplied by the user and are not produced by another stage.
+What this file does:
+1. Takes a starting list of known confusable drug pairs (e.g. from ISMP).
+2. For each known pair (x_1, x_2), it uses x_1 as an 'anchor' drug.
+3. Searches the drug registry for similar-sounding/spelled candidates that meet
+   our similarity rules:
+     - Spelling similarity (fuzz.WRatio) > 60% OR Soundex similarity >= 75%
+     - Edit distance > 2 (avoids simple typos)
+4. Sends the anchor and candidate list to an AI model (like DeepSeek or Qwen).
+5. The AI selects which candidates are genuinely confusable with the anchor.
+6. Saves the original pairs plus all new AI proposals into a JSON file (lasa_run.json).
 """
 
 import json
@@ -20,12 +21,12 @@ from rapidfuzz import fuzz
 from rapidfuzz.distance import Levenshtein
 
 from config import (
-    REGISTRY_COL,
     COL_X1,
     COL_X2,
     LLM_N_PROPOSALS,
     LLM_OUTPUT_JSON,
     P_INPUT_COLS,
+    REGISTRY_COL,
     USE_API_MODEL,
 )
 from src.adapters.llm.api import api_response
@@ -33,18 +34,18 @@ from src.adapters.llm.local import LocalModel, response
 from src.adapters.tbb import nativize as _nativize
 from src.proposer.prompt import SYSTEM_PROMPT, construct_user_prompt
 
-# Fuzzy candidates pulled per seed drug before the LLM sees them. One extra is
-# requested so the seed drug itself can be dropped without going short.
 _CANDIDATE_LIMIT = 20
 
 
 def _soundex_code(name: str) -> str:
-    """
-    Safely compute a 4-char Soundex code for the tbb-cli Filipino-nativized
-    spelling of name, rather than the raw English name. jellyfish.soundex
-    encodes American-English phonetics, so scoring it against the nativized
-    form catches confusability that only shows up once a name is
-    heard/spelled the way a Filipino listener would nativize it.
+    """Compute a 4-character Soundex code for a drug name using its Filipino pronunciation.
+
+    Args:
+        name: The drug name string.
+
+    Returns:
+        A 4-character Soundex code string, or an empty string if invalid.
+
     """
     if not isinstance(name, str):
         return ""
@@ -58,7 +59,16 @@ def _soundex_code(name: str) -> str:
 
 
 def _soundex_similarity(code_a: str, code_b: str) -> float:
-    """Levenshtein similarity on 4-char Soundex codes in [0.0, 1.0]."""
+    """Calculate normalized similarity between two Soundex codes.
+
+    Args:
+        code_a: First 4-character Soundex code.
+        code_b: Second 4-character Soundex code.
+
+    Returns:
+        Similarity score between 0.0 and 1.0.
+
+    """
     if not code_a or not code_b:
         return 0.0
     dist = Levenshtein.distance(code_a, code_b)
@@ -72,17 +82,23 @@ def extract_candidates(
     drug_soundex_map: dict[str, str] | None = None,
     limit: int = _CANDIDATE_LIMIT,
 ) -> list[str]:
-    """
-    Extract candidate confusibles for an anchor drug satisfying:
-      ((fuzzy_score > 60) or (soundex_similarity >= 0.75)) and (edit_distance > 2)
+    """Extract and rank confusable candidate drugs for an anchor drug.
 
-    soundex_similarity is scored on the Filipino-nativized spelling (see
-    _soundex_code), not the raw English name.
+    Filters candidates based on edit distance and similarity thresholds:
+    - Edit distance must be greater than 2 to avoid simple typos.
+    - Fuzzy spelling score must be > 60% OR Soundex similarity must be >= 75%.
+    Candidates are ranked by a composite score of spelling and Soundex similarity.
 
-    Excludes exact matches to anchor and known. Candidates are ranked by:
-      composite_score = 0.5 * (fuzzy_score / 100.0) + 0.5 * soundex_similarity
+    Args:
+        anchor: Target drug name.
+        known: Known paired drug name to exclude.
+        all_drugs: List of all available drug names in the registry.
+        drug_soundex_map: Optional precomputed map of drug names to Soundex codes.
+        limit: Maximum number of candidate names to return.
 
-    Returns at most `limit` unique candidate names.
+    Returns:
+        List of up to `limit` confusable candidate drug names.
+
     """
     if drug_soundex_map is None:
         drug_soundex_map = {d: _soundex_code(d) for d in all_drugs}
@@ -118,12 +134,17 @@ def extract_candidates(
 
 
 def load_seed_pairs(seed_csv: Path | str) -> pd.DataFrame:
-    """
-    Read the predefined LASA pairs the proposer augments.
+    """Load and validate predefined confusable drug pairs from a CSV file.
 
-    Raises rather than silently proposing from nothing, since an empty or
-    mis-columned seed file would otherwise produce an empty P that only
-    surfaces as a confusing failure two stages later.
+    Args:
+        seed_csv: Path to the CSV file containing predefined pairs.
+
+    Returns:
+        A DataFrame containing the cleaned predefined pairs.
+
+    Raises:
+        ValueError: If required columns are missing or if the file contains no pairs.
+
     """
     pairs = pd.read_csv(seed_csv)
     missing = [c for c in P_INPUT_COLS if c not in pairs.columns]
@@ -145,27 +166,22 @@ def run_inference(
     n_proposals: int = LLM_N_PROPOSALS,
     output_path: Path = LLM_OUTPUT_JSON,
 ) -> Path:
-    """
-    Augment predefined LASA pairs with additional confusibles.
+    """Augment predefined confusable drug pairs with additional AI proposals.
 
-    For each seed pair, x_1 is the anchor: registry drugs similar to it are
-    gathered by similarity constraints (fuzzy match > 0.6 or Soundex
-    similarity >= 0.75 on the Filipino-nativized spelling, edit distance > 2)
-    and the LLM picks the true confusibles among them. The seed's own x_2 is
-    excluded from the candidate
-    list (it is already confirmed) and carried into the output directly.
-
-    Writes results to a JSON file and returns the path.
+    For each seed pair, the anchor drug is matched against similar registry candidates
+    (fuzzy similarity > 0.6 or Soundex similarity >= 0.75, edit distance > 2), and the
+    AI model selects the genuinely confusable pairs.
 
     Args:
-        registry_df:   Cleaned drug registry [REGISTRY_COL].
-        model_choice:  Which LocalModel to use.
-        seed_pairs:    Predefined LASA pairs [COL_X1, COL_X2] to augment.
-        n_proposals:   Number of extra confusibles to request per seed pair.
-        output_path:   Where to write the JSON output.
+        registry_df: Cleaned drug registry DataFrame.
+        model_choice: Which LocalModel to use if running locally.
+        seed_pairs: Predefined confusable pairs DataFrame.
+        n_proposals: Number of extra confusable candidates to request per seed.
+        output_path: Destination path for saving JSON results.
 
     Returns:
-        Path to the written JSON file.
+        Path to the saved JSON file.
+
     """
     all_drugs = registry_df[REGISTRY_COL].tolist()
     drug_soundex_map = {drug: _soundex_code(drug) for drug in all_drugs}
@@ -225,13 +241,14 @@ def run_inference(
 
 
 def load_inference(json_path: Path | str) -> pd.DataFrame:
-    """
-    Parse the JSON written by run_inference() into a pairs DataFrame with
-    columns [COL_X1, COL_X2].
+    """Parse proposer JSON output into a DataFrame of confirmed and proposed pairs.
 
-    Both the seed pair and the LLM's additions are emitted, so the result is
-    the augmented P: every predefined pair is present whether or not that
-    entry produced any proposals.
+    Args:
+        json_path: Path to the JSON file generated by run_inference.
+
+    Returns:
+        A DataFrame containing unique drug pairs with columns x_1 and x_2.
+
     """
     data = json.loads(Path(json_path).read_text(encoding="utf-8"))
     rows = []
