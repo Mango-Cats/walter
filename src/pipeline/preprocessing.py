@@ -12,6 +12,7 @@ from random import randint
 import pandas as pd
 
 from config import (
+    ALIASES,
     REGISTRY_COL,
     USE_PRECLEANED_REGISTRY,
     DataSource,
@@ -171,6 +172,30 @@ def load_clean_registry(source: DataSource) -> pd.DataFrame:
     return df.dropna().reset_index(drop=True)
 
 
+def apply_aliases(df: pd.DataFrame, source: DataSource) -> pd.DataFrame:
+    """Drop registry names confirmed as misspellings of another registry name.
+
+    Reads the alias file for the source (columns `typo`, `canonical`). A missing
+    file leaves the registry unchanged.
+
+    Args:
+        df: Cleaned registry DataFrame.
+        source: Data source enum key.
+
+    Returns:
+        Registry DataFrame without the misspelled names.
+
+    """
+    path: Path = ALIASES[source]
+    if not path.exists():
+        return df
+    aliases = pd.read_csv(path, dtype=str)
+    typos = set(aliases["typo"].map(clean_name)) - set(aliases["canonical"].map(clean_name))
+    out = df[~df[REGISTRY_COL].isin(typos)].reset_index(drop=True)
+    print(f"[preprocessing] Removed {len(df) - len(out):,} misspelled names listed in {path}")
+    return out
+
+
 def run(source: DataSource) -> pd.DataFrame:
     """Run the complete registry preprocessing pipeline for the given data source.
 
@@ -187,7 +212,7 @@ def run(source: DataSource) -> pd.DataFrame:
         print(
             f"[preprocessing] Loaded {len(clean):,} pre-cleaned rows from {R_CLEAN[source]}"
         )
-        return clean
+        return apply_aliases(clean, source)
 
     print(f"[preprocessing] Source: {source.name}")
     raw = load_registry(source)
@@ -195,7 +220,7 @@ def run(source: DataSource) -> pd.DataFrame:
     clean = clean_registry(raw)
     cleaning_report(raw, clean)
     save_clean_registry(clean, source)
-    return clean
+    return apply_aliases(clean, source)
 
 
 def get_rand_entries(df: pd.DataFrame, count: int = 10) -> pd.DataFrame:

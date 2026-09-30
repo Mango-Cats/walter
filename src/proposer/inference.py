@@ -1,6 +1,7 @@
 """Proposer: augments predefined LASA pairs with LLM-selected registry candidates."""
 
 import json
+import re
 from pathlib import Path
 
 import jellyfish
@@ -23,8 +24,10 @@ from src.adapters.tbb import nativize as _nativize
 from src.proposer.prompt import SYSTEM_PROMPT, construct_user_prompt
 
 _CANDIDATE_LIMIT = 20
-_MIN_EDIT_DISTANCE = 2
+_MIN_EDIT_DISTANCE = 1
 _MIN_LENGTH_RATIO = 0.5
+_RATIO_THRESHOLD = 50
+_SOUNDEX_THRESHOLD = 0.75
 
 
 def _metaphone_code(name: str) -> str:
@@ -65,6 +68,20 @@ def _is_fragment(a: str, b: str) -> bool:
         return False
     short_words = short.split()
     return long.split()[: len(short_words)] != short_words
+
+
+def _is_strength_variant(a: str, b: str) -> bool:
+    """Check whether two names differ only in their numbers (e.g. strengths).
+
+    Args:
+        a: First drug name.
+        b: Second drug name.
+
+    Returns:
+        True if the names are identical once digits are removed.
+
+    """
+    return re.sub(r"\d+", "", a).split() == re.sub(r"\d+", "", b).split()
 
 
 def _spelling_similarity(a: str, b: str) -> float:
@@ -135,12 +152,12 @@ def extract_candidates(
 ) -> list[str]:
     """Extract and rank confusable candidate drugs for an anchor drug.
 
-    A candidate is kept if its edit distance to the anchor is at least
-    `_MIN_EDIT_DISTANCE`, it is not a fragment of a much longer name (or vice
-    versa), and either its spelling similarity (fuzz.ratio) is above 60 or its
-    Soundex similarity is at least 0.75. Kept candidates are ranked by the mean
-    of spelling similarity (Jaro-Winkler on the names or their leading words)
-    and sound similarity (Jaro-Winkler on the Metaphone codes).
+    A candidate is kept if it differs from the anchor by more than its numbers,
+    is not a fragment of a much longer name (or vice versa), and either its
+    spelling similarity (fuzz.ratio) is above `_RATIO_THRESHOLD` or its Soundex
+    similarity is at least `_SOUNDEX_THRESHOLD`. Kept candidates are ranked by
+    the mean of spelling similarity (Jaro-Winkler on the names or their leading
+    words) and sound similarity (Jaro-Winkler on the Metaphone codes).
 
     Args:
         anchor: Target drug name.
@@ -168,6 +185,8 @@ def extract_candidates(
             continue
         if Levenshtein.distance(anchor, candidate) < _MIN_EDIT_DISTANCE:
             continue
+        if _is_strength_variant(anchor, candidate):
+            continue
         if _is_fragment(anchor, candidate):
             continue
 
@@ -175,9 +194,9 @@ def extract_candidates(
         s_sim = _soundex_similarity(s_anchor, s_candidate)
         f_score = fuzz.ratio(anchor, candidate)
 
-        if f_score > 60 or s_sim >= 0.75:
+        if f_score > _RATIO_THRESHOLD or s_sim >= _SOUNDEX_THRESHOLD:
             spelling = _spelling_similarity(anchor, candidate)
-            sound =JaroWinkler.normalized_similarity(
+            sound = JaroWinkler.normalized_similarity(
                 m_anchor, drug_metaphone_map.get(candidate, "")
             )
             scored.append((0.5 * spelling + 0.5 * sound, f_score, candidate))
