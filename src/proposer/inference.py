@@ -1,16 +1,4 @@
-"""AI-assisted confusable drug pair finder (Proposer).
-
-What this file does:
-1. Takes a starting list of known confusable drug pairs (e.g. from ISMP).
-2. For each known pair (x_1, x_2), it uses x_1 as an 'anchor' drug.
-3. Searches the drug registry for similar-sounding/spelled candidates that meet
-   our similarity rules:
-     - Spelling similarity (fuzz.WRatio) > 60% OR Soundex similarity >= 75%
-     - Edit distance > 2 (avoids simple typos)
-4. Sends the anchor and candidate list to an AI model (like DeepSeek or Qwen).
-5. The AI selects which candidates are genuinely confusable with the anchor.
-6. Saves the original pairs plus all new AI proposals into a JSON file (lasa_run.json).
-"""
+"""Proposer: augments predefined LASA pairs with LLM-selected registry candidates."""
 
 import json
 from pathlib import Path
@@ -18,7 +6,7 @@ from pathlib import Path
 import jellyfish
 import pandas as pd
 from rapidfuzz import fuzz
-from rapidfuzz.distance import Levenshtein
+from rapidfuzz.distance import JaroWinkler, Levenshtein
 
 from config import (
     COL_X1,
@@ -84,10 +72,10 @@ def extract_candidates(
 ) -> list[str]:
     """Extract and rank confusable candidate drugs for an anchor drug.
 
-    Filters candidates based on edit distance and similarity thresholds:
-    - Edit distance must be greater than 2 to avoid simple typos.
-    - Fuzzy spelling score must be > 60% OR Soundex similarity must be >= 75%.
-    Candidates are ranked by a composite score of spelling and Soundex similarity.
+    A candidate is kept if its edit distance to the anchor is greater than 2 and
+    either its spelling similarity (fuzz.ratio) is above 60 or its Soundex
+    similarity is at least 0.75. Kept candidates are ranked by Jaro-Winkler
+    similarity to the anchor.
 
     Args:
         anchor: Target drug name.
@@ -114,11 +102,11 @@ def extract_candidates(
 
         s_candidate = drug_soundex_map.get(candidate, "")
         s_sim = _soundex_similarity(s_anchor, s_candidate)
-        f_score = fuzz.WRatio(anchor, candidate)
+        f_score = fuzz.ratio(anchor, candidate)
 
         if f_score > 60 or s_sim >= 0.75:
-            composite = 0.5 * (f_score / 100.0) + 0.5 * s_sim
-            scored.append((composite, f_score, candidate))
+            rank_score = JaroWinkler.normalized_similarity(anchor, candidate)
+            scored.append((rank_score, f_score, candidate))
 
     scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
 
@@ -167,10 +155,6 @@ def run_inference(
     output_path: Path = LLM_OUTPUT_JSON,
 ) -> Path:
     """Augment predefined confusable drug pairs with additional AI proposals.
-
-    For each seed pair, the anchor drug is matched against similar registry candidates
-    (fuzzy similarity > 0.6 or Soundex similarity >= 0.75, edit distance > 2), and the
-    AI model selects the genuinely confusable pairs.
 
     Args:
         registry_df: Cleaned drug registry DataFrame.
