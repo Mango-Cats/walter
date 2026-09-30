@@ -1,24 +1,13 @@
-"""AI-assisted confusable drug pair finder (Proposer).
-
-What this file does:
-1. Takes a starting list of known confusable drug pairs (e.g. from ISMP).
-2. For each known pair (x_1, x_2), it uses x_1 as an 'anchor' drug.
-3. Searches the drug registry for similar-sounding/spelled candidates that meet
-   our similarity rules:
-     - Spelling similarity (fuzz.WRatio) > 60% OR Soundex similarity >= 75%
-     - Edit distance > 2 (avoids simple typos)
-4. Sends the anchor and candidate list to an AI model (like DeepSeek or Qwen).
-5. The AI selects which candidates are genuinely confusable with the anchor.
-6. Saves the original pairs plus all new AI proposals into a JSON file (lasa_run.json).
-"""
+"""Proposer: augments predefined LASA pairs with LLM-selected registry candidates."""
 
 import json
+import re
 from pathlib import Path
 
 import jellyfish
 import pandas as pd
 from rapidfuzz import fuzz
-from rapidfuzz.distance import Levenshtein
+from rapidfuzz.distance import JaroWinkler, Levenshtein
 
 from config import (
     COL_X1,
@@ -35,6 +24,84 @@ from src.adapters.tbb import nativize as _nativize
 from src.proposer.prompt import SYSTEM_PROMPT, construct_user_prompt
 
 _CANDIDATE_LIMIT = 20
+_MIN_EDIT_DISTANCE = 1
+_MIN_LENGTH_RATIO = 0.5
+_RATIO_THRESHOLD = 50
+_SOUNDEX_THRESHOLD = 0.75
+
+
+def _metaphone_code(name: str) -> str:
+    """Compute a Metaphone code for a drug name using its Filipino pronunciation.
+
+    Args:
+        name: The drug name string.
+
+    Returns:
+        A Metaphone code string, or an empty string if invalid.
+
+    """
+    if not isinstance(name, str):
+        return ""
+    name = name.strip()
+    if not name:
+        return ""
+    try:
+        return jellyfish.metaphone(_nativize(name))
+    except Exception:
+        return ""
+
+
+def _is_fragment(a: str, b: str) -> bool:
+    """Check whether the shorter name is only a fragment of a much longer name.
+
+    Args:
+        a: First drug name.
+        b: Second drug name.
+
+    Returns:
+        True if the shorter name is less than `_MIN_LENGTH_RATIO` of the longer
+        name's length and is not the longer name's leading word(s).
+
+    """
+    short, long = (a, b) if len(a) <= len(b) else (b, a)
+    if len(short) >= _MIN_LENGTH_RATIO * len(long):
+        return False
+    short_words = short.split()
+    return long.split()[: len(short_words)] != short_words
+
+
+def _is_strength_variant(a: str, b: str) -> bool:
+    """Check whether two names differ only in their numbers (e.g. strengths).
+
+    Args:
+        a: First drug name.
+        b: Second drug name.
+
+    Returns:
+        True if the names are identical once digits are removed.
+
+    """
+    return re.sub(r"\d+", "", a).split() == re.sub(r"\d+", "", b).split()
+
+
+def _spelling_similarity(a: str, b: str) -> float:
+    """Jaro-Winkler similarity of two names, also comparing each with the other's leading words.
+
+    Args:
+        a: First drug name.
+        b: Second drug name.
+
+    Returns:
+        Similarity score between 0.0 and 1.0.
+
+    """
+    a_lead = " ".join(a.split()[: len(b.split())])
+    b_lead = " ".join(b.split()[: len(a.split())])
+    return max(
+        JaroWinkler.normalized_similarity(a, b),
+        JaroWinkler.normalized_similarity(a, b_lead),
+        JaroWinkler.normalized_similarity(a_lead, b),
+    )
 
 
 def _soundex_code(name: str) -> str:
@@ -81,13 +148,16 @@ def extract_candidates(
     all_drugs: list[str],
     drug_soundex_map: dict[str, str] | None = None,
     limit: int = _CANDIDATE_LIMIT,
+    drug_metaphone_map: dict[str, str] | None = None,
 ) -> list[str]:
     """Extract and rank confusable candidate drugs for an anchor drug.
 
-    Filters candidates based on edit distance and similarity thresholds:
-    - Edit distance must be greater than 2 to avoid simple typos.
-    - Fuzzy spelling score must be > 60% OR Soundex similarity must be >= 75%.
-    Candidates are ranked by a composite score of spelling and Soundex similarity.
+    A candidate is kept if it differs from the anchor by more than its numbers,
+    is not a fragment of a much longer name (or vice versa), and either its
+    spelling similarity (fuzz.ratio) is above `_RATIO_THRESHOLD` or its Soundex
+    similarity is at least `_SOUNDEX_THRESHOLD`. Kept candidates are ranked by
+    the mean of spelling similarity (Jaro-Winkler on the names or their leading
+    words) and sound similarity (Jaro-Winkler on the Metaphone codes).
 
     Args:
         anchor: Target drug name.
@@ -95,6 +165,7 @@ def extract_candidates(
         all_drugs: List of all available drug names in the registry.
         drug_soundex_map: Optional precomputed map of drug names to Soundex codes.
         limit: Maximum number of candidate names to return.
+        drug_metaphone_map: Optional precomputed map of drug names to Metaphone codes.
 
     Returns:
         List of up to `limit` confusable candidate drug names.
@@ -102,23 +173,33 @@ def extract_candidates(
     """
     if drug_soundex_map is None:
         drug_soundex_map = {d: _soundex_code(d) for d in all_drugs}
+    if drug_metaphone_map is None:
+        drug_metaphone_map = {d: _metaphone_code(d) for d in all_drugs}
 
     s_anchor = _soundex_code(anchor)
+    m_anchor = _metaphone_code(anchor)
     scored: list[tuple[float, float, str]] = []
 
     for candidate in all_drugs:
         if candidate == anchor or candidate == known:
             continue
-        if Levenshtein.distance(anchor, candidate) <= 2:
+        if Levenshtein.distance(anchor, candidate) < _MIN_EDIT_DISTANCE:
+            continue
+        if _is_strength_variant(anchor, candidate):
+            continue
+        if _is_fragment(anchor, candidate):
             continue
 
         s_candidate = drug_soundex_map.get(candidate, "")
         s_sim = _soundex_similarity(s_anchor, s_candidate)
-        f_score = fuzz.WRatio(anchor, candidate)
+        f_score = fuzz.ratio(anchor, candidate)
 
-        if f_score > 60 or s_sim >= 0.75:
-            composite = 0.5 * (f_score / 100.0) + 0.5 * s_sim
-            scored.append((composite, f_score, candidate))
+        if f_score > _RATIO_THRESHOLD or s_sim >= _SOUNDEX_THRESHOLD:
+            spelling = _spelling_similarity(anchor, candidate)
+            sound = JaroWinkler.normalized_similarity(
+                m_anchor, drug_metaphone_map.get(candidate, "")
+            )
+            scored.append((0.5 * spelling + 0.5 * sound, f_score, candidate))
 
     scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
 
@@ -168,10 +249,6 @@ def run_inference(
 ) -> Path:
     """Augment predefined confusable drug pairs with additional AI proposals.
 
-    For each seed pair, the anchor drug is matched against similar registry candidates
-    (fuzzy similarity > 0.6 or Soundex similarity >= 0.75, edit distance > 2), and the
-    AI model selects the genuinely confusable pairs.
-
     Args:
         registry_df: Cleaned drug registry DataFrame.
         model_choice: Which LocalModel to use if running locally.
@@ -185,6 +262,7 @@ def run_inference(
     """
     all_drugs = registry_df[REGISTRY_COL].tolist()
     drug_soundex_map = {drug: _soundex_code(drug) for drug in all_drugs}
+    drug_metaphone_map = {drug: _metaphone_code(drug) for drug in all_drugs}
     results = []
     total = len(seed_pairs)
 
@@ -195,6 +273,7 @@ def run_inference(
             all_drugs,
             drug_soundex_map=drug_soundex_map,
             limit=_CANDIDATE_LIMIT,
+            drug_metaphone_map=drug_metaphone_map,
         )
 
         proposed: list[str] = []

@@ -12,6 +12,7 @@ All values are re-exported here so you can import them directly from `config`.
 """
 
 from .paths import (
+    ALIASES,
     D_CSV,
     D_FILENAME,
     D_PHO_CSV,
@@ -92,6 +93,7 @@ __all__ = [
     "USE_PRECLEANED_REGISTRY",
     "P",
     "N",
+    "ALIASES",
     "U_CSV",
     "D_CSV",
     "D_PHO_CSV",
