@@ -44,11 +44,6 @@ N: dict[DataSource, Path] = {
     DataSource.US: DATA_DIR / "N_us.csv",
 }
 
-ALIASES: dict[DataSource, Path] = {
-    DataSource.PH: DATA_DIR / "aliases_ph.csv",
-    DataSource.US: DATA_DIR / "aliases_us.csv",
-}
-
 U_FILENAME: str = "U.csv"
 D_FILENAME: str = "D.csv"
 D_PHO_FILENAME: str = "D_pho.csv"
