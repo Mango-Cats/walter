@@ -12,7 +12,6 @@ from rapidfuzz.distance import JaroWinkler, Levenshtein
 from config import (
     COL_X1,
     COL_X2,
-    LLM_N_PROPOSALS,
     LLM_OUTPUT_JSON,
     P_INPUT_COLS,
     REGISTRY_COL,
@@ -244,16 +243,17 @@ def run_inference(
     registry_df: pd.DataFrame,
     model_choice: LocalModel,
     seed_pairs: pd.DataFrame,
-    n_proposals: int = LLM_N_PROPOSALS,
     output_path: Path = LLM_OUTPUT_JSON,
 ) -> Path:
     """Augment predefined confusable drug pairs with additional AI proposals.
+
+    The AI model selects as many or as few candidates as it judges genuinely
+    confusable, since that count can't be predicted ahead of time.
 
     Args:
         registry_df: Cleaned drug registry DataFrame.
         model_choice: Which LocalModel to use if running locally.
         seed_pairs: Predefined confusable pairs DataFrame.
-        n_proposals: Number of extra confusable candidates to request per seed.
         output_path: Destination path for saving JSON results.
 
     Returns:
@@ -279,9 +279,7 @@ def run_inference(
         proposed: list[str] = []
         reasoning = ""
         if candidates:
-            user_prompt = construct_user_prompt(
-                anchor, "\n".join(candidates), n_proposals
-            )
+            user_prompt = construct_user_prompt(anchor, "\n".join(candidates))
             if USE_API_MODEL:
                 proposed, reasoning = api_response(
                     user_prompt,
