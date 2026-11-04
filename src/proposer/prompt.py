@@ -63,13 +63,17 @@ suffix is confusable.
 """
 
 
-def construct_user_prompt(drug_name: str, candidates: str, n: int = 1) -> str:
+def construct_user_prompt(drug_name: str, candidates: str) -> str:
     """Build the user prompt requesting confusable candidates for a target drug.
+
+    There is no fixed number of confusibles to request: how many candidates
+    are genuinely LASA with the target can't be predicted ahead of time, so
+    the model is asked to select as many or as few as are actually
+    warranted, including none at all.
 
     Args:
         drug_name: The anchor drug name.
         candidates: Newline-separated list of candidate drug names.
-        n: Number of confusable candidates requested.
 
     Returns:
         Formatted prompt string for the AI model.
@@ -78,7 +82,11 @@ def construct_user_prompt(drug_name: str, candidates: str, n: int = 1) -> str:
     return (
         f"Target Drug:\n{drug_name}\n\n"
         f"Candidate Drugs:\n{candidates}\n\n"
-        f"Task:\nReturn EXACTLY {n} drug names from the dataset "
-        f"that are most likely to be confused with the target drug.\n\n"
-        f"Output:\n"
+        f"Task:\nSelect every candidate drug above that is genuinely likely "
+        f"to be confused with the target drug. There is no fixed number to "
+        f"return -- select as many or as few as are actually warranted, "
+        f"including none at all if nothing on the list is a real risk.\n\n"
+        f"Output:\nOne selected drug name per line, written exactly as it "
+        f"appears in the candidate list above. No explanations, headers, "
+        f"numbering, or extra text in this section.\n"
     )
