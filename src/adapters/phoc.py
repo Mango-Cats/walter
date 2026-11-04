@@ -13,6 +13,7 @@ What this file does:
 import csv
 import errno
 import os
+import shutil
 import stat
 import subprocess
 import tempfile
@@ -25,13 +26,18 @@ import pandas as pd
 from config import (
     COL_T1,
     COL_T2,
+    COL_X1,
+    COL_X2,
     PHOC_BIN,
     PHOC_CONFIG_DIR,
     PHONETIC_ALGORITHMS,
+    PHONETIC_CONFIG_LANGS,
     TRANSCRIPTION_LANGS,
 )
+from src.adapters.g2p.fil import stressed_transcriptions
 
-_SEPARATE_SUFFIXES = ("_substitutions", "_insertions", "_deletions")
+_STRESSED_LANG = "fil"
+_SEPARATE_SUFFIXES = ("_substitutions", "_indels", "_indel_diff")
 
 
 def _header(csv_path: Path) -> list[str]:
@@ -94,6 +100,7 @@ def run_phoc(
 
     cmd = [
         str(PHOC_BIN),
+        "csv",
         "--input",
         str(input_csv),
         "--output",
@@ -168,6 +175,36 @@ def _classify_configs(
     return phonetic, orthographic, separate
 
 
+def _config_langs(stem: str, langs: dict[str, tuple[str, str]]) -> list[str]:
+    """List the transcription languages a phonetic configuration is scored over.
+
+    Args:
+        stem: Base name of the phonetic configuration file.
+        langs: Mapping of language codes to transcription column names.
+
+    Returns:
+        Language codes from `langs` that apply to this configuration.
+
+    """
+    allowed = PHONETIC_CONFIG_LANGS.get(stem, tuple(langs))
+    return [lang for lang in langs if lang in allowed]
+
+
+def _phonetic_column(col: str, lang: str) -> str:
+    """Name the feature column for a phonetic configuration and transcription.
+
+    Args:
+        col: phoc output column, named `aline_<variant>` after its configuration file.
+        lang: Language code of the transcription it was scored over.
+
+    Returns:
+        Column name of the form `aline_var:<variant>_g2p:<lang>`.
+
+    """
+    algorithm, _, variant = col.partition("_")
+    return f"{algorithm}_var:{variant}_g2p:{lang}"
+
+
 def _feature_names(
     phonetic: list[str],
     orthographic: list[str],
@@ -190,10 +227,10 @@ def _feature_names(
         c for stem in orthographic for c in _stem_columns(stem, separate[stem])
     ]
     phon_cols = [
-        f"{col}_{lang}"
+        _phonetic_column(col, lang)
         for stem in phonetic
         for col in _stem_columns(stem, separate[stem])
-        for lang in langs
+        for lang in _config_langs(stem, langs)
     ]
     return orth_cols + phon_cols
 
@@ -249,17 +286,30 @@ def run_phoc_multilingual(
             staged = base.drop(columns=lang_cols)
             staged[COL_T1] = base[col_1].fillna("")
             staged[COL_T2] = base[col_2].fillna("")
+            if lang == _STRESSED_LANG:
+                for name_col, t_col in ((COL_X1, COL_T1), (COL_X2, COL_T2)):
+                    staged[t_col] = stressed_transcriptions(
+                        base[name_col].fillna("").tolist(), staged[t_col].tolist()
+                    )
 
             staged_csv = tmp / f"in_{lang}.csv"
             scored_csv = tmp / f"out_{lang}.csv"
             staged.to_csv(staged_csv, index=False)
 
-            run_phoc(staged_csv, scored_csv, config_dir)
+            lang_config_dir = tmp / f"conf_{lang}"
+            lang_config_dir.mkdir()
+            for path in config_dir.glob("*.toml"):
+                if path.stem in orthographic or lang in _config_langs(path.stem, langs):
+                    shutil.copy(path, lang_config_dir / path.name)
+
+            run_phoc(staged_csv, scored_csv, lang_config_dir)
             scored = pd.read_csv(scored_csv)
 
             for stem in phonetic:
+                if lang not in _config_langs(stem, langs):
+                    continue
                 for col in _stem_columns(stem, separate[stem]):
-                    features[f"{col}_{lang}"] = scored[col]
+                    features[_phonetic_column(col, lang)] = scored[col]
 
             for stem in orthographic:
                 for col in _stem_columns(stem, separate[stem]):

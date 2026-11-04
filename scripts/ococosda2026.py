@@ -21,7 +21,7 @@ two differences from `walter all`:
      So candidates are drawn from src/pipeline/noise.py's existing
      WRatio/Soundex/Metaphone anchor mining (oversampled well past len(P),
      and already guaranteed disjoint from every known P pair), then
-     re-scored with phoc's `levenshtein` and `aline_eng_kondrak` (English
+     re-scored with phoc's `levenshtein` and `aline_kondrak` (English
      G2P) columns - both normalized similarity in [0, 1], verified by hand
      (identical strings score 1.0, unrelated ones score ~0). Only
      candidates whose average of the two falls inside
@@ -81,7 +81,7 @@ OVERSAMPLE: int = 5
 def _score_hardness(df: pd.DataFrame) -> pd.DataFrame:
     """
     Append a `hardness` column: mean of phoc's `levenshtein` and
-    `aline_eng_kondrak` (English) similarity scores, each in [0, 1].
+    `aline_kondrak` (English) similarity scores, each in [0, 1].
 
     df must already carry COL_T_ENG_1 / COL_T_ENG_2 (see transcribe_all).
     """
@@ -97,7 +97,7 @@ def _score_hardness(df: pd.DataFrame) -> pd.DataFrame:
         scored = pd.read_csv(scored_csv)
 
     out = df.copy()
-    out["hardness"] = (scored["levenshtein"] + scored["aline_eng_kondrak"]) / 2
+    out["hardness"] = (scored["levenshtein"] + scored["aline_kondrak"]) / 2
     return out
 
 
@@ -169,7 +169,7 @@ def main() -> None:
             candidates, langs=["eng"], tag="ococosda2026", verbose=False
         )
 
-    with Spinner("Scoring candidate hardness (phoc: levenshtein + aline_eng_kondrak)"):
+    with Spinner("Scoring candidate hardness (phoc: levenshtein + aline_kondrak)"):
         candidates = _score_hardness(candidates)
 
     band = candidates[

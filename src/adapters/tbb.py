@@ -171,12 +171,12 @@ class _TbbWorker:
         key = _sanitize(word)
         if not key:
             return Adaptation("", "", "", "", None)
-        cached = self._cache.get(key)
+        cached = self._cache.get(word)
         if cached is not None:
             return cached
 
         with self._lock:
-            cached = self._cache.get(key)
+            cached = self._cache.get(word)
             if cached is not None:
                 return cached
 
@@ -206,7 +206,7 @@ class _TbbWorker:
                 )
             else:
                 result = Adaptation(key, key, key, key, None)
-            self._cache[key] = result
+            self._cache[word] = result
             return result
 
     def close(self) -> None:

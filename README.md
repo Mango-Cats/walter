@@ -193,12 +193,20 @@ Saved to `results/`:
 - `D.csv` - classification: `x_1, t_eng_1, t_fil_1, x_2, t_eng_2, t_fil_2, label`
   (`label` is `1`/`0`, or `1`/`-1`/`0` under `--soft-labels`)
 - `D_pho.csv` - `D` with one phonetic-similarity feature column per `bin/pho_conf/*.toml`.
-  Transcription-dependent configs (`aline`) yield one column per language
-  (`aline_ph_mc_eng`, `aline_ph_mc_fil`); the rest score `x_1`/`x_2` only and appear once.
-  An aline column reads `aline_<config phonology>_<variant>_<transcription>`, so
-  `aline_eng_kondrak_fil` is the English segment table scored over the Filipino
-  IPA. The `_ph_` and `_eng_` configs share their costs, salience and `[values.*]`
-  scales and differ only in how each segment is described, so a gap between them
-  is attributable to phonology rather than to a re-tuned weighting.
+  Transcription-dependent configs (`aline`) yield one column per transcription they
+  are scored over; the rest score `x_1`/`x_2` only and appear once. An aline column
+  reads `aline_var:<variant>_g2p:<transcription>`:
+
+  | column | ALINE weights | transcription |
+  | --- | --- | --- |
+  | `aline_var:kondrak_g2p:eng` | Kondrak (`aline_kondrak.toml`) | English |
+  | `aline_var:kondrak_g2p:fil` | Kondrak (`aline_kondrak.toml`) | Filipino |
+  | `aline_var:cangu_g2p:fil` | learned (`aline_cangu.toml`) | Filipino |
+
+  `config.PHONETIC_CONFIG_LANGS` limits a config to specific transcriptions.
+
+  ALINE scores Filipino with one `ˈ` per word: on the vowel `tbb-cli` capitalizes,
+  otherwise the penult. Only `mango_cats` configs use it; `kondrak` ignores stress
+  marks. The marks are added for scoring, so `t_fil_*` stays unmarked.
 
 `D.csv` is always written before `phoc` runs, so a `phoc` failure leaves it intact.

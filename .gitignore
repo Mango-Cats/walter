@@ -1,8 +1,6 @@
 data/
 models/
-
-bin/phoc
-bin/tbb-cli
+bin/
 
 # VS Code
 .vscode/

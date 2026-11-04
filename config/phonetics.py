@@ -14,6 +14,10 @@ PHOC_CONFIG_DIR: Path = Path("bin/pho_conf")
 
 PHONETIC_ALGORITHMS: frozenset[str] = frozenset({"aline"})
 
+# Transcriptions each phonetic config is scored over, keyed by config file stem.
+# A phonetic config not listed here is scored over every TRANSCRIPTION_LANGS entry.
+PHONETIC_CONFIG_LANGS: dict[str, tuple[str, ...]] = {"aline_cangu": ("fil",)}
+
 TBB_BIN: Path = Path("bin/tbb-cli")
 
 IPA_BATCH_SIZE: int = 256

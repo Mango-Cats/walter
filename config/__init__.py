@@ -37,6 +37,7 @@ from .phonetics import (
     PHOC_BIN,
     PHOC_CONFIG_DIR,
     PHONETIC_ALGORITHMS,
+    PHONETIC_CONFIG_LANGS,
     TBB_BIN,
 )
 from .proposer import (
@@ -134,6 +135,7 @@ __all__ = [
     "PHOC_BIN",
     "PHOC_CONFIG_DIR",
     "PHONETIC_ALGORITHMS",
+    "PHONETIC_CONFIG_LANGS",
     "TBB_BIN",
     "IPA_BATCH_SIZE",
     "FIL_G2P_BIN",

@@ -25,6 +25,7 @@ from config import (
     FIL_G2P_MODEL,
 )
 from src.adapters.g2p.client import transcribe_dataframe as _transcribe_dataframe
+from src.adapters.tbb import adapt
 
 _TAG = "fil_g2p"
 
@@ -38,6 +39,11 @@ _IPA_FIXUPS = {
 }
 
 _TONE_LETTERS = re.compile(r"[˥-˩]")
+
+_ORTHOGRAPHIC_VOWELS = frozenset("aeiou")
+_IPA_VOWELS = frozenset("aeiouɔɛɪʊəɐɑæ")
+_STRESS_MARK = "ˈ"
+_DEFAULT_STRESS_FROM_END = 2
 
 
 def _resolve_model() -> Path:
@@ -159,6 +165,47 @@ def _decode(tokens: list[str], model: Path) -> dict[str, str]:
     return out
 
 
+def _stress_from_end(token: str) -> int:
+    """Find which vowel of a loanword carries stress, counting from the word's end.
+
+    Args:
+        token: Alphabetic word token.
+
+    Returns:
+        Position of the vowel capitalized by tbb (1 is the final vowel), or the
+        penult when tbb marks no vowel.
+
+    """
+    vowels = [c for c in adapt(token).stressed if c.lower() in _ORTHOGRAPHIC_VOWELS]
+    for i, vowel in enumerate(vowels):
+        if vowel.isupper():
+            return len(vowels) - i
+    return _DEFAULT_STRESS_FROM_END
+
+
+def _add_stress(ipa: str, token: str) -> str:
+    """Insert a primary stress mark before the stressed vowel of a transcription.
+
+    The position counts back from the end because tbb's spelling and the G2P
+    output can disagree on how many vowels a word has. ALINE stresses the first
+    vowel after a mark, so a word with no vowel stays unmarked rather than
+    stressing the next word.
+
+    Args:
+        ipa: IPA transcription of the token.
+        token: Alphabetic word token the transcription came from.
+
+    Returns:
+        The transcription with a stress mark, unchanged if it has no vowel.
+
+    """
+    vowels = [i for i, c in enumerate(ipa) if c in _IPA_VOWELS]
+    if not vowels:
+        return ipa
+    at = vowels[max(len(vowels) - _stress_from_end(token), 0)]
+    return f"{ipa[:at]}{_STRESS_MARK}{ipa[at:]}"
+
+
 def _chunk(name: str) -> list[tuple[str, bool]]:
     """Split a drug name into decodable alphabetic chunks and non-decodable tokens.
 
@@ -181,11 +228,12 @@ def _chunk(name: str) -> list[tuple[str, bool]]:
     return chunks
 
 
-def _transcribe_batch(names: list[str]) -> list[str]:
+def _transcribe_batch(names: list[str], stressed: bool = False) -> list[str]:
     """Convert a batch of drug names into Filipino IPA pronunciations.
 
     Args:
         names: List of drug names.
+        stressed: Whether to mark each word's stressed vowel.
 
     Returns:
         List of IPA pronunciation strings.
@@ -204,13 +252,41 @@ def _transcribe_batch(names: list[str]) -> list[str]:
         parts = []
         for text, ok in cs:
             if ok:
-                parts.append(decoded.get(text, ""))
+                ipa = decoded.get(text, "")
+                parts.append(_add_stress(ipa, text) if stressed else ipa)
             else:
                 literal = "".join(text.split())
                 if literal:
                     parts.append(literal)
         out.append("".join(parts))
     return out
+
+
+def stressed_transcriptions(names: list[str], plain: list[str]) -> list[str]:
+    """Build the stress-marked Filipino IPA that ALINE scores.
+
+    Stress is placed per word, and plain transcriptions have no word boundaries,
+    so the names are transcribed again rather than marking `plain` directly.
+
+    Args:
+        names: Drug names.
+        plain: Existing unmarked transcriptions of those names.
+
+    Returns:
+        Stress-marked transcriptions, one per name.
+
+    Raises:
+        ValueError: If a transcription no longer matches its existing plain form.
+
+    """
+    stressed = _transcribe_batch(names, stressed=True)
+    stale = sum(s.replace(_STRESS_MARK, "") != p for s, p in zip(stressed, plain))
+    if stale:
+        raise ValueError(
+            f"{stale} Filipino transcriptions differ from the current G2P output. "
+            "Transcribe the pairs again before scoring."
+        )
+    return stressed
 
 
 def transcribe_dataframe(
