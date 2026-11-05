@@ -1,6 +1,7 @@
 data/
 models/
 bin/
+results/*
 
 # VS Code
 .vscode/
