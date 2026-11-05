@@ -8,6 +8,8 @@ This module coordinates each major step of building LASA drug datasets:
     - assemble: Combines pairs and adds spoken pronunciations (D).
     - phoc: Adds phonetic and orthographic similarity scores (D_pho).
     - featurize: Adds pronunciations and similarity scores to an existing pair CSV.
+    - relabel: Applies reviewed label changes to a dataset's pairs.
+    - lexicon: Scores LASA names against all held-out names, for a ranking test.
 """
 
 import json
@@ -16,6 +18,9 @@ from pathlib import Path
 import pandas as pd
 
 from config import (
+    POSITIVE_LABEL,
+    NOISE_OVERSAMPLE,
+    REGISTRY_COL,
     COL_LABEL,
     COL_X1,
     COL_X2,
@@ -37,11 +42,19 @@ from config import (
     U_CSV,
 )
 from src.adapters.g2p.transcribe import transcribe_all
-from src.adapters.phoc import run_phoc_multilingual
+from src.adapters.phoc import run_core_features, run_phoc_multilingual, score_lexicon
 from src.artifacts import in_file, require_file, seed_file
+from src.pipeline.core_name import is_variant_pair
 from src.pipeline.dataset import assemble_and_save, unselected_candidate_pairs
 from src.pipeline.features import run_engineering
-from src.pipeline.noise import make_noise
+from src.pipeline.noise import (
+    get_positive_pairs,
+    make_noise,
+    noise_report,
+    normalize,
+    random_registry_pairs,
+)
+from src.pipeline.preprocessing import clean_registry
 from src.pipeline.preprocessing import run as run_preprocessing
 
 
@@ -174,32 +187,141 @@ def load_rejections(
     return N_df.reset_index(drop=True)
 
 
+def load_registry_file(path: Path) -> pd.DataFrame:
+    """Load and clean a one-column registry CSV without using the registry cache.
+
+    Args:
+        path: CSV whose first column holds drug names.
+
+    Returns:
+        A cleaned single-column DataFrame of unique drug names.
+    """
+    registry = pd.read_csv(path, usecols=[0], dtype=str)
+    registry.columns = [REGISTRY_COL]
+    return clean_registry(registry.dropna())
+
+
+def load_labelled(path: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Load a preconstructed CSV of positive and rejected pairs.
+
+    Args:
+        path: CSV with x_1, x_2, and label (or y), where the label is 1 or -1.
+
+    Returns:
+        The confirmed pairs (P) and the rejected pairs (N).
+
+    Raises:
+        ValueError: If a column is missing or a label is not 1 or -1.
+    """
+    labelled = pd.read_csv(path, keep_default_na=False).rename(columns={"y": COL_LABEL})
+    missing = [c for c in (COL_X1, COL_X2, COL_LABEL) if c not in labelled.columns]
+    if missing:
+        raise ValueError(f"{path} is missing column(s) {missing}")
+    bad = set(labelled[COL_LABEL]) - {POSITIVE_LABEL, NEGATIVE_LABEL}
+    if bad:
+        raise ValueError(f"{path} has labels other than 1 and -1: {sorted(bad)}")
+    columns = [COL_X1, COL_X2]
+    positives = labelled[labelled[COL_LABEL] == POSITIVE_LABEL][columns]
+    rejected = labelled[labelled[COL_LABEL] == NEGATIVE_LABEL][columns]
+    return positives.reset_index(drop=True), rejected.reset_index(drop=True)
+
+
+def _pair_keys(df: pd.DataFrame) -> list[frozenset]:
+    """Key each pair regardless of name order.
+
+    Args:
+        df: DataFrame with x_1 and x_2.
+
+    Returns:
+        One normalized key per row.
+    """
+    return [
+        frozenset([normalize(a), normalize(b)]) for a, b in zip(df[COL_X1], df[COL_X2])
+    ]
+
+
 def noise(
     pairs_df: pd.DataFrame,
     registry_df: pd.DataFrame,
     output_path: Path | None = U_CSV,
+    target: int | None = None,
+    seed: int | None = None,
+    rejected_df: pd.DataFrame | None = None,
+    random_share: float = 0.0,
+    skip_variants: bool = False,
 ) -> pd.DataFrame:
     """Sample non-confusable drug pairs (U) and optionally save a checkpoint.
+
+    With a target, the sampler over-generates, any pair already labelled is removed,
+    and the rest is sampled down to exactly that many pairs. A random share of that
+    target comes from unfiltered random registry pairs in place of similar ones.
 
     Args:
         pairs_df: Confirmed confusable drug pairs.
         registry_df: Cleaned drug registry DataFrame.
         output_path: Optional CSV destination for saving sampled pairs.
+        target: Exact number of pairs wanted. Defaults to the configured prevalence.
+        seed: Random seed. Defaults to the configured seed.
+        rejected_df: Rejected pairs, which may not appear in the sample.
+        random_share: Fraction of the target drawn as unfiltered random pairs.
+        skip_variants: Leave out similar pairs that differ only in strength, salt,
+            form, or qualifier.
 
     Returns:
         A DataFrame of sampled non-confusable drug pairs.
+
+    Raises:
+        ValueError: If fewer than target pairs remain after filtering.
     """
+    seed = SEED if seed is None else seed
+    prevalence = POSITIVE_PREVALENCE
+    if target is not None:
+        n_positive = len(get_positive_pairs(pairs_df))
+        requested = target * NOISE_OVERSAMPLE
+        prevalence = n_positive / (n_positive + requested)
     U = make_noise(
         pairs_df=pairs_df,
         registry_df=registry_df,
-        positive_prevalence=POSITIVE_PREVALENCE,
+        positive_prevalence=prevalence,
         tier_2_sample_size=TIER_2_SAMPLE_SIZE,
-        seed=SEED,
+        seed=seed,
     )
+    if target is not None:
+        labelled = get_positive_pairs(pairs_df)
+        if rejected_df is not None:
+            labelled = labelled | get_positive_pairs(rejected_df)
+        keys = [
+            frozenset([normalize(a), normalize(b)])
+            for a, b in zip(U[COL_X1], U[COL_X2])
+        ]
+        U = U[[key not in labelled for key in keys]]
+        if skip_variants:
+            variant = [is_variant_pair(a, b) for a, b in zip(U[COL_X1], U[COL_X2])]
+            print(f"[stages] Skipped {sum(variant):,} variant pairs")
+            U = U[[not v for v in variant]]
+        if len(U) < target:
+            raise ValueError(
+                f"only {len(U):,} of the {target:,} pairs needed remain after "
+                "removing labelled pairs."
+            )
+        n_random = round(target * random_share)
+        U = U.sample(target - n_random, random_state=seed)
+        random_pairs = random_registry_pairs(registry_df, n_random, labelled, seed)
+        U = pd.concat([U, random_pairs], ignore_index=True)
+        U = U[~pd.Series(_pair_keys(U)).duplicated().to_numpy()]
+        if len(U) != target:
+            raise ValueError(f"expected {target:,} noise pairs, found {len(U):,}.")
+        U = U.sample(frac=1, random_state=seed).reset_index(drop=True)
     if output_path is not None:
-        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         U.to_csv(output_path, index=False)
         print(f"[stages] U -> {output_path}")
+        report = noise_report(U, pairs_df)
+        output_path.with_name(f"{output_path.stem}_report.txt").write_text(
+            report + "\n"
+        )
+        print(report)
     return U
 
 
@@ -269,7 +391,86 @@ def phoc(
     require_file(input_csv, "walter assemble")
     feats = run_phoc_multilingual(input_csv, output_csv)
     engineered = run_engineering(output_csv, output_csv)
-    return feats + engineered
+    core = run_core_features(output_csv, output_csv)
+    return feats + engineered + core
+
+
+def relabel(
+    input_csv: Path,
+    changes_csv: Path,
+    output_csv: Path,
+    allow_missing: bool = False,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Apply reviewed label changes to a dataset and write its pairs.
+
+    Only x_1, x_2, and label are written, ready for `walter featurize`. A label column
+    named y is read as label.
+
+    With allow_missing, the changes may come from a different version of the dataset:
+    removing an absent pair does nothing, relabelling an absent pair adds it, and adding
+    a present pair relabels it.
+
+    Args:
+        input_csv: Dataset CSV with x_1, x_2, and label.
+        changes_csv: CSV with action (remove, relabel, or add), x_1, x_2, and new_label.
+        output_csv: Path to write the changed pairs.
+        allow_missing: Whether changes may refer to pairs that do not fit the dataset.
+
+    Returns:
+        The changed pairs, and each change with what happened to it.
+
+    Raises:
+        ValueError: If a change does not fit the dataset and allow_missing is False.
+    """
+    columns = [COL_X1, COL_X2, COL_LABEL]
+    pairs = pd.read_csv(input_csv, dtype=str, keep_default_na=False)
+    pairs = pairs.rename(columns={"y": COL_LABEL})[columns]
+    changes = pd.read_csv(changes_csv, dtype=str, keep_default_na=False)
+    keys = [frozenset(p) for p in zip(pairs[COL_X1], pairs[COL_X2])]
+    labels = dict(zip(keys, pairs[COL_LABEL]))
+    names = dict(zip(keys, zip(pairs[COL_X1], pairs[COL_X2])))
+
+    outcomes = []
+    for row in changes.itertuples():
+        key = frozenset([getattr(row, COL_X1), getattr(row, COL_X2)])
+        present = key in labels
+        if not allow_missing and present == (row.action == "add"):
+            raise ValueError(f"{row.action} does not fit the dataset: {sorted(key)}")
+        if row.action == "remove":
+            outcome = "removed" if present else "already absent"
+            labels.pop(key, None)
+            names.pop(key, None)
+        else:
+            if not present:
+                outcome = "added"
+                names[key] = (getattr(row, COL_X1), getattr(row, COL_X2))
+            elif labels[key] == row.new_label:
+                outcome = "already correct"
+            else:
+                outcome = f"relabelled from {labels[key]}"
+            labels[key] = row.new_label
+        outcomes.append(outcome)
+
+    out = pd.DataFrame(
+        [(*names[key], label) for key, label in labels.items()], columns=columns
+    )
+    Path(output_csv).parent.mkdir(parents=True, exist_ok=True)
+    out.to_csv(output_csv, index=False)
+    return out, changes.assign(outcome=outcomes)
+
+
+def lexicon(input_csv: Path, output_path: Path) -> list[str]:
+    """Score every LASA name against all names in a held-out pair CSV.
+
+    Args:
+        input_csv: CSV with x_1, x_2, label, and transcription columns.
+        output_path: Path to write the Parquet pool.
+
+    Returns:
+        A list of feature column names in the pool.
+
+    """
+    return score_lexicon(Path(input_csv), Path(output_path))
 
 
 def featurize(
@@ -331,7 +532,11 @@ def featurize(
     if verbose:
         print(f"[stages] Engineered features -> {output_csv}")
 
-    return feats + engineered
+    core = run_core_features(output_csv, output_csv)
+    if verbose:
+        print(f"[stages] Core features -> {output_csv}")
+
+    return feats + engineered + core
 
 
 def summarize(D: pd.DataFrame) -> str:
@@ -347,4 +552,3 @@ def summarize(D: pd.DataFrame) -> str:
     return f"{len(D):,} rows  " + "  ".join(
         f"label={k}: {v:,}" for k, v in sorted(counts.items())
     )
-

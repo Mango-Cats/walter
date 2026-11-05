@@ -640,3 +640,77 @@ def make_noise(
     )
 
     return u_df
+
+
+def noise_report(noise: pd.DataFrame, pairs_df: pd.DataFrame) -> str:
+    """Summarize sampled noise, including how evenly it uses names.
+
+    Args:
+        noise: Sampled non-confusable pairs.
+        pairs_df: Confirmed confusable drug pairs.
+
+    Returns:
+        A multi-line text report.
+
+    """
+    p_vocab = get_positive_vocabulary(pairs_df)
+    first = noise[COL_X1].map(normalize)
+    second = noise[COL_X2].map(normalize)
+    same_letter = sum(a[:1] == b[:1] for a, b in zip(first, second)) / max(
+        len(noise), 1
+    )
+    has_lasa = first.isin(p_vocab) | second.isin(p_vocab)
+    usage = pd.concat([first, second]).value_counts()
+    unused = len(p_vocab - set(usage.index))
+    return "\n".join(
+        [
+            f"[noise] pairs: {len(noise):,}",
+            f"[noise] same first letter: {same_letter:.1%}",
+            f"[noise] pairs containing a LASA name: {has_lasa.mean():.1%}",
+            f"[noise] different names used: {len(usage):,}",
+            f"[noise] LASA names with no noise pair: {unused:,} of {len(p_vocab):,}",
+            "[noise] most used names:",
+            usage.head(20).to_string(),
+        ]
+    )
+
+
+def random_registry_pairs(
+    registry_df: pd.DataFrame,
+    count: int,
+    excluded: set[frozenset],
+    seed: int | None = SEED,
+) -> pd.DataFrame:
+    """Draw unfiltered random registry pairs, with no similarity requirement.
+
+    Args:
+        registry_df: Cleaned drug registry DataFrame.
+        count: Number of pairs wanted.
+        excluded: Normalized pairs that may not be drawn, such as labelled pairs.
+        seed: Random seed.
+
+    Returns:
+        A DataFrame with the same columns as make_noise. Tier is 3, and similarity is
+        empty because no similarity score decided these pairs.
+
+    """
+    rng = random.Random(seed)
+    names = sorted({normalize(n) for n in registry_df[REGISTRY_COL].dropna().tolist()})
+    seen: set[frozenset] = set()
+    rows: list[dict] = []
+    while len(rows) < count:
+        a, b = rng.sample(names, 2)
+        pair = frozenset([a, b])
+        if pair in seen or pair in excluded:
+            continue
+        seen.add(pair)
+        rows.append(
+            {
+                COL_X1: a,
+                COL_X2: b,
+                "similarity": None,
+                "tier": 3,
+                COL_LABEL: UNLABELED_LABEL,
+            }
+        )
+    return pd.DataFrame(rows, columns=[COL_X1, COL_X2, "similarity", "tier", COL_LABEL])

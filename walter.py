@@ -15,6 +15,9 @@ Usage:
     walter phoc          Calculate phonetic and spelling similarity scores (D_pho).
     walter featurize     Take an existing list of drug pairs and add pronunciations
                          and similarity scores without building a new dataset.
+    walter relabel       Apply reviewed label changes to a dataset's pairs.
+    walter lexicon       Score every LASA name against all names in a held-out
+                         pair CSV, for a ranking evaluation.
 
 File and folder inputs/outputs:
     Most stages read and write files inside folders (directories). Each stage writes
@@ -26,7 +29,8 @@ File and folder inputs/outputs:
     By default, files are read from and written to the `results/` folder.
 
 Exceptions:
-    `walter propose` and `walter featurize` take a specific CSV file as `--input`
+    `walter propose`, `walter featurize`, `walter relabel`, and `walter lexicon` take a
+    specific CSV file as `--input`
     instead of a folder.
 """
 
@@ -34,9 +38,12 @@ import argparse
 import time
 from pathlib import Path
 
+import pandas as pd
 from rich.console import Console
 
 from config import (
+    NOISE_RANDOM_SHARE,
+    NOISE_SKIP_VARIANTS,
     D_FILENAME,
     D_PHO_FILENAME,
     DATA_SOURCE,
@@ -166,6 +173,36 @@ def cmd_propose(args: argparse.Namespace) -> None:
     print(f"\nP -> {out}")
 
 
+def _load_labelled(args: argparse.Namespace) -> tuple | None:
+    """Load a preconstructed labelled CSV if one was given.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        The positive and rejected pairs, or None.
+
+    """
+    if args.labelled is None:
+        return None
+    return stages.load_labelled(seed_file(args.labelled, "labelled pairs CSV"))
+
+
+def _load_registry(args: argparse.Namespace) -> pd.DataFrame:
+    """Load the registry named on the command line, or the configured one.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        A cleaned registry DataFrame.
+
+    """
+    if args.registry is None:
+        return stages.preprocess()
+    return stages.load_registry_file(seed_file(args.registry, "registry CSV"))
+
+
 def cmd_noise(args: argparse.Namespace) -> None:
     """Run the noise stage to sample non-confusable negative pairs (U).
 
@@ -173,12 +210,22 @@ def cmd_noise(args: argparse.Namespace) -> None:
         args: Parsed command-line arguments.
 
     """
-    P_load = stages.load_positives(args.input)
+    labelled = _load_labelled(args)
+    P_load, N_load = labelled if labelled else (stages.load_positives(args.input), None)
     out = out_file(args.output, U_FILENAME)
     with Spinner("Preprocessing registry"):
-        R_clean = stages.preprocess()
+        R_clean = _load_registry(args)
     with Spinner("Sampling unlabeled pairs (U)"):
-        U = stages.noise(P_load, R_clean, output_path=out)
+        U = stages.noise(
+            P_load,
+            R_clean,
+            output_path=out,
+            target=args.target,
+            seed=args.seed,
+            rejected_df=N_load,
+            random_share=args.random_share,
+            skip_variants=args.skip_variants,
+        )
     print(f"\nU: {len(U):,} pairs")
     print(f"U -> {out}")
 
@@ -235,6 +282,38 @@ def cmd_featurize(args: argparse.Namespace) -> None:
     print(f"\n{src} -> {out}")
 
 
+def cmd_relabel(args: argparse.Namespace) -> None:
+    """Apply reviewed label changes to a dataset's pairs.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    """
+    src = seed_file(args.input, "dataset CSV")
+    changes = seed_file(args.changes, "label changes CSV")
+    out, applied = stages.relabel(src, changes, args.output, args.allow_missing)
+    print(f"\n{len(out):,} pairs -> {args.output}")
+    print(stages.summarize(out))
+    print(applied.groupby(["action", "outcome"]).size().to_string())
+    log = args.output.with_name(f"{args.output.stem}_changes.csv")
+    applied.to_csv(log, index=False)
+    print(f"Changes -> {log}")
+
+
+def cmd_lexicon(args: argparse.Namespace) -> None:
+    """Score every LASA name against all names in a held-out pair CSV.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    """
+    src = seed_file(args.input, "held-out pair CSV")
+    with Spinner("Scoring the lexicon pool"):
+        feats = stages.lexicon(src, args.output)
+    print(f"\nLexicon features ({len(feats)}): {', '.join(feats)}")
+    print(f"\n{src} -> {args.output}")
+
+
 def cmd_all(args: argparse.Namespace) -> None:
     """Run all pipeline stages in sequence from start to finish.
 
@@ -242,7 +321,8 @@ def cmd_all(args: argparse.Namespace) -> None:
         args: Parsed command-line arguments.
 
     """
-    soft = _soft_labels(args)
+    labelled = _load_labelled(args)
+    soft = labelled is not None or _soft_labels(args)
     _banner(soft)
 
     d_csv = out_file(args.output, D_FILENAME)
@@ -250,10 +330,10 @@ def cmd_all(args: argparse.Namespace) -> None:
     print(f"Output: D -> {d_csv}")
 
     with Spinner("Preprocessing registry"):
-        R_clean = stages.preprocess()
+        R_clean = _load_registry(args)
     print(f"\nCleaned registry: {len(R_clean):,} drug names")
 
-    if not FROM_FILE:
+    if not FROM_FILE and labelled is None:
         seed_csv = seed_file(args.input, "predefined LASA pairs CSV")
         with Spinner("Augmenting predefined pairs (LLM)"):
             stages.propose(
@@ -261,16 +341,26 @@ def cmd_all(args: argparse.Namespace) -> None:
                 seed_csv=seed_csv,
                 output_path=out_file(args.output, LLM_OUTPUT_FILENAME),
             )
-    P_load = stages.load_positives(args.output)
+    if labelled is None:
+        P_load = stages.load_positives(args.output)
+        N_load = None
+    else:
+        P_load, N_load = labelled
 
     with Spinner("Sampling unlabeled pairs (U)"):
-        U = stages.noise(P_load, R_clean, output_path=out_file(args.output, U_FILENAME))
+        U = stages.noise(
+            P_load,
+            R_clean,
+            output_path=out_file(args.output, U_FILENAME),
+            target=args.target,
+            seed=args.seed,
+            rejected_df=N_load,
+            random_share=args.random_share,
+            skip_variants=args.skip_variants,
+        )
 
-    N_load = (
-        stages.load_rejections(args.output, rejected_csv=args.rejected)
-        if soft
-        else None
-    )
+    if labelled is None and soft:
+        N_load = stages.load_rejections(args.output, rejected_csv=args.rejected)
 
     with Spinner("Assembling and saving D"):
         D = stages.assemble(P_load, U, N_load, output_csv=d_csv)
@@ -311,6 +401,46 @@ def build_parser() -> argparse.ArgumentParser:
             help=f"Directory to write {writes} into",
         )
 
+    def _add_noise_options(p: argparse.ArgumentParser) -> None:
+        p.add_argument(
+            "--labelled",
+            type=Path,
+            default=None,
+            help="Preconstructed CSV of pairs labelled 1 or -1, replacing the proposer",
+        )
+        p.add_argument(
+            "--registry",
+            type=Path,
+            default=None,
+            help="One-column registry CSV, in place of the cleaned registry cache",
+        )
+        p.add_argument(
+            "--target",
+            type=int,
+            default=None,
+            help="Exact number of noise pairs (default: the configured prevalence)",
+        )
+        p.add_argument(
+            "--seed",
+            type=int,
+            default=None,
+            help="Random seed for noise sampling (default: the configured seed)",
+        )
+        p.add_argument(
+            "--random-share",
+            type=float,
+            default=NOISE_RANDOM_SHARE,
+            help="With --target, the fraction drawn as unfiltered random pairs "
+            f"(default: {NOISE_RANDOM_SHARE})",
+        )
+        p.add_argument(
+            "--skip-variants",
+            action=argparse.BooleanOptionalAction,
+            default=NOISE_SKIP_VARIANTS,
+            help="With --target, leave out pairs that differ only in strength, salt, "
+            "form, or qualifier",
+        )
+
     p_all = sub.add_parser("all", help="Run every stage (default)")
     p_all.add_argument(
         "--input",
@@ -325,6 +455,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Directory to write every artifact into",
     )
     _add_label_flags(p_all)
+    _add_noise_options(p_all)
     p_all.set_defaults(func=cmd_all)
 
     p_propose = sub.add_parser("propose", help="Augment predefined LASA pairs into P")
@@ -344,6 +475,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_noise = sub.add_parser("noise", help="Sample the unlabeled set U")
     _dirs(p_noise, LLM_OUTPUT_FILENAME, U_FILENAME, "walter propose")
+    _add_noise_options(p_noise)
     p_noise.set_defaults(func=cmd_noise)
 
     p_assemble = sub.add_parser("assemble", help="Merge P and U into D")
@@ -373,6 +505,49 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output CSV (default: <input>_pho.csv beside the input)",
     )
     p_featurize.set_defaults(func=cmd_featurize)
+
+    p_relabel = sub.add_parser(
+        "relabel",
+        help="Apply reviewed label changes to a dataset's pairs",
+    )
+    p_relabel.add_argument("--input", required=True, type=Path, help="Dataset CSV")
+    p_relabel.add_argument(
+        "--changes",
+        required=True,
+        type=Path,
+        help="CSV with action (remove, relabel, or add), x_1, x_2, and new_label",
+    )
+    p_relabel.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help="Output CSV of pairs, ready for `walter featurize`",
+    )
+    p_relabel.add_argument(
+        "--allow-missing",
+        action="store_true",
+        help="Apply changes made on another version of the dataset, adding or skipping "
+        "pairs that do not fit",
+    )
+    p_relabel.set_defaults(func=cmd_relabel)
+
+    p_lexicon = sub.add_parser(
+        "lexicon",
+        help="Score every LASA name against all names in a held-out pair CSV",
+    )
+    p_lexicon.add_argument(
+        "--input",
+        required=True,
+        type=Path,
+        help="CSV with x_1, x_2, label, and the transcription columns",
+    )
+    p_lexicon.add_argument(
+        "--output",
+        required=True,
+        type=Path,
+        help="Output Parquet file",
+    )
+    p_lexicon.set_defaults(func=cmd_lexicon)
 
     return parser
 

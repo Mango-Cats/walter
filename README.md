@@ -69,6 +69,8 @@ have instead of pairs this pipeline builds (see below).
 | `assemble` | `U.csv` + `lasa_run.json` | `D.csv` |
 | `phoc` | `D.csv` | `D_pho.csv` |
 | `featurize` | *(any pairs CSV - see below)* | `<input>_pho.csv` |
+| `relabel` | *(a dataset CSV and a changes CSV - see below)* | the CSV named by `--output` |
+| `lexicon` | *(a held-out pair CSV - see below)* | the Parquet file named by `--output` |
 
 Because the name a stage writes is exactly the name the next one looks for,
 chaining stages is just pointing them at the same directory:
@@ -185,6 +187,60 @@ keeps the work already paid for:
 | --- | --- |
 | `<input>_t.csv` | + the IPA transcriptions |
 | `<input>_pho.csv` | + the phonetic-similarity columns *(the default `--output`)* |
+
+#### Core-word features
+
+Registry names can carry salts, dosage forms, strengths, and qualifiers. The
+core word is the first word left after skipping those (`CORE_NAME_STOPWORDS` in
+`config/phonetics.py`): `sevelamer hydrochloride` becomes `sevelamer`, and
+`tored 10` becomes `tored`. A name opening with a word that identifies little
+alone (`CORE_LEADING_WORDS`) keeps the next usable word too, so `neo penotran`
+and `sodium valproate` stay whole. Core words are scored in addition to the full
+names, which keep all their own columns.
+
+`phoc` and `featurize` add nine `core_*` columns: eight spelling measures
+(`CORE_ORTHOGRAPHIC_CONFIGS`) and `core_aline_var:cangu_g2p:fil`, which scores the
+Filipino transcription of the core word.
+
+#### Starting from preconstructed positives and negatives
+
+When LASA pairs and rejected pairs already exist, one command runs the whole pipeline
+and skips the LLM. The input has `x_1`, `x_2`, and `label` (1 or -1):
+
+```bash
+uv run walter all --labelled data/ths2/D.csv --registry data/registries/R_ph.csv \
+    --target 19928 --seed 42 --output results/seed42
+```
+
+It samples exactly `--target` noise pairs labelled 0, leaving out any pair already
+labelled. By default, 10% are unfiltered random registry pairs (`--random-share`), and
+pairs that differ only in strength, salt, form, or qualifier are left out
+(`--no-skip-variants` keeps them). It then merges everything, transcribes it, and computes every feature, ending
+in `D_pho.csv`. `U_report.txt` shows how evenly the noise uses names.
+
+#### Changing labels in a finished dataset
+
+Apply reviewed changes, then recompute the features:
+
+```bash
+uv run walter relabel --input D.csv --changes changes.csv --output pairs.csv
+uv run walter featurize --input pairs.csv --output D_new.csv
+```
+
+`--allow-missing` applies changes made on another version of the dataset, and writes
+what happened to each one to `<output>_changes.csv`.
+
+#### Scoring a lexicon pool
+
+`walter lexicon` supports a ranking evaluation. Each name in a LASA pair becomes
+a query, scored against every other name in the input CSV:
+
+```bash
+uv run walter lexicon --input test_pairs.csv --output pool.parquet
+```
+
+The input needs `x_1`, `x_2`, `label`, and the transcription columns. The pool
+holds the similarity and core columns, but not the engineered features.
 
 ### Outputs
 

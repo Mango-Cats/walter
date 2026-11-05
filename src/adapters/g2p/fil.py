@@ -262,6 +262,19 @@ def _transcribe_batch(names: list[str], stressed: bool = False) -> list[str]:
     return out
 
 
+def transcribe_stressed(names: list[str]) -> list[str]:
+    """Transcribe drug names into stress-marked Filipino IPA.
+
+    Args:
+        names: Drug names.
+
+    Returns:
+        Stress-marked transcriptions, one per name.
+
+    """
+    return _transcribe_batch(names, stressed=True)
+
+
 def stressed_transcriptions(names: list[str], plain: list[str]) -> list[str]:
     """Build the stress-marked Filipino IPA that ALINE scores.
 
@@ -279,7 +292,7 @@ def stressed_transcriptions(names: list[str], plain: list[str]) -> list[str]:
         ValueError: If a transcription no longer matches its existing plain form.
 
     """
-    stressed = _transcribe_batch(names, stressed=True)
+    stressed = transcribe_stressed(names)
     stale = sum(s.replace(_STRESS_MARK, "") != p for s, p in zip(stressed, plain))
     if stale:
         raise ValueError(
